@@ -15,6 +15,7 @@ use App\Exceptions\LimitExpiredException;
 use App\Exceptions\MccNotAllowedException;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\RecordAuthorizeMetrics;
+use App\Http\Middleware\SecurityHeaders;
 use App\Support\ApiError;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -40,7 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [AssignRequestId::class]);
-        $middleware->api(append: [RecordAuthorizeMetrics::class]);
+        $middleware->api(append: [RecordAuthorizeMetrics::class, SecurityHeaders::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
