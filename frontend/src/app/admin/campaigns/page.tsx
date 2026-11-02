@@ -404,7 +404,7 @@ export default function CampaignOperationsPage() {
                   </div>
 
                   {reasonAction ? (
-                    <div className="mt-4 rounded-xl border border-stone-200 bg-stone-50 p-4">
+                    <div className="mt-4 rounded-md border border-stone-200 bg-stone-50 p-4">
                       <label htmlFor={`campaign-reason-${campaign.id}`} className="field-label">
                         {reasonAction.action === "reject"
                           ? "Alasan penolakan"

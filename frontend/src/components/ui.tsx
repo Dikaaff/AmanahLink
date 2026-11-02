@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { Badge, badgeToneForStatus } from "@/components/badge";
+import { Check, CircleAlert, Info, TriangleAlert } from "lucide-react";
+import { Badge, badgeToneForStatus } from "@/components/ui/badge";
 
 /**
  * Legacy status badge, now backed by the six-tone Paper & Ink system (§5.2).
@@ -36,16 +37,21 @@ export function Alert({
   tone?: "error" | "success" | "info" | "warning";
   children: ReactNode;
 }) {
-  const styles = {
-    error: "border-rose-200 bg-rose-50 text-rose-800",
-    success: "border-brand-200 bg-brand-50 text-brand-900",
-    info: "border-sky-200 bg-sky-50 text-sky-900",
-    warning: "border-amber-200 bg-amber-50 text-amber-900",
+  /* Tone is carried by the icon shape and the weight, never by color (R07). */
+  const { Icon, weight } = {
+    error: { Icon: CircleAlert, weight: "font-medium" },
+    success: { Icon: Check, weight: "font-normal" },
+    info: { Icon: Info, weight: "font-normal" },
+    warning: { Icon: TriangleAlert, weight: "font-medium" },
   }[tone];
 
   return (
-    <div className={`rounded-xl border px-4 py-3 text-sm ${styles}`} role="alert">
-      {children}
+    <div
+      className="flex gap-3 rounded-sm border border-line bg-sunken px-4 py-3 text-body-sm text-ink"
+      role="alert"
+    >
+      <Icon aria-hidden="true" size={20} strokeWidth={1.5} className="mt-0.5 shrink-0" />
+      <div className={`min-w-0 flex-1 ${weight}`}>{children}</div>
     </div>
   );
 }

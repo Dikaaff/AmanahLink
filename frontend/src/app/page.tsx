@@ -59,18 +59,15 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6">
-      <section className="relative overflow-hidden rounded-3xl bg-brand-900 px-6 py-14 text-white sm:px-12">
-        <div className="absolute -right-16 -top-24 h-72 w-72 rounded-full bg-brand-500/30 blur-3xl" />
-        <div className="absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-amber-300/10 blur-3xl" />
-
-        <div className="relative max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-200">
+      <section className="rounded-lg bg-ink px-6 py-12 text-inverse sm:px-10">
+        <div className="max-w-2xl">
+          <p className="text-label font-medium uppercase text-inverse/70">
             Donasi dengan batas tujuan
           </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
+          <h1 className="mt-4 text-h1 font-semibold md:text-h1-lg">
             Dana tidak bisa dipakai sembarangan.
           </h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-brand-100">
+          <p className="mt-4 max-w-xl text-body text-inverse/80">
             Setiap pencairan hanya boleh ke merchant terverifikasi dengan
             kategori transaksi yang disetujui kampanye. Semua pergerakan dana
             tercatat di ledger yang tidak dapat diubah.
@@ -81,30 +78,30 @@ export default function HomePage() {
               value={draftQuery}
               onChange={(event) => setDraftQuery(event.target.value)}
               placeholder="Cari kampanye, mis. biaya operasi"
-              className="w-full rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm text-white placeholder:text-brand-200 focus:border-white/50 focus:outline-none"
+              className="min-h-11 w-full rounded-sm border border-inverse/40 bg-transparent px-4 text-body-sm text-inverse placeholder:text-inverse/60 focus:border-inverse focus:outline-none"
               aria-label="Cari kampanye"
             />
             <button
               type="submit"
-              className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-brand-900 transition hover:bg-brand-100"
+              className="min-h-11 rounded-sm bg-inverse px-5 text-body-sm font-medium text-ink transition-colors hover:bg-inverse/90"
             >
               Cari
             </button>
           </form>
         </div>
 
-        <dl className="relative mt-10 grid max-w-2xl grid-cols-2 gap-4 border-t border-white/15 pt-6 text-sm sm:grid-cols-3">
+        <dl className="mt-10 grid max-w-2xl grid-cols-2 gap-4 border-t border-inverse/20 pt-6 text-body-sm sm:grid-cols-3">
           <div>
-            <dt className="text-brand-200">Bukti dana</dt>
-            <dd className="mt-1 font-semibold">Ledger double-entry</dd>
+            <dt className="text-inverse/70">Bukti dana</dt>
+            <dd className="mt-1 font-medium">Ledger double-entry</dd>
           </div>
           <div>
-            <dt className="text-brand-200">Pencairan</dt>
-            <dd className="mt-1 font-semibold">Merchant + MCC</dd>
+            <dt className="text-inverse/70">Pencairan</dt>
+            <dd className="mt-1 font-medium">Merchant + MCC</dd>
           </div>
           <div>
-            <dt className="text-brand-200">Nota</dt>
-            <dd className="mt-1 font-semibold">OCR + review manual</dd>
+            <dt className="text-inverse/70">Nota</dt>
+            <dd className="mt-1 font-medium">OCR + review manual</dd>
           </div>
         </dl>
       </section>

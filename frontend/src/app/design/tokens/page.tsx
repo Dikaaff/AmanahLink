@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Badge, BADGE_TONES, badgeSpec, type BadgeTone } from "@/components/badge";
+import { Badge, BADGE_TONES, badgeSpec, type BadgeTone } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
   title: "Token & Status — AmanahLink",

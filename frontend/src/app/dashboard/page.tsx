@@ -968,7 +968,7 @@ export default function DashboardPage() {
                           </td>
                           <td className="px-4 py-4">
                             {receipt.rejection_reason ? (
-                              <span className="block max-w-[220px] text-xs text-rose-700">
+                              <span className="block max-w-[220px] text-xs text-ink">
                                 {receipt.rejection_reason}
                               </span>
                             ) : (
@@ -1092,7 +1092,7 @@ export default function DashboardPage() {
                                   </span>
                                 ) : null}
                                 {item.receipt.rejection_reason ? (
-                                  <span className="mt-1 block max-w-[180px] text-xs text-rose-700">
+                                  <span className="mt-1 block max-w-[180px] text-xs text-ink">
                                     {item.receipt.rejection_reason}
                                   </span>
                                 ) : null}

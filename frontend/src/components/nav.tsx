@@ -6,7 +6,7 @@ import { useAuth } from "@/components/auth-provider";
 
 function BrandMark() {
   return (
-    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-700 text-white">
+    <span className="flex h-9 w-9 items-center justify-center rounded-md bg-brand-700 text-white">
       <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
         <path
           fill="currentColor"

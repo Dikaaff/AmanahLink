@@ -47,7 +47,7 @@ export default function LoginPage() {
           kampanye dan mencairkan dana ke merchant terverifikasi. Verifikator dan
           admin memakai akun yang disediakan pengelola.
         </p>
-        <div className="mt-6 rounded-2xl border border-stone-200 bg-white/70 p-4 text-sm text-stone-600">
+        <div className="mt-6 rounded-md border border-stone-200 bg-white/70 p-4 text-sm text-stone-600">
           <p className="font-semibold text-stone-800">Akun demo seeder</p>
           <p className="mt-1 font-mono text-xs">budi@amanahlink.test / password</p>
           <p className="font-mono text-xs">admin@amanahlink.test / password</p>
@@ -82,7 +82,7 @@ export default function LoginPage() {
             placeholder="nama@email.com"
           />
           {fields.email ? (
-            <p className="mt-1 text-xs text-rose-700">{fields.email[0]}</p>
+            <p className="mt-1 text-xs text-ink">{fields.email[0]}</p>
           ) : null}
         </div>
 
@@ -101,7 +101,7 @@ export default function LoginPage() {
             placeholder="••••••••"
           />
           {fields.password ? (
-            <p className="mt-1 text-xs text-rose-700">{fields.password[0]}</p>
+            <p className="mt-1 text-xs text-ink">{fields.password[0]}</p>
           ) : null}
         </div>
 

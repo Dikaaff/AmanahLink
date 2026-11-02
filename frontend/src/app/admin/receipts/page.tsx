@@ -232,7 +232,7 @@ export default function ReceiptReviewPage() {
                     </div>
                   </div>
 
-                  <dl className="mt-5 grid gap-3 rounded-xl bg-stone-50 p-4 text-sm sm:grid-cols-3">
+                  <dl className="mt-5 grid gap-3 rounded-md bg-stone-50 p-4 text-sm sm:grid-cols-3">
                     <div>
                       <dt className="text-xs text-stone-500">Merchant terdeteksi</dt>
                       <dd className="mt-1 font-medium text-stone-800">{merchantName ?? "—"}</dd>

@@ -132,7 +132,7 @@ export default function NewCampaignPage() {
             onChange={(event) => update("title", event.target.value)}
           />
           {fields.title ? (
-            <p className="mt-1 text-xs text-rose-700">{fields.title[0]}</p>
+            <p className="mt-1 text-xs text-ink">{fields.title[0]}</p>
           ) : null}
         </div>
 
@@ -155,7 +155,7 @@ export default function NewCampaignPage() {
             Minimal 50 karakter ({form.description.length}/5000).
           </p>
           {fields.description ? (
-            <p className="mt-1 text-xs text-rose-700">{fields.description[0]}</p>
+            <p className="mt-1 text-xs text-ink">{fields.description[0]}</p>
           ) : null}
         </div>
 
@@ -175,7 +175,7 @@ export default function NewCampaignPage() {
               }
             />
             {fields.target_amount ? (
-              <p className="mt-1 text-xs text-rose-700">{fields.target_amount[0]}</p>
+              <p className="mt-1 text-xs text-ink">{fields.target_amount[0]}</p>
             ) : null}
           </div>
 
@@ -192,7 +192,7 @@ export default function NewCampaignPage() {
               onChange={(event) => update("deadline_at", event.target.value)}
             />
             {fields.deadline_at ? (
-              <p className="mt-1 text-xs text-rose-700">{fields.deadline_at[0]}</p>
+              <p className="mt-1 text-xs text-ink">{fields.deadline_at[0]}</p>
             ) : null}
           </div>
         </div>
@@ -207,7 +207,7 @@ export default function NewCampaignPage() {
             {MCC_OPTIONS.map((option) => (
               <label
                 key={option.code}
-                className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 text-sm transition ${
+                className={`flex cursor-pointer items-start gap-3 rounded-md border px-4 py-3 text-sm transition ${
                   mcc.includes(option.code)
                     ? "border-brand-500 bg-brand-50"
                     : "border-stone-200 hover:border-stone-300"
@@ -231,7 +231,7 @@ export default function NewCampaignPage() {
             ))}
           </div>
           {fields["allowed_mcc_array"] ? (
-            <p className="mt-2 text-xs text-rose-700">
+            <p className="mt-2 text-xs text-ink">
               {fields["allowed_mcc_array"][0]}
             </p>
           ) : null}

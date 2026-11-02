@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { Alert, Loading, Progress, StatusBadge } from "@/components/ui";
-import { Badge } from "@/components/ui/badge";
+import { Tag } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
+
 import { Textarea } from "@/components/ui/textarea";
 import { ApiError, api, errorMessage, type Campaign } from "@/lib/api";
 import { dateOnly, rupiah } from "@/lib/format";
@@ -188,7 +189,7 @@ export function CampaignEditor({
                 aria-invalid={Boolean(firstError(errors, "title"))}
               />
               <div className="mt-1 flex items-center justify-between gap-3 text-xs">
-                <p className={firstError(errors, "title") ? "text-rose-700" : "text-stone-500"}>
+                <p className={firstError(errors, "title") ? "text-ink" : "text-stone-500"}>
                   {firstError(errors, "title") ?? "Gunakan judul yang spesifik dan manusiawi."}
                 </p>
                 <span className="shrink-0 text-stone-400">{form.title.length}/150</span>
@@ -213,7 +214,7 @@ export function CampaignEditor({
               <div className="mt-1 flex items-center justify-between gap-3 text-xs">
                 <p
                   className={
-                    firstError(errors, "description") ? "text-rose-700" : "text-stone-500"
+                    firstError(errors, "description") ? "text-ink" : "text-stone-500"
                   }
                 >
                   {firstError(errors, "description") ?? "Minimal 50 karakter."}
@@ -247,7 +248,7 @@ export function CampaignEditor({
                 }
                 aria-invalid={Boolean(firstError(errors, "target_amount"))}
               />
-              <p className="mt-1 text-xs text-rose-700">{firstError(errors, "target_amount")}</p>
+              <p className="mt-1 text-xs text-ink">{firstError(errors, "target_amount")}</p>
             </div>
 
             <div>
@@ -263,7 +264,7 @@ export function CampaignEditor({
                 onChange={(event) => updateField("deadline_at", event.target.value)}
                 aria-invalid={Boolean(firstError(errors, "deadline_at"))}
               />
-              <p className="mt-1 text-xs text-rose-700">{firstError(errors, "deadline_at")}</p>
+              <p className="mt-1 text-xs text-ink">{firstError(errors, "deadline_at")}</p>
             </div>
           </CardContent>
         </Card>
@@ -285,7 +286,7 @@ export function CampaignEditor({
                   return (
                     <label
                       key={option.code}
-                      className={`group flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 text-sm transition-colors ${
+                      className={`group flex cursor-pointer items-start gap-3 rounded-md border px-4 py-3 text-sm transition-colors ${
                         selected
                           ? "border-brand-500 bg-brand-50"
                           : "border-stone-200 hover:border-stone-300 hover:bg-stone-50"
@@ -307,7 +308,7 @@ export function CampaignEditor({
                   );
                 })}
               </div>
-              <p className="mt-2 text-xs text-rose-700">
+              <p className="mt-2 text-xs text-ink">
                 {firstError(errors, "allowed_mcc_array")}
               </p>
             </fieldset>
@@ -315,9 +316,9 @@ export function CampaignEditor({
         </Card>
 
         <div className="flex flex-wrap items-center gap-3 border-t border-stone-200/80 pt-2">
-          <ShimmerButton type="submit" disabled={saving || form.allowed_mcc_array.length === 0}>
+          <Button type="submit" disabled={saving || form.allowed_mcc_array.length === 0}>
             {saving ? "Menyimpan…" : "Simpan perubahan"}
-          </ShimmerButton>
+          </Button>
           <Link href="/dashboard" className="btn-secondary">
             Batal
           </Link>
@@ -335,7 +336,7 @@ export function CampaignEditor({
                 </p>
                 <p className="mt-1 text-xs text-stone-500">Tampilan donatur setelah disimpan</p>
               </div>
-              <Badge>Pratinjau</Badge>
+              <Tag>Pratinjau</Tag>
             </div>
           </div>
           <CardContent>
@@ -349,7 +350,7 @@ export function CampaignEditor({
             <p className="mt-3 line-clamp-5 whitespace-pre-line text-sm leading-relaxed text-stone-600">
               {previewDescription}
             </p>
-            <div className="mt-6 rounded-xl bg-brand-50 p-4">
+            <div className="mt-6 rounded-md bg-brand-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Target dana</p>
               <p className="mt-1 text-2xl font-semibold text-brand-900">{rupiah(previewAmount)}</p>
               <div className="mt-3">
@@ -362,7 +363,7 @@ export function CampaignEditor({
             <div className="mt-5 flex flex-wrap gap-2">
               {form.allowed_mcc_array.length > 0 ? (
                 form.allowed_mcc_array.map((code) => (
-                  <Badge key={code}>{mccTitle(code)}</Badge>
+                  <Tag key={code}>{mccTitle(code)}</Tag>
                 ))
               ) : (
                 <span className="text-xs text-stone-400">Belum ada kategori dipilih</span>

@@ -84,7 +84,7 @@ export default function RegisterPage() {
             placeholder="Nama Anda"
           />
           {fields.name ? (
-            <p className="mt-1 text-xs text-rose-700">{fields.name[0]}</p>
+            <p className="mt-1 text-xs text-ink">{fields.name[0]}</p>
           ) : null}
         </div>
 
@@ -103,7 +103,7 @@ export default function RegisterPage() {
             placeholder="nama@email.com"
           />
           {fields.email ? (
-            <p className="mt-1 text-xs text-rose-700">{fields.email[0]}</p>
+            <p className="mt-1 text-xs text-ink">{fields.email[0]}</p>
           ) : null}
         </div>
 
@@ -124,7 +124,7 @@ export default function RegisterPage() {
               placeholder="Min. 8 karakter"
             />
             {fields.password ? (
-              <p className="mt-1 text-xs text-rose-700">{fields.password[0]}</p>
+              <p className="mt-1 text-xs text-ink">{fields.password[0]}</p>
             ) : null}
           </div>
           <div>

@@ -218,7 +218,7 @@ export default function CampaignDetailPage() {
                         key={preset}
                         type="button"
                         onClick={() => setAmount(String(preset))}
-                        className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
+                        className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
                           amount === String(preset)
                             ? "border-brand-600 bg-brand-50 text-brand-700"
                             : "border-stone-200 text-stone-600 hover:border-stone-300"

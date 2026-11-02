@@ -5,7 +5,7 @@ import { Progress, StatusBadge } from "@/components/ui";
 
 export function CampaignCard({ campaign }: { campaign: Campaign }) {
   return (
-    <article className="card group flex flex-col p-5 transition-shadow hover:shadow-md">
+    <article className="card group flex flex-col p-5 transition-colors hover:border-ink">
       <div className="flex items-start justify-between gap-3">
         <StatusBadge status={campaign.status} label={campaign.status_label} />
         <span className="text-xs text-stone-500">
