@@ -319,4 +319,55 @@ final class DisbursementApiTest extends TestCase
             'daily_limit' => '50000.00',
         ]);
     }
+
+    public function test_a_campaigner_can_read_the_own_limit(): void
+    {
+        $campaign = $this->fundedCampaign();
+        $limit = $this->limit($campaign, '25000', '250000');
+
+        Sanctum::actingAs($campaign->campaigner);
+
+        $this->getJson("/api/v1/campaigns/{$campaign->id}/disbursement-limit")
+            ->assertOk()
+            ->assertJsonPath('data.campaign_id', $campaign->id)
+            ->assertJsonPath('data.daily_limit', '25000.00')
+            ->assertJsonPath('data.monthly_limit', '250000.00')
+            ->assertJsonPath('data.used_today', $limit->used_today)
+            ->assertJsonPath('data.expires_at', $limit->expires_at->toIso8601String());
+    }
+
+    public function test_a_campaigner_cannot_read_someone_elses_limit(): void
+    {
+        $campaign = $this->fundedCampaign();
+        $this->limit($campaign);
+
+        Sanctum::actingAs(User::factory()->campaigner()->create());
+
+        $this->getJson("/api/v1/campaigns/{$campaign->id}/disbursement-limit")
+            ->assertForbidden()
+            ->assertJsonPath('error.code', 'FORBIDDEN');
+    }
+
+    public function test_an_admin_can_read_the_limit_of_any_campaign(): void
+    {
+        $campaign = $this->fundedCampaign();
+        $this->limit($campaign, '10000', '100000');
+
+        Sanctum::actingAs(User::factory()->admin()->create());
+
+        $this->getJson("/api/v1/campaigns/{$campaign->id}/disbursement-limit")
+            ->assertOk()
+            ->assertJsonPath('data.daily_limit', '10000.00');
+    }
+
+    public function test_reading_a_missing_limit_returns_null_payload(): void
+    {
+        $campaign = $this->fundedCampaign();
+
+        Sanctum::actingAs($campaign->campaigner);
+
+        $this->getJson("/api/v1/campaigns/{$campaign->id}/disbursement-limit")
+            ->assertOk()
+            ->assertJsonPath('data', null);
+    }
 }

@@ -197,6 +197,7 @@
 - **Alasan:** Limit harian/bulanan adalah kontrol risiko platform atas penggunaan dana terikat; membiarkan penggalang menaikkan limitnya sendiri menghapus kontrol itu. PRD §8 menulis campaigner boleh menerbitkan limit, tetapi kode, test (`DisbursementApiTest`), dan alur review admin sudah konsisten admin-only — memperbaiki PRD lebih murah dan lebih aman daripada melonggarkan policy.
 - **Alternatif yang ditolak:** (a) Campaigner boleh menerbitkan limit — melemahkan kontrol dan bertentangan dengan D-002 (platform yang menjamin kategori). (b) Menghapus form dari UI tanpa endpoint baca — campaigner tidak bisa tahu sisa limit sehingga tidak bisa merencanakan pencairan.
 - **Konsekuensi:** PRD §8 dan matriks izin harus dikoreksi (T-11). Form limit di `dashboard/page.tsx` wajib diberi guard role (G-16). Test baru: campaigner GET 200, campaigner PUT 403, admin PUT 200.
+- **Status:** diterapkan 2026-11-03 (T-02c) — endpoint GET + `CampaignPolicy::viewLimits`, form edit hanya admin, panel read-only untuk campaigner.
 
 ---
 

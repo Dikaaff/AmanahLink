@@ -148,6 +148,7 @@
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/MerchantApiTest.php` | **10 passed, 43 assertions** (registry merchant T-02a) |
 | 2026-11-03 | `php artisan test --compact` (setelah T-02a) | **171 passed, 670 assertions** |
 | 2026-11-03 | smoke API + `npm run lint`/`build` (T-02b) | campaigner `GET /merchants` → 2 merchant tanpa `mid`; admin → `mid` ada; lint/build bersih |
+| 2026-11-03 | smoke API (T-02c) | campaigner `GET /campaigns/{id}/disbursement-limit` → `daily=5000000.00`, `used_today=0.00`; campaigner `PUT` → 403 `FORBIDDEN` |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
 
 ## Kesiapan dokumen (PRD, backlog, kontrak API) — audit 2026-11-03
@@ -178,8 +179,8 @@ Kesenjangan yang harus ditutup (ID dipakai di rencana kerja):
 | G-12 | FR-08 menyebut VA **dan QRIS**; `PaymentInstruction` hanya VA | `PaymentGateway`/`FakePaymentGateway` | ekspektasi demo meleset | T-11 |
 | G-13 | Token Sanctum disimpan di `localStorage`; CSP nonce sudah aktif tetapi risiko XSS residual tetap ada | `frontend/src/lib/api.ts` | pencurian token bila XSS lolos | T-07 |
 | G-14 | A-05 single-tenant masih asumsi, bukan keputusan eksplisit | `DECISIONS.md` A-05 | skema sulit diubah bila multi-org | T-11 (terima/tolak) |
-| G-15 | Registry merchant tidak punya API/UI; campaigner harus mengetik ID merchant (seed saja) | `routes/api.php` tidak punya route merchant; `dashboard/page.tsx:537` | demo & pemakaian nyata rapuh; PRD §8 "kelola merchant" tak terpenuhi | T-02 |
-| G-16 | Form limit disbursement tampil di dashboard campaigner, tetapi API `manageLimits` admin-only | `dashboard/page.tsx`, `CampaignPolicy::manageLimits` | campaigner mendapat 403 dari UI sendiri | T-02 |
+| G-15 | Registry merchant tidak punya API/UI; campaigner harus mengetik ID merchant (seed saja) | `routes/api.php` tidak punya route merchant; `dashboard/page.tsx:537` | demo & pemakaian nyata rapuh; PRD §8 "kelola merchant" tak terpenuhi | ✅ T-02a/T-02b |
+| G-16 | Form limit disbursement tampil di dashboard campaigner, tetapi API `manageLimits` admin-only | `dashboard/page.tsx`, `CampaignPolicy::manageLimits` | campaigner mendapat 403 dari UI sendiri | ✅ T-02c (form admin-only + GET read-only) |
 
 ## Protokol handoff untuk agent berikutnya
 
@@ -324,9 +325,14 @@ limit) dan beberapa state/UX.
    `api.merchants()`, dashboard memuat daftar merchant terverifikasi dan
    memfilternya berdasarkan `allowed_mcc` kampanye yang dipilih; input ID manual
    diganti `<select>` (nama · kategori · kota) dengan empty/error state.
-3. **T-02c — Guard limit (D-024):** tambahkan `GET /campaigns/{id}/disbursement-limit`
-   (pemilik + admin) dan sembunyikan form edit untuk non-admin; tampilkan sisa
-   limit read-only. Test: campaigner GET 200, campaigner PUT 403, admin PUT 200.
+3. **T-02c — Guard limit (D-024):** ✅ **selesai 2026-11-03** —
+   `GET /campaigns/{id}/disbursement-limit` (pemilik + admin,
+   `CampaignPolicy::viewLimits`), payload `data: null` bila limit belum ada;
+   dashboard admin tetap memakai form edit, sedangkan campaigner hanya melihat
+   limit harian/bulanan + pemakaian + masa berlaku (read-only). Test: pemilik
+   GET 200, campaigner lain GET 403 `FORBIDDEN`, admin GET 200, limit kosong →
+   `data: null`, PUT campaigner 403 (total 18 test / 62 assertions di
+   `DisbursementApiTest`).
 4. **T-02d — Status nota campaigner:** daftar nota per disbursement (status,
    confidence, alasan reject) agar campaigner tahu harus upload ulang.
 5. **T-02e — State kosong/error:** pastikan setiap layar punya empty state dan
@@ -334,8 +340,8 @@ limit) dan beberapa state/UX.
 
 ## Langkah berikutnya (ringkas)
 
-1. **T-02a/T-02b** (registry merchant + pemilihnya) → **T-02c** (keputusan
-   limit) → **T-02d/T-02e** → **T-03** (E2E manual) → GATE 5.
+1. **T-02d** (status nota) dan **T-02e** (empty/error state), lalu **T-03**
+   (E2E manual) dan GATE 5. T-02a/T-02b/T-02c sudah selesai.
 2. **T-04** verifikasi email (FR-03 satu-satunya FR `M` yang belum ada).
 3. **T-07** ASVS + **T-11** sinkronisasi dokumen sebelum menyentuh Fase 7.
 

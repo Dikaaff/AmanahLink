@@ -11,6 +11,7 @@ use App\Services\AuditLogger;
 use App\Support\Money;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 final class DisbursementLimitController
 {
@@ -54,17 +55,37 @@ final class DisbursementLimitController
             return $limit->refresh();
         });
 
+        return response()->json(['data' => $this->serialize($limit)]);
+    }
+
+    public function show(Campaign $campaign): JsonResponse
+    {
+        Gate::authorize('viewLimits', $campaign);
+
+        /** @var DisbursementLimit|null $limit */
+        $limit = DisbursementLimit::query()
+            ->where('campaign_id', $campaign->getKey())
+            ->first();
+
         return response()->json([
-            'data' => [
-                'campaign_id' => $limit->campaign_id,
-                'daily_limit' => $limit->daily_limit,
-                'monthly_limit' => $limit->monthly_limit,
-                'used_today' => $limit->used_today,
-                'used_this_month' => $limit->used_this_month,
-                'daily_window' => $limit->daily_window?->toDateString(),
-                'monthly_window' => $limit->monthly_window,
-                'expires_at' => $limit->expires_at?->toIso8601String(),
-            ],
+            'data' => $limit === null ? null : $this->serialize($limit),
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function serialize(DisbursementLimit $limit): array
+    {
+        return [
+            'campaign_id' => $limit->campaign_id,
+            'daily_limit' => $limit->daily_limit,
+            'monthly_limit' => $limit->monthly_limit,
+            'used_today' => $limit->used_today,
+            'used_this_month' => $limit->used_this_month,
+            'daily_window' => $limit->daily_window?->toDateString(),
+            'monthly_window' => $limit->monthly_window,
+            'expires_at' => $limit->expires_at?->toIso8601String(),
+        ];
     }
 }

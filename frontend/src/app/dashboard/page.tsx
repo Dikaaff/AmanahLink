@@ -17,6 +17,7 @@ import {
   errorMessage,
   type Campaign,
   type Disbursement,
+  type DisbursementLimit,
   type Donation,
   type Merchant,
   type Paginated,
@@ -55,6 +56,15 @@ export default function DashboardPage() {
   const [limitError, setLimitError] = useState<string | null>(null);
   const [limitNotice, setLimitNotice] = useState<string | null>(null);
 
+  const isAdmin = user?.role === "admin";
+  const [limitViewCampaignId, setLimitViewCampaignId] = useState("");
+  const [limitInfoState, setLimitInfoState] = useState<{
+    campaignId: string;
+    data: DisbursementLimit | null;
+    error: string | null;
+    loading: boolean;
+  } | null>(null);
+
   const [submittingId, setSubmittingId] = useState<number | null>(null);
 
   const [disbursement, setDisbursement] = useState({
@@ -89,6 +99,17 @@ export default function DashboardPage() {
 
     return merchants.filter((merchant) => allowed.has(merchant.mcc));
   }, [merchants, selectedCampaign]);
+
+  const viewedLimit =
+    !isAdmin &&
+    limitViewCampaignId !== "" &&
+    limitInfoState?.campaignId === limitViewCampaignId
+      ? limitInfoState
+      : null;
+
+  const limitInfo = viewedLimit?.data ?? null;
+  const limitInfoError = viewedLimit?.error ?? null;
+  const loadingLimitInfo = viewedLimit?.loading ?? false;
 
   const loadCampaigns = useCallback(async () => {
     if (!isFundraiser) return;
@@ -148,6 +169,39 @@ export default function DashboardPage() {
       cancelled = true;
     };
   }, [ready, user, isFundraiser, donationPage, disbursementPage, router]);
+
+  useEffect(() => {
+    if (isAdmin || !limitViewCampaignId) return;
+
+    let cancelled = false;
+
+    api
+      .disbursementLimit(Number(limitViewCampaignId))
+      .then((response) => {
+        if (!cancelled) {
+          setLimitInfoState({
+            campaignId: limitViewCampaignId,
+            data: response.data,
+            error: null,
+            loading: false,
+          });
+        }
+      })
+      .catch((caught) => {
+        if (!cancelled) {
+          setLimitInfoState({
+            campaignId: limitViewCampaignId,
+            data: null,
+            error: errorMessage(caught),
+            loading: false,
+          });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, limitViewCampaignId]);
 
   const stats = useMemo(() => {
     const total = campaigns.reduce(
@@ -415,18 +469,21 @@ export default function DashboardPage() {
 
           <section className="card p-6">
             <h2 className="text-xl font-semibold text-stone-900">
-              Atur limit pencairan
+              {isAdmin ? "Atur limit pencairan" : "Limit pencairan"}
             </h2>
             <p className="mt-1 max-w-2xl text-sm text-stone-600">
               Limit membatasi pencairan baru per kampanye. Saldo tetap diverifikasi
               dari ledger dan limit yang kedaluwarsa akan ditolak oleh backend.
+              {isAdmin
+                ? ""
+                : " Limit ditetapkan oleh admin; Anda hanya dapat melihat pemakaian terbaru."}
             </p>
 
             {disbursable.length === 0 ? (
               <div className="mt-4">
                 <Alert tone="info">Belum ada kampanye aktif atau funded.</Alert>
               </div>
-            ) : (
+            ) : isAdmin ? (
               <form onSubmit={handleLimitSubmit} className="mt-5 grid gap-4 md:grid-cols-4">
                 <div>
                   <label htmlFor="limit-campaign" className="field-label">
@@ -518,6 +575,86 @@ export default function DashboardPage() {
                   </button>
                 </div>
               </form>
+              ) : (
+                <div className="mt-5 space-y-4">
+                  <div className="max-w-sm">
+                    <label htmlFor="limit-view-campaign" className="field-label">
+                      Kampanye
+                    </label>
+                    <select
+                      id="limit-view-campaign"
+                      className="input"
+                      value={limitViewCampaignId}
+                      onChange={(event) => {
+                        const campaignId = event.target.value;
+                        setLimitViewCampaignId(campaignId);
+                        setLimitInfoState(
+                          campaignId === ""
+                            ? null
+                            : {
+                                campaignId,
+                                data: null,
+                                error: null,
+                                loading: true,
+                              },
+                        );
+                      }}
+                    >
+                      <option value="">Pilih kampanye</option>
+                      {disbursable.map((campaign) => (
+                        <option key={campaign.id} value={campaign.id}>
+                          {campaign.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {limitInfoError ? <Alert>{limitInfoError}</Alert> : null}
+                  {loadingLimitInfo ? (
+                    <p className="text-sm text-stone-500">Memuat limit…</p>
+                  ) : null}
+
+                  {!loadingLimitInfo &&
+                  !limitInfoError &&
+                  limitViewCampaignId &&
+                  !limitInfo ? (
+                    <Alert tone="info">
+                      Admin belum menetapkan limit untuk kampanye ini, sehingga
+                      pencairan belum bisa dilakukan.
+                    </Alert>
+                  ) : null}
+
+                  {limitInfo ? (
+                    <dl className="grid gap-4 text-sm md:grid-cols-3">
+                      <div>
+                        <dt className="field-label">Limit harian</dt>
+                        <dd className="text-stone-900">
+                          {rupiah(limitInfo.daily_limit)}
+                        </dd>
+                        <dd className="text-xs text-stone-500">
+                          Terpakai hari ini: {rupiah(limitInfo.used_today)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="field-label">Limit bulanan</dt>
+                        <dd className="text-stone-900">
+                          {rupiah(limitInfo.monthly_limit)}
+                        </dd>
+                        <dd className="text-xs text-stone-500">
+                          Terpakai bulan ini: {rupiah(limitInfo.used_this_month)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="field-label">Berlaku sampai</dt>
+                        <dd className="text-stone-900">
+                          {limitInfo.expires_at
+                            ? dateTime(limitInfo.expires_at)
+                            : "Tanpa batas waktu"}
+                        </dd>
+                      </div>
+                    </dl>
+                  ) : null}
+                </div>
             )}
           </section>
 

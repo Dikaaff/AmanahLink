@@ -398,6 +398,11 @@ export const api = {
     return request<Paginated<Merchant>>(`/merchants?${params.toString()}`);
   },
 
+  disbursementLimit: (campaignId: number) =>
+    request<{ data: DisbursementLimit | null }>(
+      `/campaigns/${campaignId}/disbursement-limit`,
+    ),
+
   upsertDisbursementLimit: (
     campaignId: number,
     body: { daily_limit: string; monthly_limit: string; expires_at: string },

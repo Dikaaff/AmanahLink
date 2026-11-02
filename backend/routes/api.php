@@ -38,6 +38,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('campaigns/{campaign}/freeze', [CampaignController::class, 'freeze']);
         Route::post('campaigns/{campaign}/unfreeze', [CampaignController::class, 'unfreeze']);
         Route::post('campaigns/{campaign}/close', [CampaignController::class, 'close']);
+        Route::get('campaigns/{campaign}/disbursement-limit', [DisbursementLimitController::class, 'show']);
         Route::put('campaigns/{campaign}/disbursement-limit', [DisbursementLimitController::class, 'upsert']);
 
         Route::get('donations', [DonationController::class, 'index']);

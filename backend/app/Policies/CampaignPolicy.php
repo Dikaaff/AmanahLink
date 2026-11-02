@@ -55,6 +55,11 @@ final class CampaignPolicy
         return $user->isAdmin();
     }
 
+    public function viewLimits(User $user, Campaign $campaign): bool
+    {
+        return $user->getKey() === $campaign->user_id || $user->isAdmin();
+    }
+
     public function close(User $user, Campaign $campaign): bool
     {
         return $user->role->canFreezeCampaigns();
