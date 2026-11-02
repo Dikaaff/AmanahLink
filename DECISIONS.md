@@ -191,6 +191,15 @@
 
 ---
 
+### D-024 — Limit disbursement diterbitkan admin, campaigner hanya membaca
+
+- **Keputusan:** `PUT /api/v1/campaigns/{id}/disbursement-limit` tetap **admin-only** (`CampaignPolicy::manageLimits`). Ditambahkan `GET /api/v1/campaigns/{id}/disbursement-limit` yang boleh dibaca pemilik kampanye dan admin. UI dashboard campaigner menampilkan limit sebagai read-only dan menjelaskan bahwa limit diterbitkan platform; form edit hanya muncul untuk admin.
+- **Alasan:** Limit harian/bulanan adalah kontrol risiko platform atas penggunaan dana terikat; membiarkan penggalang menaikkan limitnya sendiri menghapus kontrol itu. PRD §8 menulis campaigner boleh menerbitkan limit, tetapi kode, test (`DisbursementApiTest`), dan alur review admin sudah konsisten admin-only — memperbaiki PRD lebih murah dan lebih aman daripada melonggarkan policy.
+- **Alternatif yang ditolak:** (a) Campaigner boleh menerbitkan limit — melemahkan kontrol dan bertentangan dengan D-002 (platform yang menjamin kategori). (b) Menghapus form dari UI tanpa endpoint baca — campaigner tidak bisa tahu sisa limit sehingga tidak bisa merencanakan pencairan.
+- **Konsekuensi:** PRD §8 dan matriks izin harus dikoreksi (T-11). Form limit di `dashboard/page.tsx` wajib diberi guard role (G-16). Test baru: campaigner GET 200, campaigner PUT 403, admin PUT 200.
+
+---
+
 ## 2. Register Asumsi (default yang saya pakai sampai dikoreksi)
 | ID | Asumsi | Default bila salah | Dampak bila berubah |
 |---|---|---|---|
@@ -235,3 +244,4 @@
 | 1.8 | 2026-11-02 | D-019 timestamp + audit penolakan webhook; README utama lengkap |
 | 1.9 | 2026-11-02 | D-020 metrik p95 authorize + dashboard admin; US-25 selesai, Epic 6 tuntas |
 | 1.10 | 2026-11-02 | D-023 CSP nonce + render dinamis; security headers frontend terverifikasi |
+| 1.11 | 2026-11-03 | D-024 limit disbursement admin-only (baca untuk pemilik); audit PRD/backlog + rencana T-01…T-14 |

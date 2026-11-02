@@ -176,6 +176,8 @@ Kesenjangan yang harus ditutup (ID dipakai di rencana kerja):
 | G-12 | FR-08 menyebut VA **dan QRIS**; `PaymentInstruction` hanya VA | `PaymentGateway`/`FakePaymentGateway` | ekspektasi demo meleset | T-11 |
 | G-13 | Token Sanctum disimpan di `localStorage`; CSP nonce sudah aktif tetapi risiko XSS residual tetap ada | `frontend/src/lib/api.ts` | pencurian token bila XSS lolos | T-07 |
 | G-14 | A-05 single-tenant masih asumsi, bukan keputusan eksplisit | `DECISIONS.md` A-05 | skema sulit diubah bila multi-org | T-11 (terima/tolak) |
+| G-15 | Registry merchant tidak punya API/UI; campaigner harus mengetik ID merchant (seed saja) | `routes/api.php` tidak punya route merchant; `dashboard/page.tsx:537` | demo & pemakaian nyata rapuh; PRD §8 "kelola merchant" tak terpenuhi | T-02 |
+| G-16 | Form limit disbursement tampil di dashboard campaigner, tetapi API `manageLimits` admin-only | `dashboard/page.tsx`, `CampaignPolicy::manageLimits` | campaigner mendapat 403 dari UI sendiri | T-02 |
 
 ## Protokol handoff untuk agent berikutnya
 
@@ -244,8 +246,8 @@ selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
 
 | ID | Task | Estimasi | Bukti/DoD |
 |---|---|---|---|
-| T-01 | Peta UI↔API: daftar halaman yang ada vs aksi API yang belum punya layar (donasi, riwayat donasi, limit & disbursement, upload/review nota, close/refund, freeze) | 1h | tabel di file ini; tanpa kode |
-| T-02 | Implementasikan layar yang kurang dengan fetch API asli (tanpa placeholder), termasuk state loading/error/empty dan guard role | 8h | `npm run lint` + `npm run build`; setiap layar memanggil endpoint nyata |
+| T-01 | Peta UI↔API: daftar halaman yang ada vs aksi API yang belum punya layar (donasi, riwayat donasi, limit & disbursement, upload/review nota, close/refund, freeze) | 1h | ✅ **selesai 2026-11-03** — hasil di §T-01 |
+| T-02 | Implementasikan layar yang kurang dengan fetch API asli (tanpa placeholder), termasuk state loading/error/empty, guard role, dan perbaikan G-15/G-16 | 8h | `npm run lint` + `npm run build`; setiap layar memanggil endpoint nyata |
 | T-03 | Skrip E2E manual (langkah + data seed) dan jalankan sekali dari UI ke backend: register → campaign → donate → webhook fake → disburse → receipt → review → close/refund | 2h | tabel hasil per langkah + screenshot/response; **GATE 5** |
 
 ### Fase 6 — security & kepatuhan (GATE 6)
@@ -277,10 +279,58 @@ selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
 **Total sisa ± 51 jam** (≈13 sesi 4 jam), belum termasuk perbaikan yang muncul
 saat E2E/security review.
 
+## T-01 — Peta UI ↔ API (2026-11-03)
+
+Hasil audit `frontend/src/app/**` + `src/lib/api.ts` terhadap `routes/api.php`.
+Kesimpulan: **UI MVP sudah menutupi hampir semua endpoint**, bukan "belum ada
+frontend". Yang kurang adalah dua hal fungsional (registry merchant, guard form
+limit) dan beberapa state/UX.
+
+| Aksi | Endpoint | Layar | Status |
+|---|---|---|---|
+| Register / login / logout / me | `/auth/*` | `/register`, `/login`, nav + `auth-provider` | ✅ |
+| Feed kampanye publik | `GET /campaigns` | `/` | ✅ |
+| Detail + progress + label MCC | `GET /campaigns/{slug}` | `/campaigns/[slug]` | ✅ |
+| Donasi + instruksi VA | `POST /donations` | form di `/campaigns/[slug]` | ✅ (tanpa tombol simulasi bayar) |
+| Riwayat donasi sendiri | `GET /donations` | `/dashboard` | ✅ |
+| Kampanye milik sendiri | `GET /campaigns/mine` | `/dashboard` | ✅ |
+| Buat / edit draft | `POST /campaigns`, `PUT /campaigns/{id}` | `/dashboard/new`, `/dashboard/campaigns/[slug]/edit` | ✅ |
+| Ajukan review | `POST /campaigns/{id}/submit` | `/dashboard` | ✅ |
+| Review queue + approve/reject | `GET /campaigns/review-queue`, `POST .../review` | `/admin/campaigns` | ✅ |
+| Freeze / unfreeze / close | `POST .../freeze`, `.../unfreeze`, `.../close` | `/admin/campaigns` | ✅ |
+| Atur limit disbursement | `PUT /campaigns/{id}/disbursement-limit` | form di `/dashboard` | ⚠️ G-16 (form tampil untuk campaigner, API admin-only) |
+| Authorize disbursement | `POST /disbursements` | form di `/dashboard` | ⚠️ G-15 (merchant ID diketik manual) |
+| Riwayat disbursement | `GET /disbursements` | `/dashboard` | ✅ |
+| Upload nota | `POST /disbursements/{id}/receipts` | `/dashboard` | ✅ |
+| Review nota | `GET /receipts`, `POST /receipts/{id}/review` | `/admin/receipts` | ✅ |
+| Notifikasi | `/notifications*` | `/notifications` | ✅ |
+| Audit log | `GET /audit-logs` | `/admin/audit-logs` | ✅ |
+| Webhook events + replay | `/admin/webhook-events*` | `/admin/webhooks` | ✅ |
+| Dashboard admin | `GET /admin/dashboard` | `/admin` | ✅ |
+| Registry merchant | — (tidak ada route) | — | ❌ G-15 |
+| Verifikasi email | — (tidak ada route) | — | ❌ G-01 |
+
+**Rincian T-02 (urutan kerja):**
+
+1. **T-02a — Registry merchant (backend):** admin CRUD (`POST/PUT /merchants`,
+   `PATCH /merchants/{id}/verify`), plus `GET /merchants` untuk user login
+   (campaigner/admin) yang hanya mengembalikan merchant `verified` dengan field
+   minimal (id, name, mcc, kategori, city). Test: admin CRUD, campaigner baca
+   terbatas, non-staff 403.
+2. **T-02b — Pemilih merchant di UI:** ganti input ID manual dengan `<select>`
+   dari `GET /merchants`; tampilkan MCC + kategori + status verifikasi.
+3. **T-02c — Guard limit (D-024):** tambahkan `GET /campaigns/{id}/disbursement-limit`
+   (pemilik + admin) dan sembunyikan form edit untuk non-admin; tampilkan sisa
+   limit read-only. Test: campaigner GET 200, campaigner PUT 403, admin PUT 200.
+4. **T-02d — Status nota campaigner:** daftar nota per disbursement (status,
+   confidence, alasan reject) agar campaigner tahu harus upload ulang.
+5. **T-02e — State kosong/error:** pastikan setiap layar punya empty state dan
+   tombol retry; jangan ada teks placeholder.
+
 ## Langkah berikutnya (ringkas)
 
-1. **T-01** (peta UI↔API) → **T-02** (layar kurang) → **T-03** (E2E manual) →
-   GATE 5.
+1. **T-02a/T-02b** (registry merchant + pemilihnya) → **T-02c** (keputusan
+   limit) → **T-02d/T-02e** → **T-03** (E2E manual) → GATE 5.
 2. **T-04** verifikasi email (FR-03 satu-satunya FR `M` yang belum ada).
 3. **T-07** ASVS + **T-11** sinkronisasi dokumen sebelum menyentuh Fase 7.
 
