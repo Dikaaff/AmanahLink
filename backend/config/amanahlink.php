@@ -46,6 +46,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Webhook Retry & Dead Letter (US-29)
+    |--------------------------------------------------------------------------
+    |
+    | Seconds to wait before retry #1, #2, #3. A failure past the last delay
+    | moves the event to `dead_letter`. The scheduler polls every minute.
+    |
+    */
+    'webhook_retry_delays' => array_map('intval', explode(',', (string) env('AMANAH_WEBHOOK_RETRY_DELAYS', '60,300,1800'))),
+
+    'webhook_dlq_alert_depth' => (int) env('AMANAH_WEBHOOK_DLQ_ALERT_DEPTH', 1000),
+
+    /*
+    |--------------------------------------------------------------------------
     | OCR
     |--------------------------------------------------------------------------
     */

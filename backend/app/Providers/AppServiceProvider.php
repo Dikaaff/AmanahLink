@@ -49,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::define('view-dashboard', fn (User $user): bool => $user->isAdmin());
+        Gate::define('manage-webhooks', fn (User $user): bool => $user->isAdmin());
 
         RateLimiter::for('api', function (Request $request): Limit {
             $key = $request->user()?->getAuthIdentifier() ?? $request->ip();

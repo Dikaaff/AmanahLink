@@ -17,7 +17,10 @@ use Illuminate\Validation\ValidationException;
 
 final class CampaignService
 {
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(
+        private readonly AuditLogger $audit,
+        private readonly CampaignNotificationService $notifications,
+    ) {}
 
     /**
      * @param  array{title: string, description: string, target_amount: string|int, allowed_mcc_array: list<string>, deadline_at: string}  $data
@@ -107,7 +110,7 @@ final class CampaignService
 
     public function review(Campaign $campaign, User $reviewer, string $decision, ?string $reason = null): Campaign
     {
-        return DB::transaction(function () use ($campaign, $reviewer, $decision, $reason): Campaign {
+        $reviewed = DB::transaction(function () use ($campaign, $reviewer, $decision, $reason): Campaign {
             $locked = Campaign::query()->whereKey($campaign->getKey())->lockForUpdate()->firstOrFail();
 
             $approve = $decision === 'approve';
@@ -137,11 +140,19 @@ final class CampaignService
 
             return $locked->refresh();
         });
+
+        $this->notifications->stateChanged(
+            $reviewed,
+            $reviewed->status,
+            $reviewed->rejection_reason,
+        );
+
+        return $reviewed;
     }
 
     public function freeze(Campaign $campaign, User $actor, string $reason): Campaign
     {
-        return DB::transaction(function () use ($campaign, $actor, $reason): Campaign {
+        $frozen = DB::transaction(function () use ($campaign, $actor, $reason): Campaign {
             $locked = Campaign::query()->whereKey($campaign->getKey())->lockForUpdate()->firstOrFail();
             $previous = $locked->status;
 
@@ -160,11 +171,15 @@ final class CampaignService
 
             return $locked->refresh();
         });
+
+        $this->notifications->stateChanged($frozen, $frozen->status, $frozen->freeze_reason);
+
+        return $frozen;
     }
 
     public function unfreeze(Campaign $campaign, User $actor): Campaign
     {
-        return DB::transaction(function () use ($campaign, $actor): Campaign {
+        $unfrozen = DB::transaction(function () use ($campaign, $actor): Campaign {
             $locked = Campaign::query()->whereKey($campaign->getKey())->lockForUpdate()->firstOrFail();
             $previous = $locked->status;
             $reason = $locked->freeze_reason;
@@ -189,6 +204,10 @@ final class CampaignService
 
             return $locked->refresh();
         });
+
+        $this->notifications->stateChanged($unfrozen, $unfrozen->status);
+
+        return $unfrozen;
     }
 
     private function transition(Campaign $campaign, CampaignStatus $next): void

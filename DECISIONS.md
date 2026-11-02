@@ -164,6 +164,24 @@
 
 ---
 
+### D-021 — Notifikasi in-app ditulis langsung, email lewat queue terpisah
+
+- **Keputusan:** Perubahan state kampanye (approve/reject/freeze/unfreeze) memanggil `CampaignNotificationService` setelah transaksi DB selesai. Service menulis baris `notifications` (channel `database`) secara sinkron dan meng-queue `CampaignStateChangedMail` lewat `Mail::to()->queue()`. Endpoint inbox: `GET /notifications` (cursor 25, filter `unread`), `POST /notifications/{id}/read`, `POST /notifications/read-all`; semua selalu di-scope ke `$request->user()`.
+- **Alasan:** AC US-28 meminta **dua** artefak sekaligus: baris `notifications` dan email ter-queue. Menjadikan satu `Notification` ber-`ShouldQueue` akan menunda baris in-app sampai worker berjalan; mengirim email sinkron membuat request review bergantung pada SMTP. Memisahkan keduanya membuat inbox langsung terisi dan kegagalan email tidak membatalkan keputusan review.
+- **Alternatif yang ditolak:** (a) Satu notifikasi `ShouldQueue` untuk semua channel — baris in-app tertunda dan tidak ada saat approver menerima respons. (b) Hanya email — tidak ada inbox in-app. (c) Menulis baris notifikasi di dalam transaksi review — baris bisa ada meski transaksi rollback.
+- **Konsekuensi:** Notifikasi dikirim setelah commit, sehingga kegagalan pengiriman tidak me-rollback perubahan status. Email memerlukan queue worker; inbox tetap berfungsi tanpanya. Notifikasi hanya untuk pemilik kampanye; penerima lain (donatur) di luar scope MVP.
+
+---
+
+### D-022 — Retry webhook dengan backoff di database, DLQ di-replay admin secara idempoten
+
+- **Keputusan:** `webhook_events` mendapat `next_attempt_at` dan `dead_lettered_at`. `WebhookEvent::markFailed()` menaikkan `attempts`; kegagalan ke-1/2/3 menjadwalkan retry pada +60/+300/+1800 detik (`AMANAH_WEBHOOK_RETRY_DELAYS`), kegagalan ke-4 memindahkan event ke `dead_letter`. `webhooks:retry` (dijadwalkan tiap menit, `withoutOverlapping`) mengambil event `failed` yang jatuh tempo dan meng-dispatch `ProcessWebhookEvent`. Admin dapat me-replay event `failed`/`dead_letter` melalui `POST /admin/webhook-events/{id}/replay`; event `processed` ditolak `409 CONFLICT_STATE`.
+- **Alasan:** Jadwal retry harus bertahan terhadap restart worker, jadi disimpan di database, bukan bergantung pada `delay` job di queue. Endpoint provider tetap harus menerima event duplikat kapan pun; `handle()` tidak memproses ulang event yang sudah `failed`/`dead_letter`, sehingga pengiriman ulang provider tidak melewati backoff. Replay aman karena `DonationSettlementService::settle()` sudah idempoten per `payment_ref`.
+- **Alternatif yang ditolak:** (a) Mengandalkan retry queue worker (`$tries`/`backoff`) — hitungan percobaan hilang saat queue di-flush dan tidak bisa diinspeksi. (b) Cron menghapus event setelah gagal — kehilangan payload untuk replay. (c) Replay membuat event baru — melanggar unique `external_id` dan mengaburkan jejak audit. (d) Alert DLQ via layanan eksternal — observability baru ada di Fase 8; sementara log `critical` sudah cukup sebagai sinyal.
+- **Konsekuensi:** Butuh scheduler berjalan; tanpa itu retry tidak pernah dieksekusi. `attempts` di event adalah jumlah kegagalan pemrosesan, bukan jumlah pengiriman provider. Kedalaman DLQ dilaporkan lewat log `critical` ketika melewati `AMANAH_WEBHOOK_DLQ_ALERT_DEPTH` (default 1000).
+
+---
+
 ## 2. Register Asumsi (default yang saya pakai sampai dikoreksi)
 | ID | Asumsi | Default bila salah | Dampak bila berubah |
 |---|---|---|---|

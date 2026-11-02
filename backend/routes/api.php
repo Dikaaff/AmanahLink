@@ -9,8 +9,10 @@ use App\Http\Controllers\Api\V1\CampaignController;
 use App\Http\Controllers\Api\V1\DisbursementController;
 use App\Http\Controllers\Api\V1\DisbursementLimitController;
 use App\Http\Controllers\Api\V1\DonationController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\ReceiptController;
+use App\Http\Controllers\Api\V1\WebhookEventController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -45,7 +47,13 @@ Route::prefix('v1')->group(function (): void {
         Route::get('receipts', [ReceiptController::class, 'index']);
         Route::post('receipts/{receipt}/review', [ReceiptController::class, 'review']);
 
+        Route::get('notifications', [NotificationController::class, 'index']);
+        Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
+        Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead']);
+
         Route::get('admin/dashboard', AdminDashboardController::class);
+        Route::get('admin/webhook-events', [WebhookEventController::class, 'index']);
+        Route::post('admin/webhook-events/{webhookEvent}/replay', [WebhookEventController::class, 'replay']);
 
         Route::get('audit-logs', [AuditLogController::class, 'index']);
         Route::match(['put', 'patch', 'delete'], 'audit-logs/{auditLog}', [AuditLogController::class, 'immutable']);

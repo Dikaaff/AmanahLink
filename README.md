@@ -70,8 +70,8 @@ Proyek berada pada tahap **backend MVP**. Sumber kebenaran status ada di [`docs/
 | 7 — Test Suite | k6, konkurensi, E2E | ⬜ belum |
 | 8 — DevOps | compose, CI, observability, runbook | ⬜ belum |
 
-**Story yang sudah selesai:** US-01 … US-27.
-**Berikutnya:** US-28 (notifikasi), US-29 (retry/DLQ webhook), lalu frontend dan fase non-fungsional.
+**Story yang sudah selesai:** US-01 … US-29 (seluruh backlog MVP).
+**Berikutnya:** Fase 5 — frontend Next.js, lalu security, test suite, dan DevOps.
 
 ---
 
@@ -95,6 +95,12 @@ Proyek berada pada tahap **backend MVP**. Sumber kebenaran status ada di [`docs/
 - **Idempotency-Key** per pengguna, payload di-hash, replay mengembalikan body identik.
 - Webhook settlement dengan **HMAC-SHA256**, toleransi timestamp 5 menit, deduplikasi `external_id`, dan audit setiap penolakan.
 - Fee platform 2% dicatat sebagai transaksi terpisah.
+- **Retry & dead-letter:** event gagal dicoba ulang dengan backoff 1m/5m/30m oleh `webhooks:retry`; setelah itu masuk DLQ dan hanya bisa di-replay admin (idempoten).
+
+### Notifikasi
+- Perubahan state kampanye (approve, reject, freeze, unfreeze) menulis baris `notifications` untuk pemilik kampanye.
+- Email dikirim lewat **queue** (`CampaignStateChangedMail`), terpisah dari baris in-app.
+- `GET /notifications`, tandai satu, atau tandai semua sebagai dibaca (`read_at`).
 
 ### Disbursement & Ledger
 - Limit harian/bulanan/kedaluwarsa per kampanye.
@@ -115,6 +121,7 @@ Proyek berada pada tahap **backend MVP**. Sumber kebenaran status ada di [`docs/
 - Freeze/unfreeze kampanye tanpa membatalkan disbursement yang sudah `captured`.
 - Audit log viewer read-only dengan filter actor/action/tanggal dan cursor pagination.
 - `PUT/PATCH/DELETE /audit-logs/{id}` selalu `405`; audit row tidak dapat diubah atau dihapus.
+- Webhook event viewer untuk admin dengan filter status/provider, plus replay dari dead-letter queue.
 
 ---
 
@@ -126,6 +133,8 @@ flowchart LR
     API --> DB[("MySQL 8.4")]
     API --> Q[("Queue<br/>database")]
     Q --> JOB["ProcessReceiptOcr"]
+    Q --> RETRY["ProcessWebhookEvent<br/>(backoff 1m/5m/30m)"]
+    SCH["Scheduler<br/>webhooks:retry"] --> Q
     JOB --> OCR["Flask OCR<br/>POST /extract"]
     OCR --> FP["Provider fake<br/>(offline, deterministik)"]
     OCR --> OP["OpenAI Vision<br/>(butuh API key)"]
@@ -467,7 +476,12 @@ cd ocr-service
 | `POST` | `/disbursements/{transaction}/receipts` | owner/admin | Multipart `file` (JPEG/PNG) |
 | `GET` | `/receipts` | verifier/admin | Filter `status`, mis. `needs_review` |
 | `POST` | `/receipts/{receipt}/review` | verifier/admin | Approve/reject nota |
+| `GET` | `/notifications` | token | Inbox sendiri; `?unread=1`, cursor 25 |
+| `POST` | `/notifications/{id}/read` | token | Mengisi `read_at` |
+| `POST` | `/notifications/read-all` | token | Tandai semua telah dibaca |
 | `GET` | `/admin/dashboard` | admin | Saldo ledger vs cache, mismatch, antrean OCR, p95 authorize |
+| `GET` | `/admin/webhook-events` | admin | Filter `status`/`provider`/`external_id`, cursor 25 |
+| `POST` | `/admin/webhook-events/{id}/replay` | admin | Replay event `failed`/`dead_letter` (idempoten) |
 | `GET` | `/audit-logs` | verifier/admin | Cursor pagination + filter |
 | `PUT/PATCH/DELETE` | `/audit-logs/{id}` | — | Selalu `405` (append-only) |
 | `POST` | `/webhooks/payments/{provider}` | HMAC | Tanpa bearer token |
@@ -516,7 +530,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/donations \
 | Endpoint | Model |
 |---|---|
 | `/campaigns`, `/campaigns/mine`, `/donations`, `/receipts` | Offset (`page`, 15 per halaman) |
-| `/audit-logs` | Cursor (`cursor`, 25 per halaman) |
+| `/audit-logs`, `/notifications`, `/admin/webhook-events` | Cursor (`cursor`, 25 per halaman) |
 
 ---
 
@@ -536,6 +550,8 @@ curl -X POST http://127.0.0.1:8000/api/v1/donations \
 | Review nota | — | — | ✓ | ✓ |
 | Freeze / close kampanye | — | — | — | ✓ |
 | Lihat audit log | — | — | ✓ | ✓ |
+| Inbox notifikasi | ✓ (sendiri) | ✓ (sendiri) | ✓ (sendiri) | ✓ (sendiri) |
+| Lihat/replay DLQ webhook | — | — | — | ✓ |
 
 ### Penegakan MCC berlapis
 
@@ -600,7 +616,7 @@ vendor/bin/pint --format agent <file-yang-diubah>
 | [`docs/prd.md`](docs/prd.md) | Problem, persona, FR/NFR, business rules, state machine, matriks izin, katalog error |
 | [`docs/backlog.md`](docs/backlog.md) | 29 user story, acceptance criteria Gherkin, estimasi, traceability FR → US |
 | [`docs/progress.md`](docs/progress.md) | **Status eksekusi per fase/story + bukti test + langkah berikutnya** |
-| [`DECISIONS.md`](DECISIONS.md) | Register keputusan arsitektur D-001 … D-019 beserta alasan dan alternatif yang ditolak |
+| [`DECISIONS.md`](DECISIONS.md) | Register keputusan arsitektur D-001 … D-022 beserta alasan dan alternatif yang ditolak |
 
 > AI/engineer berikutnya: baca `docs/progress.md` dan `DECISIONS.md` sebelum menulis kode, lalu perbarui `docs/progress.md` setelah setiap story selesai.
 
@@ -609,7 +625,8 @@ vendor/bin/pint --format agent <file-yang-diubah>
 ## Batasan yang Diketahui
 
 - **Frontend belum ada.** API siap, tetapi belum ada aplikasi Next.js (Fase 5).
-- **Notifikasi (US-28) dan retry/DLQ (US-29) belum diimplementasikan.**
+- **Email notifikasi memerlukan queue worker** (`php artisan queue:work`) dan retry webhook memerlukan scheduler (`php artisan schedule:work`). Tanpa keduanya, baris in-app tetap dibuat tetapi email tertunda dan retry tidak berjalan.
+- **Alert DLQ > 1000 baru berupa log `critical`** dari `webhooks:retry`; pengiriman alert nyata menunggu observability Fase 8.
 - **p95 dashboard mengukur waktu proses aplikasi**, bukan latency jaringan end-to-end; pemangkasan `request_metrics` belum ada (Fase 8).
 - **Adapter Midtrans belum diisi.** Hanya driver `fake` yang aktif; interface dan alur webhook sudah siap.
 - **Adapter OpenAI OCR belum diuji dengan API key nyata.** Jalur `fake` yang diuji otomatis.

@@ -10,8 +10,8 @@
 |---|---|
 | Terakhir diperbarui | 2026-11-02 |
 | Fase selesai | Fase 0, 1, 2, 3, 4 |
-| Fase berjalan | Epic 7 — notifikasi (US-28) & retry/DLQ webhook (US-29) |
-| Status gate | Fase 4 ditutup; Epic 6 tuntas (US-25, US-26, US-27 ✅) |
+| Fase berjalan | Fase 5 — frontend Next.js |
+| Status gate | Seluruh 29 story backlog backend ✅ (Epic 6 dan Epic 7 tuntas) |
 | Referensi | `docs/prd.md`, `docs/backlog.md`, `DECISIONS.md` |
 
 ## Ringkasan Fase
@@ -58,8 +58,8 @@
 | US-25 | Dashboard monitoring | ✅ | `tests/Feature/Api/AdminDashboardApiTest.php` |
 | US-26 | Freeze kampanye | ✅ | `tests/Feature/Api/CampaignFreezeApiTest.php` |
 | US-27 | Audit log viewer | ✅ | `tests/Feature/Api/AuditLogApiTest.php` |
-| US-28 | Notifikasi perubahan state | ⬜ | — |
-| US-29 | Retry & dead-letter queue | ⬜ | — |
+| US-28 | Notifikasi perubahan state | ✅ | `tests/Feature/Api/NotificationApiTest.php` |
+| US-29 | Retry & dead-letter queue | ✅ | `tests/Feature/Api/WebhookRetryApiTest.php` |
 
 ## Catatan implementasi penting
 
@@ -81,6 +81,18 @@
   `request_metrics` (best-effort), `GET /admin/dashboard` (admin) melaporkan
   total settled/disbursed/refund, saldo dari ledger + cache + jumlah mismatch,
   antrean OCR & `needs_review`, serta p95 nearest-rank 24 jam (D-020).
+- **Epic 7 — notifikasi (2026-11-02):** perubahan state kampanye (approve, reject,
+  freeze, unfreeze) menulis baris `notifications` untuk pemilik kampanye **dan**
+  meng-queue `CampaignStateChangedMail`; keduanya sengaja dipisah agar antrean
+  email tidak menahan inbox in-app. Endpoint `GET /notifications`,
+  `POST /notifications/{id}/read`, `POST /notifications/read-all` (D-021).
+- **Epic 7 — retry/DLQ (2026-11-02):** `webhook_events` mendapat
+  `next_attempt_at` + `dead_lettered_at`; kegagalan ke-1/2/3 menjadwalkan retry
+  +60s/+300s/+1800s, kegagalan ke-4 memindahkan event ke `dead_letter`.
+  `webhooks:retry` dijadwalkan tiap menit dan meng-dispatch
+  `ProcessWebhookEvent`. Admin dapat melihat event (`GET /admin/webhook-events`)
+  dan me-replay event `failed`/`dead_letter` (`POST .../replay`) secara idempoten.
+  Kedalaman DLQ > `AMANAH_WEBHOOK_DLQ_ALERT_DEPTH` menulis log `critical` (D-022).
 - **Epic 6 — freeze/audit (2026-11-02):** freeze/unfreeze kampanye menyimpan `frozen_at` +
   `freeze_reason`, memblokir donasi/pencairan baru tanpa membatalkan transaksi
   captured, dan mengembalikan state `active`/`funded` saat unfreeze (D-017).
@@ -91,6 +103,10 @@
   `5812` yang tidak ada di registry (melanggar FK `merchants.mcc`).
 - Test backend memakai **MySQL** (`amanahlink_test`), bukan SQLite (D-010).
   Jalankan dari folder `backend/`: `php artisan test`.
+- Notifikasi email dan retry webhook butuh proses runtime: `php artisan queue:work`
+  dan `php artisan schedule:work` (atau cron `schedule:run` tiap menit).
+- Migration baru yang perlu dijalankan: `notifications` dan kolom retry
+  `webhook_events` (`php artisan migrate`).
 - Test OCR berjalan di virtualenv lokal `ocr-service/.venv` (di-gitignore):
   `.venv/Scripts/python -m pytest -q` (Windows) atau `.venv/bin/python -m pytest -q`.
 - Money selalu string + `brick/math`; jangan pakai float (D-005).
@@ -101,20 +117,22 @@
 - `ocr-service/Dockerfile` belum pernah di-build karena Docker Desktop belum
   tersedia di mesin ini (D-010). Kontrak Flask sudah diuji dengan pytest.
 - Adapter `openai` belum diuji dengan API key nyata; jalur `fake` yang diuji.
+- Pengiriman email notifikasi baru diuji dengan `Mail::fake()`; belum ada SMTP
+  nyata atau queue worker yang diverifikasi end-to-end.
+- Alert DLQ baru berupa log `critical`; belum ada integrasi alerting.
 - NFR-03/NFR-10 (availability, backup) tetap belum terverifikasi sampai staging.
 
 ## Log Verifikasi
 
 | Tanggal | Perintah | Hasil |
 |---|---|---|
-| 2026-11-02 | `php artisan test` (backend) | **142 passed, 515 assertions**, tanpa warning/failure |
+| 2026-11-02 | `php artisan test` (backend) | **153 passed, 585 assertions**, tanpa warning/failure |
 | 2026-11-02 | `.venv/Scripts/python -m pytest -q` (ocr-service) | **8 passed** |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih (hanya file terpilih karena repo tanpa Git) |
 
 ## Langkah berikutnya (berurutan)
 
-1. Epic 7 — notifikasi in-app + email (US-28) dan retry 1m/5m/30m +
-   dead-letter queue dengan replay idempoten (US-29).
-2. Fase 5 — frontend Next.js memakai API yang sudah lengkap.
-3. Fase 6–8 — security, test suite (k6/E2E), DevOps (compose, CI, runbook,
-   retensi `request_metrics`).
+1. Fase 5 — frontend Next.js memakai API yang sudah lengkap (termasuk inbox
+   notifikasi dan panel DLQ admin).
+2. Fase 6–8 — security, test suite (k6/E2E), DevOps (compose, CI, runbook,
+   retensi `request_metrics`, alert DLQ nyata).
