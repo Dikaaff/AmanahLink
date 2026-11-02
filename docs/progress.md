@@ -153,7 +153,7 @@
 | 2026-11-03 | `vendor/bin/pint --test` (4 file T-02d) | bersih |
 | 2026-11-03 | `npm run lint` + `npm run build` (panel status nota) | lint bersih; build 14 route `ƒ (Dynamic)` |
 | 2026-11-03 | `npm run lint` + `npm run build` (T-02e, state kosong/error) | lint bersih; build sukses, 14 route `ƒ (Dynamic)` |
-| 2026-11-03 | `bash scripts/e2e-manual.sh` (T-03, backend `QUEUE_CONNECTION=sync`, OCR fake) | **42 PASS, 0 FAIL** — register→approve→donasi→webhook→disburse→nota→review→refund; rincian `docs/e2e/gate5-run-2026-11-03.md` |
+| 2026-11-03 | `bash scripts/e2e-manual.sh` (T-03, backend `QUEUE_CONNECTION=sync`, OCR fake) | **43 PASS, 0 FAIL** — register→approve→donasi→webhook→disburse→nota→review→refund; rincian `docs/e2e/gate5-run-2026-11-03.md` |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
 
 ## Kesiapan dokumen (PRD, backlog, kontrak API) — audit 2026-11-03
@@ -256,7 +256,7 @@ selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
 |---|---|---|---|
 | T-01 | Peta UI↔API: daftar halaman yang ada vs aksi API yang belum punya layar (donasi, riwayat donasi, limit & disbursement, upload/review nota, close/refund, freeze) | 1h | ✅ **selesai 2026-11-03** — hasil di §T-01 |
 | T-02 | Implementasikan layar yang kurang dengan fetch API asli (tanpa placeholder), termasuk state loading/error/empty, guard role, dan perbaikan G-15/G-16 | 8h | `npm run lint` + `npm run build`; setiap layar memanggil endpoint nyata |
-| T-03 | Skrip E2E manual (langkah + data seed) dan jalankan sekali dari UI ke backend: register → campaign → donate → webhook fake → disburse → receipt → review → close/refund | 2h | ✅ **selesai 2026-11-03** — `scripts/e2e-manual.sh` (14 langkah, endpoint yang sama dengan UI), hasil 42 PASS/0 FAIL di `docs/e2e/gate5-run-2026-11-03.md`; klik UI manual belum dijalankan (tanpa browser driver), dicatat sebagai batas |
+| T-03 | Skrip E2E manual (langkah + data seed) dan jalankan sekali dari UI ke backend: register → campaign → donate → webhook fake → disburse → receipt → review → close/refund | 2h | ✅ **selesai 2026-11-03** — `scripts/e2e-manual.sh` (14 langkah, endpoint yang sama dengan UI), hasil 43 PASS/0 FAIL di `docs/e2e/gate5-run-2026-11-03.md`; klik UI manual belum dijalankan (tanpa browser driver), dicatat sebagai batas |
 
 ### Fase 6 — security & kepatuhan (GATE 6)
 
