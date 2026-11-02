@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\CampaignController;
 use App\Http\Controllers\Api\V1\DisbursementController;
 use App\Http\Controllers\Api\V1\DisbursementLimitController;
 use App\Http\Controllers\Api\V1\DonationController;
+use App\Http\Controllers\Api\V1\MerchantController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\ReceiptController;
@@ -41,6 +42,11 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('donations', [DonationController::class, 'index']);
         Route::post('donations', [DonationController::class, 'store']);
+
+        Route::get('merchants', [MerchantController::class, 'index']);
+        Route::post('merchants', [MerchantController::class, 'store']);
+        Route::put('merchants/{merchant}', [MerchantController::class, 'update']);
+        Route::patch('merchants/{merchant}/verify', [MerchantController::class, 'verify']);
 
         Route::post('disbursements', [DisbursementController::class, 'store']);
         Route::get('disbursements', [DisbursementController::class, 'index']);

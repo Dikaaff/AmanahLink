@@ -144,8 +144,9 @@
 | 2026-11-02 | `.venv/Scripts/python -m pytest -q` (ocr-service) | **8 passed** |
 | 2026-11-03 | `npm run lint` + `npm run build` (frontend) | bersih; 14 route, semuanya `ƒ (Dynamic)` |
 | 2026-11-03 | `curl -D -` ke `npm run start` (frontend) | `Content-Security-Policy` ada, `X-Powered-By` hilang, `X-Frame-Options: DENY`; HTML produksi **11/11** `<script>` ber-`nonce` |
-| 2026-11-03 | `composer audit` (backend) | **0 advisory** |
-| 2026-11-03 | `npm audit --omit=dev` / `npm audit` (frontend) | produksi **0 kerentanan**; 16 moderate hanya di toolchain lint (`minimatch` via `eslint-config-next`) tanpa fix non-breaking |
+| 2026-11-03 | `composer audit` (backend) | **0 advisory** || 2026-11-03 | `npm audit --omit=dev` / `npm audit` (frontend) | produksi **0 kerentanan**; 16 moderate hanya di toolchain lint (`minimatch` via `eslint-config-next`) tanpa fix non-breaking |
+| 2026-11-03 | `php artisan test --compact tests/Feature/Api/MerchantApiTest.php` | **10 passed, 43 assertions** (registry merchant T-02a) |
+| 2026-11-03 | `php artisan test --compact` (setelah T-02a) | **171 passed, 670 assertions** |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
 
 ## Kesiapan dokumen (PRD, backlog, kontrak API) — audit 2026-11-03
@@ -312,11 +313,12 @@ limit) dan beberapa state/UX.
 
 **Rincian T-02 (urutan kerja):**
 
-1. **T-02a — Registry merchant (backend):** admin CRUD (`POST/PUT /merchants`,
-   `PATCH /merchants/{id}/verify`), plus `GET /merchants` untuk user login
-   (campaigner/admin) yang hanya mengembalikan merchant `verified` dengan field
-   minimal (id, name, mcc, kategori, city). Test: admin CRUD, campaigner baca
-   terbatas, non-staff 403.
+1. **T-02a — Registry merchant (backend):** ✅ **selesai 2026-11-03** —
+   `MerchantController` (`GET/POST /merchants`, `PUT /merchants/{id}`,
+   `PATCH /merchants/{id}/verify`), `MerchantPolicy`, `MerchantResource`
+   (field internal `mid`/`verified_at` hanya admin), validasi MCC aktif &
+   tidak diblokir, audit `merchant.created/updated/verified`, 10 test di
+   `tests/Feature/Api/MerchantApiTest.php`. Lanjut ke T-02b.
 2. **T-02b — Pemilih merchant di UI:** ganti input ID manual dengan `<select>`
    dari `GET /merchants`; tampilkan MCC + kategori + status verifikasi.
 3. **T-02c — Guard limit (D-024):** tambahkan `GET /campaigns/{id}/disbursement-limit`
