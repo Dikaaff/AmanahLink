@@ -32,9 +32,9 @@ final class ReceiptReviewApiTest extends TestCase
     /**
      * @return array{0: Receipt, 1: Transaction}
      */
-    private function needsReviewReceipt(): array
+    private function needsReviewReceipt(?Campaign $campaign = null): array
     {
-        $campaign = Campaign::factory()->active()->create();
+        $campaign ??= Campaign::factory()->active()->create();
 
         $transaction = Transaction::factory()->captured()->create([
             'campaign_id' => $campaign->id,
@@ -66,9 +66,28 @@ final class ReceiptReviewApiTest extends TestCase
             ->assertJsonPath('data.0.status', 'needs_review');
     }
 
-    public function test_a_campaigner_cannot_access_the_review_queue(): void
+    public function test_a_campaigner_sees_only_receipts_from_own_campaigns(): void
     {
-        Sanctum::actingAs(User::factory()->campaigner()->create());
+        $campaign = Campaign::factory()->active()->create();
+        [$own] = $this->needsReviewReceipt($campaign);
+        [$foreign] = $this->needsReviewReceipt();
+
+        Sanctum::actingAs($campaign->campaigner);
+
+        $response = $this->getJson('/api/v1/receipts')
+            ->assertOk()
+            ->assertJsonPath('data.0.transaction.campaign.id', $campaign->id)
+            ->assertJsonPath('data.0.transaction.status', 'receipt_pending');
+
+        $ids = collect($response->json('data'))->pluck('id')->all();
+
+        $this->assertContains($own->id, $ids);
+        $this->assertNotContains($foreign->id, $ids);
+    }
+
+    public function test_a_donor_cannot_access_the_receipt_list(): void
+    {
+        Sanctum::actingAs(User::factory()->donor()->create());
 
         $this->getJson('/api/v1/receipts')->assertForbidden();
     }

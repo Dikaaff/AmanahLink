@@ -26,6 +26,18 @@ final class ReceiptResource extends JsonResource
             'confidence' => $this->confidence,
             'ocr' => $this->ocr_payload,
             'rejection_reason' => $this->rejection_reason,
+            'transaction' => $this->whenLoaded('transaction', fn (): array => [
+                'id' => $this->transaction->id,
+                'amount' => $this->transaction->amount,
+                'status' => $this->transaction->status->value,
+                'status_label' => $this->transaction->status->label(),
+                'campaign' => $this->transaction->relationLoaded('campaign') && $this->transaction->campaign !== null
+                    ? [
+                        'id' => $this->transaction->campaign->id,
+                        'title' => $this->transaction->campaign->title,
+                    ]
+                    : null,
+            ]),
             'reviewed_at' => $this->reviewed_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

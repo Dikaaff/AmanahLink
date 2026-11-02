@@ -21,6 +21,7 @@ import {
   type Donation,
   type Merchant,
   type Paginated,
+  type Receipt,
 } from "@/lib/api";
 import { dateOnly, dateTime, rupiah } from "@/lib/format";
 
@@ -76,6 +77,10 @@ export default function DashboardPage() {
   const [disbursementError, setDisbursementError] = useState<string | null>(null);
   const [disbursementResult, setDisbursementResult] = useState<string | null>(null);
   const [lastDisbursement, setLastDisbursement] = useState<Disbursement | null>(null);
+  const [receipts, setReceipts] = useState<Paginated<Receipt> | null>(null);
+  const [receiptPage, setReceiptPage] = useState(1);
+  const [receiptsLoading, setReceiptsLoading] = useState(false);
+  const [receiptsError, setReceiptsError] = useState<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptUploaded, setReceiptUploaded] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
@@ -123,6 +128,21 @@ export default function DashboardPage() {
     setDisbursements(response);
   }, [disbursementPage, isFundraiser]);
 
+  const loadReceipts = useCallback(async () => {
+    if (!isFundraiser) return;
+    setReceiptsLoading(true);
+
+    try {
+      const response = await api.myReceipts(receiptPage);
+      setReceipts(response);
+      setReceiptsError(null);
+    } catch (caught) {
+      setReceiptsError(errorMessage(caught));
+    } finally {
+      setReceiptsLoading(false);
+    }
+  }, [isFundraiser, receiptPage]);
+
   useEffect(() => {
     if (!ready) return;
 
@@ -137,12 +157,14 @@ export default function DashboardPage() {
       isFundraiser ? api.myCampaigns() : Promise.resolve(null),
       api.donations(donationPage),
       isFundraiser ? api.disbursements(disbursementPage) : Promise.resolve(null),
+      isFundraiser ? api.myReceipts(receiptPage) : Promise.resolve(null),
     ])
-      .then(([mine, myDonations, myDisbursements]) => {
+      .then(([mine, myDonations, myDisbursements, myReceipts]) => {
         if (cancelled) return;
         if (mine) setCampaigns(mine.data);
         setDonations(myDonations);
         if (myDisbursements) setDisbursements(myDisbursements);
+        if (myReceipts) setReceipts(myReceipts);
       })
       .catch((caught) => {
         if (!cancelled) setError(errorMessage(caught));
@@ -168,7 +190,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [ready, user, isFundraiser, donationPage, disbursementPage, router]);
+  }, [ready, user, isFundraiser, donationPage, disbursementPage, receiptPage, router]);
 
   useEffect(() => {
     if (isAdmin || !limitViewCampaignId) return;
@@ -309,7 +331,7 @@ export default function DashboardPage() {
       setReceiptUploadNotice(
         `Nota berhasil diunggah dengan status ${response.data.status_label.toLowerCase()}. OCR akan diproses oleh antrean.`,
       );
-      await loadDisbursements();
+      await Promise.all([loadDisbursements(), loadReceipts()]);
     } catch (caught) {
       setReceiptUploadError(errorMessage(caught));
     } finally {
@@ -828,6 +850,145 @@ export default function DashboardPage() {
               ) : null}
             </section>
           ) : null}
+
+          <section className="card overflow-hidden">
+            <div className="border-b border-stone-100 px-6 py-5">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+                    Rekonsiliasi nota
+                  </p>
+                  <h2 className="mt-1 text-xl font-semibold text-stone-900">
+                    Status nota
+                  </h2>
+                  <p className="mt-1 max-w-2xl text-sm text-stone-500">
+                    Nota yang masih menunggu review atau ditolak akan tampil di sini
+                    beserta alasannya, sehingga Anda tahu kapan harus mengunggah ulang.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={receiptsLoading}
+                  onClick={() => void loadReceipts()}
+                >
+                  {receiptsLoading ? "Memuat…" : "Muat ulang"}
+                </button>
+              </div>
+            </div>
+
+            {receiptsError ? (
+              <div className="p-6">
+                <Alert>
+                  Gagal memuat status nota: {receiptsError}
+                </Alert>
+                <button
+                  type="button"
+                  className="btn-secondary mt-4"
+                  onClick={() => void loadReceipts()}
+                >
+                  Coba lagi
+                </button>
+              </div>
+            ) : receiptsLoading && receipts === null ? (
+              <div className="px-6 py-4">
+                <Loading label="Memuat status nota…" />
+              </div>
+            ) : !receipts || receipts.data.length === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  title="Belum ada nota"
+                  description="Unggah nota setelah pencairan berhasil; status OCR dan keputusan verifikator akan muncul di sini."
+                />
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[820px] text-sm">
+                    <thead className="table-head">
+                      <tr>
+                        <th className="px-6 py-3">Kampanye</th>
+                        <th className="px-4 py-3">Nominal</th>
+                        <th className="px-4 py-3">Status nota</th>
+                        <th className="px-4 py-3">Keyakinan OCR</th>
+                        <th className="px-4 py-3">Catatan verifikator</th>
+                        <th className="px-6 py-3">Diunggah</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100">
+                      {receipts.data.map((receipt) => (
+                        <tr key={receipt.id} className="align-top">
+                          <td className="px-6 py-4">
+                            <span className="font-semibold text-stone-900">
+                              {receipt.transaction?.campaign?.title ?? "—"}
+                            </span>
+                            <span className="mt-1 block text-xs text-stone-500">
+                              Transaksi #{receipt.transaction_id}
+                              {receipt.transaction
+                                ? ` · ${receipt.transaction.status_label}`
+                                : ""}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 font-medium text-stone-900">
+                            {receipt.transaction
+                              ? rupiah(receipt.transaction.amount)
+                              : "—"}
+                          </td>
+                          <td className="px-4 py-4">
+                            <StatusBadge
+                              status={receipt.status}
+                              label={receipt.status_label}
+                            />
+                          </td>
+                          <td className="px-4 py-4 text-stone-600">
+                            {receipt.confidence !== null
+                              ? `${Math.round(Number(receipt.confidence) * 100)}%`
+                              : "—"}
+                          </td>
+                          <td className="px-4 py-4">
+                            {receipt.rejection_reason ? (
+                              <span className="block max-w-[220px] text-xs text-rose-700">
+                                {receipt.rejection_reason}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-stone-500">—</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-xs text-stone-500">
+                            {dateTime(receipt.created_at)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {(receipts.meta?.last_page ?? 1) > 1 ? (
+                  <div className="flex items-center justify-center gap-3 border-t border-stone-100 px-6 py-4">
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      disabled={receiptPage <= 1}
+                      onClick={() => setReceiptPage((current) => current - 1)}
+                    >
+                      Sebelumnya
+                    </button>
+                    <span className="text-sm text-stone-500">
+                      Halaman {receiptPage} dari {receipts.meta?.last_page ?? 1}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      disabled={receiptPage >= (receipts.meta?.last_page ?? 1)}
+                      onClick={() => setReceiptPage((current) => current + 1)}
+                    >
+                      Berikutnya
+                    </button>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </section>
 
           <section className="card overflow-hidden">
             <div className="border-b border-stone-100 px-6 py-5">

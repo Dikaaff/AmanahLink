@@ -11,6 +11,7 @@ use App\Http\Resources\ReceiptResource;
 use App\Models\Receipt;
 use App\Models\Transaction;
 use App\Services\ReceiptService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -44,7 +45,17 @@ final class ReceiptController
     {
         Gate::authorize('viewAny', Receipt::class);
 
-        $query = Receipt::query()->with('transaction')->latest();
+        $user = $request->user();
+
+        $query = Receipt::query()
+            ->with(['transaction.campaign'])
+            ->latest();
+
+        if ($user === null || ! $user->role->canReviewReceipts()) {
+            $query->whereHas('transaction.campaign', function (Builder $builder) use ($user): void {
+                $builder->where('user_id', $user?->getKey());
+            });
+        }
 
         if ($request->filled('status')) {
             $status = ReceiptStatus::tryFrom($request->string('status')->toString());

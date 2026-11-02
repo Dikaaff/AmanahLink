@@ -474,7 +474,7 @@ cd ocr-service
 | `GET` | `/donations` | token | Riwayat donasi sendiri |
 | `POST` | `/disbursements` | owner/admin + `Idempotency-Key` | Authorize + capture |
 | `POST` | `/disbursements/{transaction}/receipts` | owner/admin | Multipart `file` (JPEG/PNG) |
-| `GET` | `/receipts` | verifier/admin | Filter `status`, mis. `needs_review` |
+| `GET` | `/receipts` | verifier/admin (semua), campaigner (milik sendiri) | Filter `status`, mis. `needs_review` |
 | `POST` | `/receipts/{receipt}/review` | verifier/admin | Approve/reject nota |
 | `GET` | `/notifications` | token | Inbox sendiri; `?unread=1`, cursor 25 |
 | `POST` | `/notifications/{id}/read` | token | Mengisi `read_at` |

@@ -88,6 +88,13 @@ export interface Receipt {
   rejection_reason: string | null;
   reviewed_at: string | null;
   created_at: string | null;
+  transaction?: {
+    id: number;
+    amount: string;
+    status: string;
+    status_label: string;
+    campaign: { id: number; title: string } | null;
+  };
 }
 
 export interface DisbursementLimit {
@@ -426,6 +433,8 @@ export const api = {
     request<Paginated<Receipt>>(
       `/receipts?status=${encodeURIComponent(status)}&page=${page}`,
     ),
+
+  myReceipts: (page = 1) => request<Paginated<Receipt>>(`/receipts?page=${page}`),
 
   reviewReceipt: (
     id: number,

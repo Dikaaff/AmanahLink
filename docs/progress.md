@@ -149,6 +149,9 @@
 | 2026-11-03 | `php artisan test --compact` (setelah T-02a) | **171 passed, 670 assertions** |
 | 2026-11-03 | smoke API + `npm run lint`/`build` (T-02b) | campaigner `GET /merchants` → 2 merchant tanpa `mid`; admin → `mid` ada; lint/build bersih |
 | 2026-11-03 | smoke API (T-02c) | campaigner `GET /campaigns/{id}/disbursement-limit` → `daily=5000000.00`, `used_today=0.00`; campaigner `PUT` → 403 `FORBIDDEN` |
+| 2026-11-03 | `php artisan test --compact tests/Feature/Api/ReceiptReviewApiTest.php tests/Feature/Api/ReceiptUploadApiTest.php` (T-02d) | **11 passed, 53 assertions** |
+| 2026-11-03 | `vendor/bin/pint --test` (4 file T-02d) | bersih |
+| 2026-11-03 | `npm run lint` + `npm run build` (panel status nota) | lint bersih; build 14 route `ƒ (Dynamic)` |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
 
 ## Kesiapan dokumen (PRD, backlog, kontrak API) — audit 2026-11-03
@@ -306,6 +309,7 @@ limit) dan beberapa state/UX.
 | Riwayat disbursement | `GET /disbursements` | `/dashboard` | ✅ |
 | Upload nota | `POST /disbursements/{id}/receipts` | `/dashboard` | ✅ |
 | Review nota | `GET /receipts`, `POST /receipts/{id}/review` | `/admin/receipts` | ✅ |
+| Status nota milik sendiri | `GET /receipts` (scoped) | panel di `/dashboard` | ✅ T-02d |
 | Notifikasi | `/notifications*` | `/notifications` | ✅ |
 | Audit log | `GET /audit-logs` | `/admin/audit-logs` | ✅ |
 | Webhook events + replay | `/admin/webhook-events*` | `/admin/webhooks` | ✅ |
@@ -333,15 +337,22 @@ limit) dan beberapa state/UX.
    GET 200, campaigner lain GET 403 `FORBIDDEN`, admin GET 200, limit kosong →
    `data: null`, PUT campaigner 403 (total 18 test / 62 assertions di
    `DisbursementApiTest`).
-4. **T-02d — Status nota campaigner:** daftar nota per disbursement (status,
-   confidence, alasan reject) agar campaigner tahu harus upload ulang.
+4. **T-02d — Status nota campaigner:** ✅ **selesai 2026-11-03** — `GET /receipts`
+   kini boleh diakses campaigner dan otomatis di-scope ke kampanye miliknya
+   (`ReceiptPolicy::viewAny` + `whereHas('transaction.campaign')`), donor tetap
+   `403`. `ReceiptResource` menyertakan `transaction` (nominal, status, judul
+   kampanye) bila di-eager-load. Dashboard punya panel **Status nota** dengan
+   status OCR, keyakinan, catatan penolakan, pagination, empty/error state, dan
+   tombol muat ulang (memakai `api.myReceipts`). Bukti: `ReceiptReviewApiTest`
+   (campaigner hanya melihat nota kampanyenya, donor `403`), 11 test/53
+   assertions hijau, `pint --test` bersih, `npm run lint`/`build` bersih.
 5. **T-02e — State kosong/error:** pastikan setiap layar punya empty state dan
    tombol retry; jangan ada teks placeholder.
 
 ## Langkah berikutnya (ringkas)
 
-1. **T-02d** (status nota) dan **T-02e** (empty/error state), lalu **T-03**
-   (E2E manual) dan GATE 5. T-02a/T-02b/T-02c sudah selesai.
+1. **T-02e** (empty/error state), lalu **T-03** (E2E manual) dan GATE 5.
+   T-02a/T-02b/T-02c/T-02d sudah selesai.
 2. **T-04** verifikasi email (FR-03 satu-satunya FR `M` yang belum ada).
 3. **T-07** ASVS + **T-11** sinkronisasi dokumen sebelum menyentuh Fase 7.
 
