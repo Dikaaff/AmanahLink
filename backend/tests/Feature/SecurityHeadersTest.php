@@ -28,23 +28,24 @@ final class SecurityHeadersTest extends TestCase
 
     public function test_mutating_api_responses_are_not_cacheable(): void
     {
-        $this->postJson('/api/v1/auth/register', [
+        $response = $this->postJson('/api/v1/auth/register', [
             'name' => 'Security Test',
             'email' => 'security@example.test',
             'password' => 'rahasia123',
             'password_confirmation' => 'rahasia123',
-        ])
-            ->assertCreated()
-            ->assertHeader('Cache-Control', 'no-store');
+        ]);
+
+        $response->assertCreated();
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
     }
 
     public function test_authenticated_get_responses_are_not_cacheable(): void
     {
         $user = User::factory()->donor()->create();
 
-        $this->actingAs($user, 'sanctum')
-            ->getJson('/api/v1/auth/me')
-            ->assertOk()
-            ->assertHeader('Cache-Control', 'no-store');
+        $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/auth/me');
+
+        $response->assertOk();
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
     }
 }

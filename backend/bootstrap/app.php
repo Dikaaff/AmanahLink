@@ -40,8 +40,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(SecurityHeaders::class);
         $middleware->api(prepend: [AssignRequestId::class]);
-        $middleware->api(append: [RecordAuthorizeMetrics::class, SecurityHeaders::class]);
+        $middleware->api(append: [RecordAuthorizeMetrics::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

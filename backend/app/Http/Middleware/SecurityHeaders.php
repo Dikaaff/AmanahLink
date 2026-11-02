@@ -28,8 +28,8 @@ final class SecurityHeaders
             "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
         );
 
-        if ($request->headers->has('Authorization') || ! $request->isMethod('GET')) {
-            $response->headers->set('Cache-Control', 'no-store');
+        if ($request->user() !== null || $request->headers->has('Authorization') || ! $request->isMethod('GET')) {
+            $response->headers->set('Cache-Control', 'no-store, private');
         }
 
         if ($request->isSecure()) {

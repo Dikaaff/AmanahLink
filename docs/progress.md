@@ -50,7 +50,7 @@
 | US-17 | Tolak saldo tidak cukup | ✅ | `tests/Feature/Api/DisbursementApiTest.php` |
 | US-18 | Tolak batas harian/bulanan | ✅ | `tests/Feature/Api/DisbursementApiTest.php` |
 | US-19 | Tolak kampanye nonaktif / limit kedaluwarsa | ✅ | `tests/Feature/Api/DisbursementApiTest.php` |
-| US-20 | Anti double-spend konkuren | ✅ | `tests/Feature/LedgerTransactionGuardTest.php` (lock + invariant) |
+| US-20 | Anti double-spend konkuren | ✅ | `tests/Feature/DisbursementConcurrencyTest.php` (5 proses PHP paralel), `tests/Feature/LedgerTransactionGuardTest.php` |
 | US-21 | Tutup kampanye & refund sisa | ✅ | `tests/Feature/Api/CampaignClosureApiTest.php` |
 | US-22 | Upload nota | ✅ | `tests/Feature/Api/ReceiptUploadApiTest.php` |
 | US-23 | Auto-match hasil OCR | ✅ | `tests/Feature/Api/ReceiptOcrTest.php` |
@@ -101,6 +101,14 @@
 - Dua defect baseline diperbaiki saat menutup Fase 3: warning `use JsonException`
   di `bootstrap/app.php` (membuat semua test WARN) dan test MCC yang memakai kode
   `5812` yang tidak ada di registry (melanggar FK `merchants.mcc`).
+- **NFR-02 (2026-11-02):** `amanahlink:disburse` + `Symfony\Process` menjalankan 5
+  proses PHP independen (koneksi MySQL masing-masing) pada kampanye yang sama.
+  Hasilnya deterministik: 3 lolos, 2 ditolak `INSUFFICIENT_FUNDS`, saldo ledger
+  tidak pernah negatif. Lock order tetap: kampanye → limit.
+- **Security headers:** middleware dipindah ke global `prepend` agar
+  `Cache-Control` tidak ditimpa middleware di dalam grup API; test menguji
+  "header mengandung `no-store`", bukan kecocokan string persis, karena Symfony
+  menambahkan `private` untuk respons ber-cookie/terautentikasi.
 - Test backend memakai **MySQL** (`amanahlink_test`), bukan SQLite (D-010).
   Jalankan dari folder `backend/`: `php artisan test`.
 - Notifikasi email dan retry webhook butuh proses runtime: `php artisan queue:work`
@@ -127,6 +135,8 @@
 | Tanggal | Perintah | Hasil |
 |---|---|---|
 | 2026-11-02 | `php artisan test` (backend) | **153 passed, 585 assertions**, tanpa warning/failure |
+| 2026-11-02 | `php artisan test` (backend, setelah US-20 nyata) | **161 passed, 627 assertions** |
+| 2026-11-02 | `tests/Feature/DisbursementConcurrencyTest.php` | 5 proses paralel, saldo 98.000, 5×30.000 → tepat 3 sukses + 2 `INSUFFICIENT_FUNDS`, saldo akhir 8.000, `ledger:verify` exit 0 |
 | 2026-11-02 | `.venv/Scripts/python -m pytest -q` (ocr-service) | **8 passed** |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih (hanya file terpilih karena repo tanpa Git) |
 
