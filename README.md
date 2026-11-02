@@ -10,7 +10,7 @@ Dana donasi tidak dicairkan menjadi uang tunai. Dana menjadi limit pembayaran ya
 [![Laravel](https://img.shields.io/badge/Laravel-13.39-FF2D20?style=flat-square&logo=laravel&logoColor=white)](https://laravel.com/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.4-4479A1?style=flat-square&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Flask](https://img.shields.io/badge/Flask-3.1-000000?style=flat-square&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
-[![Tests](https://img.shields.io/badge/tests-138%20PHP%20%7C%208%20Python-brightgreen?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/tests-142%20PHP%20%7C%208%20Python-brightgreen?style=flat-square)](#testing)
 [![Status](https://img.shields.io/badge/status-MVP%20backend-blue?style=flat-square)](#status--roadmap)
 
 [Repo](https://github.com/Dikaaff/AmanahLink) · [Dokumentasi](#dokumentasi) · [Mulai cepat](#memulai)
@@ -70,8 +70,8 @@ Proyek berada pada tahap **backend MVP**. Sumber kebenaran status ada di [`docs/
 | 7 — Test Suite | k6, konkurensi, E2E | ⬜ belum |
 | 8 — DevOps | compose, CI, observability, runbook | ⬜ belum |
 
-**Story yang sudah selesai:** US-01 … US-24, US-26, US-27.
-**Berikutnya:** US-25 (dashboard monitoring), US-28 (notifikasi), US-29 (retry/DLQ webhook), lalu frontend dan fase non-fungsional.
+**Story yang sudah selesai:** US-01 … US-27.
+**Berikutnya:** US-28 (notifikasi), US-29 (retry/DLQ webhook), lalu frontend dan fase non-fungsional.
 
 ---
 
@@ -111,6 +111,7 @@ Proyek berada pada tahap **backend MVP**. Sumber kebenaran status ada di [`docs/
 - Queue review manual untuk verifikator, approve → transaksi `reconciled`, reject → `disputed`.
 
 ### Admin & Audit
+- Dashboard monitoring: total settled/disbursed/refund, saldo dari ledger vs cache, jumlah mismatch, antrean OCR, dan p95 latency authorize 24 jam.
 - Freeze/unfreeze kampanye tanpa membatalkan disbursement yang sudah `captured`.
 - Audit log viewer read-only dengan filter actor/action/tanggal dan cursor pagination.
 - `PUT/PATCH/DELETE /audit-logs/{id}` selalu `405`; audit row tidak dapat diubah atau dihapus.
@@ -466,6 +467,7 @@ cd ocr-service
 | `POST` | `/disbursements/{transaction}/receipts` | owner/admin | Multipart `file` (JPEG/PNG) |
 | `GET` | `/receipts` | verifier/admin | Filter `status`, mis. `needs_review` |
 | `POST` | `/receipts/{receipt}/review` | verifier/admin | Approve/reject nota |
+| `GET` | `/admin/dashboard` | admin | Saldo ledger vs cache, mismatch, antrean OCR, p95 authorize |
 | `GET` | `/audit-logs` | verifier/admin | Cursor pagination + filter |
 | `PUT/PATCH/DELETE` | `/audit-logs/{id}` | — | Selalu `405` (append-only) |
 | `POST` | `/webhooks/payments/{provider}` | HMAC | Tanpa bearer token |
@@ -577,7 +579,7 @@ Hasil verifikasi terakhir (2026-11-02):
 
 | Suite | Hasil |
 |---|---|
-| PHPUnit | **138 passed (490 assertions)**, tanpa warning/failure |
+| PHPUnit | **142 passed (515 assertions)**, tanpa warning/failure |
 | pytest | **8 passed** |
 
 Cakupan utama: auth/RBAC, siklus kampanye, validasi MCC, limit & saldo, idempotensi, replay webhook, invariant ledger, konkurensi double-spend, refund proporsional, upload/auto-match/review nota, freeze/unfreeze, audit viewer, serta kontrak OCR Flask.
@@ -607,7 +609,8 @@ vendor/bin/pint --format agent <file-yang-diubah>
 ## Batasan yang Diketahui
 
 - **Frontend belum ada.** API siap, tetapi belum ada aplikasi Next.js (Fase 5).
-- **Dashboard admin (US-25), notifikasi (US-28), retry/DLQ (US-29) belum diimplementasikan.**
+- **Notifikasi (US-28) dan retry/DLQ (US-29) belum diimplementasikan.**
+- **p95 dashboard mengukur waktu proses aplikasi**, bukan latency jaringan end-to-end; pemangkasan `request_metrics` belum ada (Fase 8).
 - **Adapter Midtrans belum diisi.** Hanya driver `fake` yang aktif; interface dan alur webhook sudah siap.
 - **Adapter OpenAI OCR belum diuji dengan API key nyata.** Jalur `fake` yang diuji otomatis.
 - **Docker belum diverifikasi.** `ocr-service/Dockerfile` ada, tetapi belum pernah di-build karena Docker Desktop belum tersedia di mesin pengembangan; belum ada `docker-compose.yml` (Fase 8).

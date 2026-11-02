@@ -10,8 +10,8 @@
 |---|---|
 | Terakhir diperbarui | 2026-11-02 |
 | Fase selesai | Fase 0, 1, 2, 3, 4 |
-| Fase berjalan | Epic 6 — tersisa US-25 (dashboard monitoring) |
-| Status gate | Fase 4 ditutup; Epic 6 hampir selesai (US-26, US-27 ✅) |
+| Fase berjalan | Epic 7 — notifikasi (US-28) & retry/DLQ webhook (US-29) |
+| Status gate | Fase 4 ditutup; Epic 6 tuntas (US-25, US-26, US-27 ✅) |
 | Referensi | `docs/prd.md`, `docs/backlog.md`, `DECISIONS.md` |
 
 ## Ringkasan Fase
@@ -55,7 +55,7 @@
 | US-22 | Upload nota | ✅ | `tests/Feature/Api/ReceiptUploadApiTest.php` |
 | US-23 | Auto-match hasil OCR | ✅ | `tests/Feature/Api/ReceiptOcrTest.php` |
 | US-24 | Review manual & keputusan verifikator | ✅ | `tests/Feature/Api/ReceiptReviewApiTest.php` |
-| US-25 | Dashboard monitoring | ⬜ | — |
+| US-25 | Dashboard monitoring | ✅ | `tests/Feature/Api/AdminDashboardApiTest.php` |
 | US-26 | Freeze kampanye | ✅ | `tests/Feature/Api/CampaignFreezeApiTest.php` |
 | US-27 | Audit log viewer | ✅ | `tests/Feature/Api/AuditLogApiTest.php` |
 | US-28 | Notifikasi perubahan state | ⬜ | — |
@@ -77,7 +77,11 @@
   membawa `timestamp` (ISO-8601/Unix) dengan toleransi 300 detik, dan setiap
   penolakan (signature/external id/timestamp) menulis audit `webhook.rejected`
   tanpa menyimpan payload mentah (D-019).
-- **Epic 6 (2026-11-02):** freeze/unfreeze kampanye menyimpan `frozen_at` +
+- **Epic 6 — dashboard (2026-11-02):** middleware mencatat durasi authorize ke
+  `request_metrics` (best-effort), `GET /admin/dashboard` (admin) melaporkan
+  total settled/disbursed/refund, saldo dari ledger + cache + jumlah mismatch,
+  antrean OCR & `needs_review`, serta p95 nearest-rank 24 jam (D-020).
+- **Epic 6 — freeze/audit (2026-11-02):** freeze/unfreeze kampanye menyimpan `frozen_at` +
   `freeze_reason`, memblokir donasi/pencairan baru tanpa membatalkan transaksi
   captured, dan mengembalikan state `active`/`funded` saat unfreeze (D-017).
   Audit viewer read-only untuk staff dengan filter actor/action/tanggal, cursor
@@ -103,15 +107,14 @@
 
 | Tanggal | Perintah | Hasil |
 |---|---|---|
-| 2026-11-02 | `php artisan test` (backend) | **138 passed, 490 assertions**, tanpa warning/failure |
+| 2026-11-02 | `php artisan test` (backend) | **142 passed, 515 assertions**, tanpa warning/failure |
 | 2026-11-02 | `.venv/Scripts/python -m pytest -q` (ocr-service) | **8 passed** |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih (hanya file terpilih karena repo tanpa Git) |
 
 ## Langkah berikutnya (berurutan)
 
-1. Epic 6 — `GET /admin/dashboard` (US-25). Perlu metrik latency authorize
-   (p95) yang saat ini belum dicatat; tambahkan pencatatan durasi request
-   disbursement sebelum membangun endpoint dashboard.
-2. Epic 7 — notifikasi (US-28) dan retry/DLQ webhook (US-29).
-3. Fase 5 — frontend Next.js memakai API yang sudah lengkap.
-4. Fase 6–8 — security, test suite (k6/E2E), DevOps (compose, CI, runbook).
+1. Epic 7 — notifikasi in-app + email (US-28) dan retry 1m/5m/30m +
+   dead-letter queue dengan replay idempoten (US-29).
+2. Fase 5 — frontend Next.js memakai API yang sudah lengkap.
+3. Fase 6–8 — security, test suite (k6/E2E), DevOps (compose, CI, runbook,
+   retensi `request_metrics`).

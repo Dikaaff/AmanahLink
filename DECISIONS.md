@@ -155,6 +155,15 @@
 
 ---
 
+### D-020 — p95 authorize diukur di aplikasi; dashboard membandingkan ledger dengan cache
+
+- **Keputusan:** Middleware `RecordAuthorizeMetrics` mencatat durasi proses `POST /api/v1/disbursements` ke tabel `request_metrics` (`route`, `status_code`, `duration_ms`, `created_at`) secara best-effort: kegagalan menulis metrik tidak pernah menggagalkan request. `GET /api/v1/admin/dashboard` (admin) mengembalikan total donasi settled, disbursement captured, refund, saldo kampanye **dari ledger**, saldo cache, jumlah mismatch ledger per kampanye, kedalaman antrean OCR (`uploaded`/`extracting`), jumlah `needs_review`, serta p95 authorize nearest-rank pada jendela 24 jam terakhir.
+- **Alasan:** NFR-01 membutuhkan artefak p95 yang konkret, tetapi belum ada APM di lingkungan ini. Mengukur di middleware memberi angka yang reproducible tanpa dependensi baru. Saldo dilaporkan dari ledger dan cache secara berdampingan agar drift langsung terlihat; memakai cache saja akan menyembunyikan bug yang justru ingin dideteksi (D-006).
+- **Alternatif yang ditolak:** (a) Menghitung p95 dari access log — format log tidak stabil dan mahal diparse. (b) Memakai rata-rata latency — tidak menjawab NFR p95. (c) Histogram/bucket Prometheus — berlebihan untuk MVP dan belum ada infrastrukturnya. (d) Menampilkan saldo dari `current_amount` saja — bertentangan dengan AC US-25.
+- **Konsekuensi:** p95 mengukur waktu proses aplikasi (bukan jaringan end-to-end). Jendela tetap 24 jam pada MVP; retensi/pemangkasan `request_metrics` masuk Fase 8.
+
+---
+
 ## 2. Register Asumsi (default yang saya pakai sampai dikoreksi)
 | ID | Asumsi | Default bila salah | Dampak bila berubah |
 |---|---|---|---|
@@ -197,3 +206,4 @@
 | 1.6 | 2026-11-02 | D-016 status nota `verified` + auto-match OCR; service Flask fase 4, US-22…US-24 selesai |
 | 1.7 | 2026-11-02 | D-017 freeze/unfreeze, D-018 audit viewer; US-26 dan US-27 selesai |
 | 1.8 | 2026-11-02 | D-019 timestamp + audit penolakan webhook; README utama lengkap |
+| 1.9 | 2026-11-02 | D-020 metrik p95 authorize + dashboard admin; US-25 selesai, Epic 6 tuntas |

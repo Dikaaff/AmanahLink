@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\AdminDashboardController;
 use App\Http\Controllers\Api\V1\AuditLogController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CampaignController;
@@ -43,6 +44,8 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('receipts', [ReceiptController::class, 'index']);
         Route::post('receipts/{receipt}/review', [ReceiptController::class, 'review']);
+
+        Route::get('admin/dashboard', AdminDashboardController::class);
 
         Route::get('audit-logs', [AuditLogController::class, 'index']);
         Route::match(['put', 'patch', 'delete'], 'audit-logs/{auditLog}', [AuditLogController::class, 'immutable']);

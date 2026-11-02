@@ -6,11 +6,13 @@ namespace App\Providers;
 
 use App\Contracts\PaymentGateway;
 use App\Contracts\ReceiptOcr;
+use App\Models\User;
 use App\Services\Ocr\FakeReceiptOcr;
 use App\Services\Ocr\HttpReceiptOcr;
 use App\Services\Payment\FakePaymentGateway;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -46,6 +48,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::define('view-dashboard', fn (User $user): bool => $user->isAdmin());
+
         RateLimiter::for('api', function (Request $request): Limit {
             $key = $request->user()?->getAuthIdentifier() ?? $request->ip();
 
