@@ -42,6 +42,8 @@ return [
     */
     'payment_webhook_secret' => env('AMANAH_PAYMENT_WEBHOOK_SECRET', ''),
 
+    'payment_webhook_tolerance_seconds' => (int) env('AMANAH_PAYMENT_WEBHOOK_TOLERANCE', 300),
+
     /*
     |--------------------------------------------------------------------------
     | OCR

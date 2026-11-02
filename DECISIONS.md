@@ -146,6 +146,15 @@
 
 ---
 
+### D-019 — Webhook wajib membawa timestamp segar dan setiap penolakan diaudit
+
+- **Keputusan:** Payload webhook wajib memuat `timestamp` (ISO-8601 atau Unix detik). Selisih terhadap waktu server dibatasi `AMANAH_PAYMENT_WEBHOOK_TOLERANCE` (default 300 detik). Signature salah, `external_id` tidak valid, timestamp hilang/tidak terbaca/kedaluwarsa semuanya ditolak `401 INVALID_SIGNATURE` dan menulis audit `webhook.rejected` berisi provider + alasan (tanpa payload mentah).
+- **Alasan:** Signature yang valid atas body lama tetap merupakan replay; `external_id` unik saja tidak menutup serangan pengulangan sebelum event pertama tercatat. AC US-12 meminta toleransi 5 menit dan audit penolakan. Tidak menyimpan payload pada jalur tolak menghindari menyimpan data penyerang yang belum terverifikasi.
+- **Alternatif yang ditolak:** (a) Hanya mengandalkan keunikan `external_id` — replay sebelum insert tetap lolos. (b) Menyimpan seluruh payload penolakan — menambah permukaan data tak tepercaya. (c) Menolak tanpa audit — melanggar BR-06.
+- **Konsekuensi:** Adapter provider nyata harus memetakan timestamp provider ke field `timestamp`; kontrak ini didokumentasikan di README dan diuji.
+
+---
+
 ## 2. Register Asumsi (default yang saya pakai sampai dikoreksi)
 | ID | Asumsi | Default bila salah | Dampak bila berubah |
 |---|---|---|---|
@@ -187,3 +196,4 @@
 | 1.5 | 2026-11-02 | D-015 tutup kampanye + refund proporsional (US-21); fase 3 selesai |
 | 1.6 | 2026-11-02 | D-016 status nota `verified` + auto-match OCR; service Flask fase 4, US-22…US-24 selesai |
 | 1.7 | 2026-11-02 | D-017 freeze/unfreeze, D-018 audit viewer; US-26 dan US-27 selesai |
+| 1.8 | 2026-11-02 | D-019 timestamp + audit penolakan webhook; README utama lengkap |

@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
+use App\Enums\AccountCode;
 use App\Models\Campaign;
 use App\Models\Donation;
 use App\Models\Transaction;
-use App\Models\User;
 use App\Models\WebhookEvent;
 use App\Services\LedgerService;
-use App\Enums\AccountCode;
-use App\Support\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 final class PaymentWebhookApiTest extends TestCase
@@ -31,8 +30,10 @@ final class PaymentWebhookApiTest extends TestCase
     /**
      * @param  array<string, mixed>  $payload
      */
-    private function deliver(array $payload, ?string $secret = self::SECRET): \Illuminate\Testing\TestResponse
+    private function deliver(array $payload, ?string $secret = self::SECRET): TestResponse
     {
+        $payload += ['timestamp' => now()->toIso8601String()];
+
         $body = json_encode($payload, JSON_THROW_ON_ERROR);
 
         return $this->call(
@@ -61,6 +62,22 @@ final class PaymentWebhookApiTest extends TestCase
             ->assertJsonPath('error.code', 'INVALID_SIGNATURE');
 
         $this->assertSame(0, WebhookEvent::query()->count());
+        $this->assertDatabaseHas('audit_logs', ['action' => 'webhook.rejected']);
+    }
+
+    public function test_a_timestamp_outside_the_tolerance_is_rejected(): void
+    {
+        $this->deliver([
+            'external_id' => 'evt-stale',
+            'event' => 'payment.settled',
+            'payment_ref' => 'PAY-X',
+            'timestamp' => now()->subMinutes(10)->toIso8601String(),
+        ])
+            ->assertUnauthorized()
+            ->assertJsonPath('error.code', 'INVALID_SIGNATURE');
+
+        $this->assertSame(0, WebhookEvent::query()->count());
+        $this->assertDatabaseHas('audit_logs', ['action' => 'webhook.rejected']);
     }
 
     public function test_a_settled_callback_credits_the_campaign_exactly_once(): void

@@ -73,6 +73,10 @@
   `auto_matched` → `verified` (transaksi `reconciled`), atau `needs_review`
   untuk confidence rendah, nominal di luar 1%, merchant tidak terdaftar, dan
   timeout OCR. Lihat D-016.
+- **Webhook (2026-11-02):** US-12 dilengkapi: selain signature HMAC, payload wajib
+  membawa `timestamp` (ISO-8601/Unix) dengan toleransi 300 detik, dan setiap
+  penolakan (signature/external id/timestamp) menulis audit `webhook.rejected`
+  tanpa menyimpan payload mentah (D-019).
 - **Epic 6 (2026-11-02):** freeze/unfreeze kampanye menyimpan `frozen_at` +
   `freeze_reason`, memblokir donasi/pencairan baru tanpa membatalkan transaksi
   captured, dan mengembalikan state `active`/`funded` saat unfreeze (D-017).
@@ -99,7 +103,7 @@
 
 | Tanggal | Perintah | Hasil |
 |---|---|---|
-| 2026-11-02 | `php artisan test` (backend) | **137 passed, 485 assertions**, tanpa warning/failure |
+| 2026-11-02 | `php artisan test` (backend) | **138 passed, 490 assertions**, tanpa warning/failure |
 | 2026-11-02 | `.venv/Scripts/python -m pytest -q` (ocr-service) | **8 passed** |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih (hanya file terpilih karena repo tanpa Git) |
 

@@ -8,6 +8,7 @@ use App\Enums\WebhookStatus;
 use App\Exceptions\InvalidSignatureException;
 use App\Models\Donation;
 use App\Models\WebhookEvent;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +36,7 @@ final class PaymentWebhookService
         $secret = (string) config('amanahlink.payment_webhook_secret', '');
 
         if ($secret === '' || ! hash_equals(hash_hmac('sha256', $raw, $secret), $signature)) {
-            throw new InvalidSignatureException;
+            $this->reject($provider, 'invalid_signature', 'Signature webhook tidak valid.');
         }
 
         /** @var array<string, mixed> $payload */
@@ -44,8 +45,10 @@ final class PaymentWebhookService
         $externalId = (string) ($payload['external_id'] ?? '');
 
         if ($externalId === '' || strlen($externalId) > 120) {
-            throw new InvalidSignatureException;
+            $this->reject($provider, 'invalid_external_id', 'External id webhook tidak valid.');
         }
+
+        $this->assertFreshTimestamp($provider, $payload['timestamp'] ?? null);
 
         $event = $this->store($provider, $externalId, $payload);
 
@@ -76,6 +79,43 @@ final class PaymentWebhookService
         }
 
         return $event->fresh();
+    }
+
+    /**
+     * A valid signature over an old body is still a replay. Providers retry
+     * within minutes, so anything outside the tolerance window is refused.
+     *
+     * @param  mixed  $timestamp  ISO-8601 string or Unix seconds
+     */
+    private function assertFreshTimestamp(string $provider, mixed $timestamp): void
+    {
+        if ($timestamp === null || $timestamp === '') {
+            $this->reject($provider, 'missing_timestamp', 'Timestamp webhook wajib ada.');
+        }
+
+        try {
+            $sentAt = is_numeric($timestamp)
+                ? CarbonImmutable::createFromTimestamp((int) $timestamp)
+                : CarbonImmutable::parse((string) $timestamp);
+        } catch (Throwable) {
+            $this->reject($provider, 'invalid_timestamp', 'Timestamp webhook tidak dapat dibaca.');
+        }
+
+        $tolerance = (int) config('amanahlink.payment_webhook_tolerance_seconds', 300);
+
+        if ($sentAt->diffInSeconds(CarbonImmutable::now(), true) > $tolerance) {
+            $this->reject($provider, 'stale_timestamp', 'Timestamp webhook di luar toleransi.');
+        }
+    }
+
+    private function reject(string $provider, string $reason, string $message): never
+    {
+        $this->audit->record('webhook.rejected', null, null, [
+            'provider' => $provider,
+            'reason' => $reason,
+        ]);
+
+        throw new InvalidSignatureException($message);
     }
 
     /**
