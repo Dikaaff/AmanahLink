@@ -190,6 +190,30 @@ final class CampaignApiTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_staff_can_filter_the_campaign_review_queue(): void
+    {
+        $pending = Campaign::factory()->pendingReview()->create();
+        Campaign::factory()->active()->create();
+
+        Sanctum::actingAs(User::factory()->verifier()->create());
+
+        $this->getJson('/api/v1/campaigns/review-queue?status=pending_review')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $pending->id)
+            ->assertJsonPath('data.0.status', 'pending_review')
+            ->assertJsonPath('data.0.campaigner.id', $pending->user_id);
+    }
+
+    public function test_a_campaigner_cannot_access_the_campaign_review_queue(): void
+    {
+        Sanctum::actingAs(User::factory()->campaigner()->create());
+
+        $this->getJson('/api/v1/campaigns/review-queue')
+            ->assertForbidden()
+            ->assertJsonPath('error.code', 'FORBIDDEN');
+    }
+
     public function test_a_campaign_with_settled_donations_cannot_be_edited(): void
     {
         $campaign = Campaign::factory()->active()->create();

@@ -270,6 +270,12 @@ export const api = {
   myCampaigns: (page = 1) =>
     request<Paginated<Campaign>>(`/campaigns/mine?page=${page}`),
 
+  reviewQueue: (status = "", page = 1) => {
+    const params = new URLSearchParams({ page: String(page) });
+    if (status) params.set("status", status);
+    return request<Paginated<Campaign>>(`/campaigns/review-queue?${params.toString()}`);
+  },
+
   createCampaign: (body: {
     title: string;
     description: string;
@@ -280,6 +286,30 @@ export const api = {
 
   submitCampaign: (id: number) =>
     request<{ data: Campaign }>(`/campaigns/${id}/submit`, { method: "POST" }),
+
+  reviewCampaign: (
+    id: number,
+    decision: "approve" | "reject",
+    rejectionReason?: string,
+  ) =>
+    request<{ data: Campaign }>(`/campaigns/${id}/review`, {
+      ...json({
+        decision,
+        ...(rejectionReason ? { rejection_reason: rejectionReason } : {}),
+      }),
+    }),
+
+  freezeCampaign: (id: number, reason: string) =>
+    request<{ data: Campaign }>(`/campaigns/${id}/freeze`, json({ reason })),
+
+  unfreezeCampaign: (id: number) =>
+    request<{ data: Campaign }>(`/campaigns/${id}/unfreeze`, { method: "POST" }),
+
+  closeCampaign: (id: number) =>
+    request<{
+      data: Campaign;
+      refund: { donor_count: number; total: string };
+    }>(`/campaigns/${id}/close`, { method: "POST" }),
 
   donations: (page = 1) =>
     request<Paginated<Donation>>(`/donations?page=${page}`),

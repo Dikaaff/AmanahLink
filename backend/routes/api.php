@@ -29,6 +29,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('auth/logout', [AuthController::class, 'logout']);
 
         Route::get('campaigns/mine', [CampaignController::class, 'mine']);
+        Route::get('campaigns/review-queue', [CampaignController::class, 'reviewQueue']);
         Route::post('campaigns', [CampaignController::class, 'store']);
         Route::put('campaigns/{campaign}', [CampaignController::class, 'update']);
         Route::post('campaigns/{campaign}/submit', [CampaignController::class, 'submit']);

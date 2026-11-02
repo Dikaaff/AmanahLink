@@ -40,6 +40,11 @@ final class CampaignPolicy
         return $user->role->canReviewCampaigns();
     }
 
+    public function viewReviewQueue(User $user): bool
+    {
+        return $user->role->canReviewCampaigns();
+    }
+
     public function disburse(User $user, Campaign $campaign): bool
     {
         return $user->getKey() === $campaign->user_id || $user->isAdmin();

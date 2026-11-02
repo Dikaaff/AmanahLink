@@ -74,6 +74,7 @@ export function Nav() {
           ) : null}
           {user && (user.role === "verifier" || user.role === "admin") ? (
             <>
+              <NavLink href="/admin/campaigns">Kampanye</NavLink>
               <NavLink href="/admin/receipts">Review nota</NavLink>
               <NavLink href="/admin/audit-logs">Audit</NavLink>
             </>

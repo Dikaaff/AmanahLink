@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\CampaignStatus;
 use App\Http\Requests\FreezeCampaignRequest;
 use App\Http\Requests\ReviewCampaignRequest;
 use App\Http\Requests\StoreCampaignRequest;
@@ -16,6 +17,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 final class CampaignController
 {
@@ -46,6 +48,31 @@ final class CampaignController
         $query = Campaign::query()
             ->where('user_id', $request->user()->getKey())
             ->with('campaigner')
+            ->latest();
+
+        return CampaignResource::collection($query->paginate(15)->withQueryString());
+    }
+
+    public function reviewQueue(Request $request): AnonymousResourceCollection
+    {
+        Gate::authorize('viewReviewQueue', Campaign::class);
+
+        $request->validate([
+            'status' => [
+                'nullable',
+                Rule::in(array_map(
+                    static fn (CampaignStatus $status): string => $status->value,
+                    CampaignStatus::cases(),
+                )),
+            ],
+        ]);
+
+        $query = Campaign::query()
+            ->with('campaigner')
+            ->when(
+                $request->filled('status'),
+                fn ($builder) => $builder->where('status', $request->string('status')->toString()),
+            )
             ->latest();
 
         return CampaignResource::collection($query->paginate(15)->withQueryString());
