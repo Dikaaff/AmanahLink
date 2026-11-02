@@ -8,10 +8,10 @@
 
 | Field | Nilai |
 |---|---|
-| Terakhir diperbarui | 2026-11-02 |
+| Terakhir diperbarui | 2026-11-03 |
 | Fase selesai | Fase 0, 1, 2, 3, 4 |
-| Fase berjalan | Fase 5 — frontend (MVP selesai, E2E menyusul) |
-| Status gate | 29 story backend ✅; Fase 5 MVP ✅; Fase 6–8 belum ditutup |
+| Fase berjalan | Fase 5 — frontend (MVP selesai, T-01…T-03 menutup gate) |
+| Status gate | 28/29 story ✅; US-04 (verifikasi email) 🟡 belum; Fase 5–8 belum ditutup |
 | Referensi | `docs/prd.md`, `docs/backlog.md`, `DECISIONS.md` |
 
 ## Ringkasan Fase
@@ -34,7 +34,7 @@
 | US-01 | Registrasi akun donatur | ✅ | `tests/Feature/Api/AuthApiTest.php` |
 | US-02 | Login, token, lockout | ✅ | `tests/Feature/Api/AuthApiTest.php` |
 | US-03 | RBAC & kepemilikan | ✅ | `tests/Feature/Api/CampaignApiTest.php` |
-| US-04 | Verifikasi email | ✅ | `tests/Feature/Api/AuthApiTest.php` |
+| US-04 | Verifikasi email | 🟡 **belum** — `MustVerifyEmail` dikomentari di `User`, tidak ada route verifikasi/resend, tidak ada test | — (lihat G-01) |
 | US-05 | Buat kampanye draft | ✅ | `tests/Feature/Api/CampaignApiTest.php` |
 | US-06 | Ajukan review | ✅ | `tests/Feature/Api/CampaignApiTest.php` |
 | US-07 | Approve/reject kampanye | ✅ | `tests/Feature/Api/CampaignApiTest.php` |
@@ -142,15 +142,145 @@
 | 2026-11-02 | `php artisan test` (backend, setelah US-20 nyata) | **161 passed, 627 assertions** |
 | 2026-11-02 | `tests/Feature/DisbursementConcurrencyTest.php` | 5 proses paralel, saldo 98.000, 5×30.000 → tepat 3 sukses + 2 `INSUFFICIENT_FUNDS`, saldo akhir 8.000, `ledger:verify` exit 0 |
 | 2026-11-02 | `.venv/Scripts/python -m pytest -q` (ocr-service) | **8 passed** |
-| 2026-11-02 | `npm run lint` + `npm run build` (frontend) | bersih; 14 route, semuanya `ƒ (Dynamic)` |
-| 2026-11-02 | `curl -D -` ke `npm run start` (frontend) | `Content-Security-Policy` ada, `X-Powered-By` hilang, `X-Frame-Options: DENY`; HTML produksi **11/11** `<script>` ber-`nonce` |
-| 2026-11-02 | `composer audit` (backend) | **0 advisory** |
-| 2026-11-02 | `npm audit --omit=dev` / `npm audit` (frontend) | produksi **0 kerentanan**; 16 moderate hanya di toolchain lint (`minimatch` via `eslint-config-next`) tanpa fix non-breaking |
-| 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih (hanya file terpilih karena repo tanpa Git) |
+| 2026-11-03 | `npm run lint` + `npm run build` (frontend) | bersih; 14 route, semuanya `ƒ (Dynamic)` |
+| 2026-11-03 | `curl -D -` ke `npm run start` (frontend) | `Content-Security-Policy` ada, `X-Powered-By` hilang, `X-Frame-Options: DENY`; HTML produksi **11/11** `<script>` ber-`nonce` |
+| 2026-11-03 | `composer audit` (backend) | **0 advisory** |
+| 2026-11-03 | `npm audit --omit=dev` / `npm audit` (frontend) | produksi **0 kerentanan**; 16 moderate hanya di toolchain lint (`minimatch` via `eslint-config-next`) tanpa fix non-breaking |
+| 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
 
-## Langkah berikutnya (berurutan)
+## Kesiapan dokumen (PRD, backlog, kontrak API) — audit 2026-11-03
 
-1. Fase 5 — frontend Next.js memakai API yang sudah lengkap (termasuk inbox
-   notifikasi dan panel DLQ admin).
-2. Fase 6–8 — security, test suite (k6/E2E), DevOps (compose, CI, runbook,
-   retensi `request_metrics`, alert DLQ nyata).
+**Verdict:** PRD dan backlog **cukup kuat untuk inti uang** (ledger, idempotensi,
+MCC, refund, state machine semuanya punya AC dan test nyata), tetapi **belum
+cukup untuk dilanjutkan tanpa koreksi**: ada satu FR `M` yang tidak
+diimplementasikan tetapi ditandai selesai, beberapa nama endpoint di backlog
+menyimpang dari kode, dan beberapa artefak NFR yang dirujuk tidak ada. Agent
+berikutnya harus memperlakukan `routes/api.php` + test sebagai sumber kebenaran
+kontrak, bukan teks backlog.
+
+Kesenjangan yang harus ditutup (ID dipakai di rencana kerja):
+
+| ID | Kesenjangan | Bukti | Dampak | Task |
+|---|---|---|---|---|
+| G-01 | Verifikasi email (FR-03, US-04) tidak ada: `MustVerifyEmail` dikomentari, tanpa route/resend/test | `app/Models/User.php:5`, `routes/api.php` | FR `M` tidak terpenuhi; klaim ✅ sebelumnya salah | T-04 |
+| G-02 | PRD §8 membolehkan campaigner menerbitkan limit; kode admin-only | `CampaignPolicy::manageLimits` | kontrak UI/API ambigu | T-11 |
+| G-03 | Backlog menyebut `POST /disbursement/scan` dan `Idempotency-Key` wajib pada create campaign; kode memakai `/disbursements` dan tidak mewajibkan key di campaign | `routes/api.php`, `docs/backlog.md` US-05/US-15 | agent bisa membuat endpoint duplikat | T-11 |
+| G-04 | Kode webhook memakai `INVALID_SIGNATURE`; PRD §9 menulis `UNAUTHENTICATED` | `PaymentWebhookService`, D-019 | test/regresi salah kode | T-11 |
+| G-05 | Tidak ada penjadwal `expired` / auto-close + refund window | `routes/console.php` hanya `webhooks:retry` | status `expired` tak pernah terjadi | T-05 |
+| G-06 | Tidak ada `/healthz` dan `/readyz`; hanya `/up` bawaan Laravel | `php artisan route:list --path=up` | NFR-03/NFR-09 tak bisa diverifikasi | T-06 |
+| G-07 | NFR-08 retensi (log 90 jam, nota 24 jam, audit 5 tahun) belum diimplementasikan | tidak ada command/test retensi | klaim kepatuhan palsu | T-13 |
+| G-08 | NFR-06 (WCAG 2.1 AA) belum diuji; tidak ada axe-core | belum ada `docs/a11y.md` | klaim aksesibilitas tak terbukti | T-14 |
+| G-09 | NFR-01 (p95 < 500 ms @200 rps) belum diukur; baru metrik internal aplikasi | tidak ada k6/`docs/perf/` | target performa belum terbukti | T-09 |
+| G-10 | Artefak yang dirujuk PRD tidak ada: `docs/erd.md`, `docs/security/asvs.md`, `docs/runbook.md`, `docs/a11y.md`, `docs/perf/scan-p95.md`, `IdempotencyTest.php`, `RetentionTest.php`, `tests/Concurrency/` | `docs/prd.md` §5 | traceability NFR putus | T-11, T-13 |
+| G-11 | Q-01…Q-04 di PRD masih "terbuka" padahal sudah diputuskan di `DECISIONS.md` | `docs/prd.md` §12, D-005/D-015 | agent bisa memutus ulang | T-11 |
+| G-12 | FR-08 menyebut VA **dan QRIS**; `PaymentInstruction` hanya VA | `PaymentGateway`/`FakePaymentGateway` | ekspektasi demo meleset | T-11 |
+| G-13 | Token Sanctum disimpan di `localStorage`; CSP nonce sudah aktif tetapi risiko XSS residual tetap ada | `frontend/src/lib/api.ts` | pencurian token bila XSS lolos | T-07 |
+| G-14 | A-05 single-tenant masih asumsi, bukan keputusan eksplisit | `DECISIONS.md` A-05 | skema sulit diubah bila multi-org | T-11 (terima/tolak) |
+
+## Protokol handoff untuk agent berikutnya
+
+1. **Baca berurutan:** `docs/progress.md` → `DECISIONS.md` → `docs/prd.md` →
+   `docs/backlog.md` → `routes/api.php` + test. Bila dokumen bertentangan
+   dengan kode, **kode + test menang** sampai T-11 menyinkronkan dokumen.
+2. **Satu task = satu commit + satu push.** Setelah selesai: jalankan bukti,
+   perbarui tabel Status Story / Log Verifikasi di file ini **dalam commit yang
+   sama**, lalu `git push origin main`. Jangan menandai ✅ tanpa output perintah.
+3. **Jangan mengerjakan dua fase sekaligus.** Setiap akhir fase = GATE: tulis
+   ringkasan + bukti, berhenti, tunggu persetujuan manusia.
+4. **Jangan menambah dependency baru** tanpa mencatatnya di `DECISIONS.md`
+   (versi persis, alasan, alternatif).
+5. **Backend dan frontend bisa dikerjakan paralel hanya bila file tidak
+   bersinggungan.** Frontend dev server bersifat tunggal per folder (lihat
+   jebakan di bawah) — koordinasikan sebelum restart.
+6. **Bahasa:** kode/komentar/commit message ringkas dalam Inggris atau
+   Indonesia konsisten dengan repo; dokumen dan penjelasan ke manusia dalam
+   Bahasa Indonesia. Jangan memakai float untuk uang (D-005).
+
+### Jebakan lingkungan (Windows 11, tanpa Docker)
+
+- **MySQL Laragon sering mati sendiri.** Nyalakan lewat Laragon → Start All,
+  atau `mysqld --defaults-file=...` lalu tunggu ±8 detik. Semua perintah
+  `artisan` dan test akan gagal bila MySQL mati; cek dulu sebelum menyimpulkan
+  kode bermasalah.
+- **Composer tidak ada di PATH:** `php C:\laragon\bin\composer\composer.phar …`.
+- **Hanya satu `next dev` per folder.** Menjalankan `npm run dev` kedua hanya
+  mencetak "Another next dev server is already running" lalu keluar. Hentikan
+  proses lama (PID dari pesan itu) sebelum memulai ulang; jangan menjalankan
+  `next dev` dan `next start` bersamaan pada folder yang sama.
+- **PowerShell 5.1 merusak UTF-8** bila memakai `Get-Content … | Set-Content`.
+  Gunakan tool editor (bukan shell) untuk mengubah file berisi `—`, `→`, emoji.
+- **Jangan pakai `git status` dari dalam `backend/`** untuk menilai perubahan;
+  jalankan dari root repo.
+- **`next dev` menulis ulang blok di `frontend/AGENTS.md`.** Commit blok itu
+  bersama perubahan agar working tree bersih.
+
+### Perintah verifikasi cepat (wajib sebelum push)
+
+```powershell
+# backend
+cd backend
+php artisan test            # suite penuh, MySQL amanahlink_test
+vendor/bin/pint             # gaya kode
+php artisan ledger:verify   # invariant ledger
+
+# frontend
+cd frontend
+npm run lint
+npm run build
+# cek header + nonce (server start pada port lain, lalu)
+curl.exe -s -D - -o NUL http://127.0.0.1:3000/login
+
+# ocr
+cd ocr-service
+.venv\Scripts\python -m pytest -q
+```
+
+## Rencana kerja (task terstruktur)
+
+Urutan ini **mengikat**: task berikutnya baru dimulai setelah task sebelumnya
+selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
+
+### Fase 5 — menutup frontend (GATE 5)
+
+| ID | Task | Estimasi | Bukti/DoD |
+|---|---|---|---|
+| T-01 | Peta UI↔API: daftar halaman yang ada vs aksi API yang belum punya layar (donasi, riwayat donasi, limit & disbursement, upload/review nota, close/refund, freeze) | 1h | tabel di file ini; tanpa kode |
+| T-02 | Implementasikan layar yang kurang dengan fetch API asli (tanpa placeholder), termasuk state loading/error/empty dan guard role | 8h | `npm run lint` + `npm run build`; setiap layar memanggil endpoint nyata |
+| T-03 | Skrip E2E manual (langkah + data seed) dan jalankan sekali dari UI ke backend: register → campaign → donate → webhook fake → disburse → receipt → review → close/refund | 2h | tabel hasil per langkah + screenshot/response; **GATE 5** |
+
+### Fase 6 — security & kepatuhan (GATE 6)
+
+| ID | Task | Estimasi | Bukti/DoD |
+|---|---|---|---|
+| T-04 | Verifikasi email end-to-end (G-01): aktifkan `MustVerifyEmail`, route signed verify + resend, gate aksi sensitif (`EMAIL_UNVERIFIED`), test 3 skenario, banner UI | 4h | test baru di `AuthApiTest` + `CampaignApiTest`; FR-03 ✅ |
+| T-05 | Penjadwal siklus: tandai `expired` saat deadline lewat, buka refund window, auto-close + refund, retensi `request_metrics` (G-05) | 4h | command + test; `routes/console.php` diperbarui |
+| T-06 | `/healthz` (liveness) dan `/readyz` (DB + queue + OCR reachability) (G-06) | 2h | test feature; contoh output di README |
+| T-07 | `docs/security/asvs.md`: checklist ASVS L2 subset dengan status + bukti per item; perbaiki temuan (CORS, rate limit per route, redaksi log, validasi upload, kebijakan token G-13) | 6h | dokumen + test untuk setiap perbaikan |
+| T-11 | Sinkronisasi kontrak: PRD §8/§9/§12, backlog endpoint & AC, `DECISIONS.md` D-024… (G-02, G-03, G-04, G-11, G-12, G-14), buat `docs/erd.md` (G-10) | 3h | dokumen konsisten; tidak ada AC yang menyebut endpoint fiktif |
+
+### Fase 7 — test suite (GATE 7)
+
+| ID | Task | Estimasi | Bukti/DoD |
+|---|---|---|---|
+| T-08 | Playwright: alur kritis end-to-end terhadap stack lokal (butuh unduh browser) | 8h | `npm run e2e` hijau; artefak trace |
+| T-09 | k6 authorize: 2 menit, target 200 rps, hitung query per request; tulis `docs/perf/scan-p95.md` (G-09) | 4h | hasil p95 + grafik/angka |
+| T-10 | Perluas uji konkurensi (di luar 5 proses) atau dokumentasikan batas bukti saat ini | 2h | hasil + catatan batas |
+
+### Fase 8 — DevOps (GATE 8)
+
+| ID | Task | Estimasi | Bukti/DoD |
+|---|---|---|---|
+| T-12 | `docker-compose.yml`: mysql, api, queue, scheduler, ocr, web + healthcheck + volume | 5h | `docker compose up` (butuh Docker di mesin lain/CI) |
+| T-13 | CI GitHub Actions: php test + pint + `composer audit`, es lint/build/audit, pytest, (opsional) k6 smoke; retensi sesuai NFR-08 | 4h | workflow hijau di PR |
+| T-14 | Observability + `docs/runbook.md` + drill backup/restore + axe-core (G-08, G-10) | 6h | runbook + hasil drill + laporan a11y |
+
+**Total sisa ± 51 jam** (≈13 sesi 4 jam), belum termasuk perbaikan yang muncul
+saat E2E/security review.
+
+## Langkah berikutnya (ringkas)
+
+1. **T-01** (peta UI↔API) → **T-02** (layar kurang) → **T-03** (E2E manual) →
+   GATE 5.
+2. **T-04** verifikasi email (FR-03 satu-satunya FR `M` yang belum ada).
+3. **T-07** ASVS + **T-11** sinkronisasi dokumen sebelum menyentuh Fase 7.
+
