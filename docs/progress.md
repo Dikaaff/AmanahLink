@@ -154,6 +154,8 @@
 | 2026-11-03 | `npm run lint` + `npm run build` (panel status nota) | lint bersih; build 14 route `ƒ (Dynamic)` |
 | 2026-11-03 | `npm run lint` + `npm run build` (T-02e, state kosong/error) | lint bersih; build sukses, 14 route `ƒ (Dynamic)` |
 | 2026-11-03 | `bash scripts/e2e-manual.sh` (T-03, backend `QUEUE_CONNECTION=sync`, OCR fake) | **43 PASS, 0 FAIL** — register→approve→donasi→webhook→disburse→nota→review→refund; rincian `docs/e2e/gate5-run-2026-11-03.md` |
+| 2026-11-03 | `npm run lint` + `npm run build` (P2 type specimen) | lint bersih; build sukses, 15 route termasuk `ƒ /design/type`; CSS memuat 2 `@font-face` Geist |
+| 2026-11-03 | Chrome headless `/design/type` (P2) | tangkapan 512 dan 1440; `innerWidth=512` saat diminta 390 (batas tool dicatat di `P2-type-specimen.md` §5) |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
 
 ## Kesiapan dokumen (PRD, backlog, kontrak API) — audit 2026-11-03
@@ -359,8 +361,10 @@ limit) dan beberapa state/UX.
 ## Langkah berikutnya (ringkas)
 
 1. **GATE 5** — T-02a…T-02e dan T-03 selesai; klik manual UI tinggal dijalankan manusia.
-2. **P1 redesign (PAPER & INK)** menunggu GATE 1: `docs/design/P1-research-dossier.md`,
+2. **Redesign PAPER & INK:** P1 ✅ (dossier) dan P2 ✅ (type specimen) —
+   lihat `docs/design/P1-research-dossier.md`, `docs/design/P2-type-specimen.md`,
    `docs/design/DESIGN_DECISIONS.md`, bukti di `docs/design/screens/`.
+   Berikutnya P3 (token warna/status/jarak) setelah GATE 2.
 2. **T-04** verifikasi email (FR-03 satu-satunya FR `M` yang belum ada).
 3. **T-07** ASVS + **T-11** sinkronisasi dokumen sebelum menyentuh Fase 7.
 

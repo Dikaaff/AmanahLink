@@ -1,11 +1,76 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
-    "Times New Roman", serif;
+  /* Fonts — Geist self-hosted via next/font (§6.1).
+     The legacy serif display face was retired at P2. */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
 
+  /* Paper & Ink — neutral ramp (§5.1). Dark mode values arrive at P3. */
+  --color-canvas: #ffffff;
+  --color-surface: #ffffff;
+  --color-sunken: #fafafa;
+  --color-line: #e4e4e7;
+  --color-line-strong: #d4d4d8;
+  --color-ink-muted: #71717a;
+  --color-ink-secondary: #52525b;
+  --color-ink: #0a0a0a;
+  --color-inverse: #ffffff;
+  --color-overlay: rgba(10, 10, 10, 0.4);
+
+  /* Type scale (§6.2) — mobile value / desktop value pairs.
+     Pair naming: base token = mobile, `-lg` token = desktop. */
+  --text-display: 2.125rem;
+  --text-display--line-height: 1.08;
+  --text-display--letter-spacing: -0.032em;
+  --text-display-lg: 2.5rem;
+  --text-display-lg--line-height: 1.08;
+  --text-display-lg--letter-spacing: -0.032em;
+
+  --text-h1: 1.625rem;
+  --text-h1--line-height: 1.15;
+  --text-h1--letter-spacing: -0.026em;
+  --text-h1-lg: 2rem;
+  --text-h1-lg--line-height: 1.15;
+  --text-h1-lg--letter-spacing: -0.026em;
+
+  --text-h2: 1.25rem;
+  --text-h2--line-height: 1.25;
+  --text-h2--letter-spacing: -0.018em;
+  --text-h2-lg: 1.4375rem;
+  --text-h2-lg--line-height: 1.25;
+  --text-h2-lg--letter-spacing: -0.018em;
+
+  --text-h3: 1.0625rem;
+  --text-h3--line-height: 1.35;
+  --text-h3--letter-spacing: -0.012em;
+  --text-h3-lg: 1.125rem;
+  --text-h3-lg--line-height: 1.35;
+  --text-h3-lg--letter-spacing: -0.012em;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.55;
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.5;
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.08em;
+
+  --text-num-lg: 2rem;
+  --text-num-lg--line-height: 1.05;
+  --text-num-lg--letter-spacing: -0.03em;
+  --text-num-lg-md: 2.5rem;
+  --text-num-lg-md--line-height: 1.05;
+  --text-num-lg-md--letter-spacing: -0.03em;
+  --text-num-md: 1.125rem;
+  --text-num-md--line-height: 1.2;
+  --text-num-md--letter-spacing: -0.01em;
+  --text-num-sm: 0.875rem;
+  --text-num-sm--line-height: 1.4;
+
+  /* Legacy palette — removed when screens migrate at P5. */
   --color-brand-50: #eef6ef;
   --color-brand-100: #d8ebdb;
   --color-brand-200: #b3d8ba;
@@ -25,19 +90,20 @@
     font-family: var(--font-sans);
   }
 
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-display);
-    letter-spacing: -0.01em;
-  }
-
+  /* Serif display retired at P2: Geist is the only display face.
+     Legacy screens inherit it immediately; their layouts are rebuilt at P5. */
   ::selection {
     background: var(--color-brand-200);
   }
 }
 
 @layer components {
+  /* Numbers are tabular everywhere they can change or align (§6.3). */
+  .numeric {
+    @apply tabular-nums;
+    font-feature-settings: "tnum" 1, "ss01" 1;
+  }
+
   .card {
     @apply rounded-2xl border border-stone-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,20,0.04)];
   }
