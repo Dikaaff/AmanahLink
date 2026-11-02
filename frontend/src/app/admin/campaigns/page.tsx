@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { Alert, EmptyState, Loading, Progress, StatusBadge } from "@/components/ui";
+import { Alert, EmptyState, ErrorState, Loading, Progress, StatusBadge } from "@/components/ui";
 import { api, errorMessage, type Campaign, type Paginated } from "@/lib/api";
 import { dateOnly, rupiah } from "@/lib/format";
 import { mccTitle } from "@/lib/mcc";
@@ -84,6 +84,19 @@ export default function CampaignOperationsPage() {
     setNotice(null);
     setPage(1);
     setApplied({ status });
+  }
+
+  function handleReload(): void {
+    setLoading(true);
+    setError(null);
+    load(page)
+      .then((response) => {
+        setResult(response);
+      })
+      .catch((caught) => {
+        setError(errorMessage(caught));
+      })
+      .finally(() => setLoading(false));
   }
 
   async function refreshAfterAction(message: string): Promise<void> {
@@ -262,14 +275,18 @@ export default function CampaignOperationsPage() {
         </div>
       </form>
 
-      {error ? <Alert>{error}</Alert> : null}
+      {error ? (
+        <ErrorState message={error} onRetry={handleReload} />
+      ) : null}
       {notice ? <Alert tone="success">{notice}</Alert> : null}
 
       {!result || result.data.length === 0 ? (
-        <EmptyState
-          title="Tidak ada kampanye"
-          description="Tidak ada kampanye yang cocok dengan status pilihan saat ini."
-        />
+        error ? null : (
+          <EmptyState
+            title="Tidak ada kampanye"
+            description="Tidak ada kampanye yang cocok dengan status pilihan saat ini."
+          />
+        )
       ) : (
         <>
           <div className="space-y-4">

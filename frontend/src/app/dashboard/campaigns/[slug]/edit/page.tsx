@@ -8,7 +8,7 @@ import {
   CampaignEditor,
   CampaignEditorLoading,
 } from "@/components/campaign-editor";
-import { Alert } from "@/components/ui";
+import { Alert, ErrorState } from "@/components/ui";
 import { api, errorMessage, type Campaign } from "@/lib/api";
 
 export default function EditCampaignPage() {
@@ -50,6 +50,16 @@ export default function EditCampaignPage() {
 
   const canEdit = user?.role === "campaigner" || user?.role === "admin";
 
+  function handleRetry() {
+    setLoading(true);
+    setError(null);
+    api
+      .campaign(params.slug)
+      .then((response) => setCampaign(response.data))
+      .catch((caught) => setError(errorMessage(caught)))
+      .finally(() => setLoading(false));
+  }
+
   if (!ready || (canEdit && loading)) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -73,9 +83,12 @@ export default function EditCampaignPage() {
 
   if (error || !campaign) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-        <Alert>{error ?? "Kampanye tidak ditemukan atau tidak dapat diedit."}</Alert>
-        <Link href="/dashboard" className="btn-secondary mt-5">
+      <div className="mx-auto max-w-3xl space-y-4 px-4 py-16 sm:px-6">
+        <ErrorState
+          message={error ?? "Kampanye tidak ditemukan atau tidak dapat diedit."}
+          onRetry={handleRetry}
+        />
+        <Link href="/dashboard" className="btn-secondary">
           Kembali ke dasbor
         </Link>
       </div>

@@ -87,6 +87,25 @@ export function Alert({
   );
 }
 
+export function ErrorState({
+  message,
+  onRetry,
+  retryLabel = "Coba lagi",
+}: {
+  message: string;
+  onRetry: () => void;
+  retryLabel?: string;
+}) {
+  return (
+    <div className="card p-6">
+      <Alert>{message}</Alert>
+      <button type="button" className="btn-secondary mt-4" onClick={onRetry}>
+        {retryLabel}
+      </button>
+    </div>
+  );
+}
+
 export function Loading({ label = "Memuat…" }: { label?: string }) {
   return (
     <div className="flex items-center gap-3 py-12 text-sm text-stone-500">

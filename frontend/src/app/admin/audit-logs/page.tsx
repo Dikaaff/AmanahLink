@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { Alert, EmptyState, Loading } from "@/components/ui";
+import { Alert, EmptyState, ErrorState, Loading } from "@/components/ui";
 import { api, errorMessage, type AuditLog, type Paginated } from "@/lib/api";
 import { dateTime } from "@/lib/format";
 
@@ -79,6 +79,18 @@ export default function AuditLogsPage() {
     setError(null);
     setApplied(filters);
     setCursor(undefined);
+  }
+
+  function handleReload() {
+    setLoading(true);
+    setError(null);
+    load()
+      .then((response) => {
+        setResult(response);
+        setCursor(undefined);
+      })
+      .catch((caught) => setError(errorMessage(caught)))
+      .finally(() => setLoading(false));
   }
 
   if (!ready || (isStaff && loading)) {
@@ -190,13 +202,15 @@ export default function AuditLogsPage() {
         </div>
       </form>
 
-      {error ? <Alert>{error}</Alert> : null}
+      {error ? <ErrorState message={error} onRetry={handleReload} /> : null}
 
       {!result || result.data.length === 0 ? (
-        <EmptyState
-          title="Tidak ada log"
-          description="Tidak ada baris audit yang cocok dengan filter saat ini."
-        />
+        error ? null : (
+          <EmptyState
+            title="Tidak ada log"
+            description="Tidak ada baris audit yang cocok dengan filter saat ini."
+          />
+        )
       ) : (
         <>
           <div className="card overflow-hidden">

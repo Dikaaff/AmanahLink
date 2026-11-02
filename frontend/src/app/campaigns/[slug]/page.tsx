@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { Alert, Loading, Progress, StatusBadge } from "@/components/ui";
+import { Alert, ErrorState, Loading, Progress, StatusBadge } from "@/components/ui";
 import {
   api,
   errorMessage,
@@ -30,11 +30,12 @@ export default function CampaignDetailPage() {
   const [donationError, setDonationError] = useState<string | null>(null);
   const [payment, setPayment] = useState<PaymentInstruction | null>(null);
 
+  const load = useCallback(() => api.campaign(params.slug), [params.slug]);
+
   useEffect(() => {
     let cancelled = false;
 
-    api
-      .campaign(params.slug)
+    load()
       .then((response) => {
         if (!cancelled) setCampaign(response.data);
       })
@@ -48,7 +49,16 @@ export default function CampaignDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [params.slug]);
+  }, [load]);
+
+  function handleRetry() {
+    setLoading(true);
+    setError(null);
+    load()
+      .then((response) => setCampaign(response.data))
+      .catch((caught) => setError(errorMessage(caught)))
+      .finally(() => setLoading(false));
+  }
 
   async function handleDonate(event: React.FormEvent) {
     event.preventDefault();
@@ -83,9 +93,12 @@ export default function CampaignDetailPage() {
 
   if (error || !campaign) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-        <Alert>{error ?? "Kampanye tidak ditemukan."}</Alert>
-        <Link href="/" className="btn-secondary mt-5">
+      <div className="mx-auto max-w-3xl space-y-4 px-4 py-16 sm:px-6">
+        <ErrorState
+          message={error ?? "Kampanye tidak ditemukan."}
+          onRetry={handleRetry}
+        />
+        <Link href="/" className="btn-secondary">
           Kembali ke daftar kampanye
         </Link>
       </div>

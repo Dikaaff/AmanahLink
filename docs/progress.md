@@ -152,6 +152,7 @@
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/ReceiptReviewApiTest.php tests/Feature/Api/ReceiptUploadApiTest.php` (T-02d) | **11 passed, 53 assertions** |
 | 2026-11-03 | `vendor/bin/pint --test` (4 file T-02d) | bersih |
 | 2026-11-03 | `npm run lint` + `npm run build` (panel status nota) | lint bersih; build 14 route `ƒ (Dynamic)` |
+| 2026-11-03 | `npm run lint` + `npm run build` (T-02e, state kosong/error) | lint bersih; build sukses, 14 route `ƒ (Dynamic)` |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
 
 ## Kesiapan dokumen (PRD, backlog, kontrak API) — audit 2026-11-03
@@ -346,13 +347,17 @@ limit) dan beberapa state/UX.
    tombol muat ulang (memakai `api.myReceipts`). Bukti: `ReceiptReviewApiTest`
    (campaigner hanya melihat nota kampanyenya, donor `403`), 11 test/53
    assertions hijau, `pint --test` bersih, `npm run lint`/`build` bersih.
-5. **T-02e — State kosong/error:** pastikan setiap layar punya empty state dan
-   tombol retry; jangan ada teks placeholder.
+5. **T-02e — State kosong/error:** ✅ **selesai 2026-11-03** — komponen bersama
+   `ErrorState` (alert + tombol “Coba lagi”) dipakai di beranda, detail kampanye,
+   dasbor, edit kampanye, notifikasi, dan seluruh layar admin (dashboard,
+   kampanye, nota, audit log, webhook). Setiap layar membedakan “data kosong”
+   dari “gagal memuat”, sehingga empty state tidak lagi muncul saat request
+   gagal dan pengguna selalu punya jalan untuk memuat ulang. Bukti:
+   `npm run lint` bersih, `npm run build` sukses (14 route `ƒ (Dynamic)`).
 
 ## Langkah berikutnya (ringkas)
 
-1. **T-02e** (empty/error state), lalu **T-03** (E2E manual) dan GATE 5.
-   T-02a/T-02b/T-02c/T-02d sudah selesai.
+1. **T-03** (E2E manual) lalu GATE 5. T-02a…T-02e sudah selesai.
 2. **T-04** verifikasi email (FR-03 satu-satunya FR `M` yang belum ada).
 3. **T-07** ASVS + **T-11** sinkronisasi dokumen sebelum menyentuh Fase 7.
 

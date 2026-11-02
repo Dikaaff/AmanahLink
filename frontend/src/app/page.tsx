@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api, errorMessage, type Campaign, type Paginated } from "@/lib/api";
 import { CampaignCard } from "@/components/campaign-card";
-import { Alert, EmptyState, Loading } from "@/components/ui";
+import { EmptyState, ErrorState, Loading } from "@/components/ui";
 
 export default function HomePage() {
   const [draftQuery, setDraftQuery] = useState("");
@@ -13,11 +13,16 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const load = useCallback(
+    (requestedPage: number, requestedQuery: string) =>
+      api.campaigns({ page: requestedPage, q: requestedQuery }),
+    [],
+  );
+
   useEffect(() => {
     let cancelled = false;
 
-    api
-      .campaigns({ page, q: query })
+    load(page, query)
       .then((response) => {
         if (!cancelled) setResult(response);
       })
@@ -31,13 +36,23 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [page, query]);
+  }, [load, page, query]);
 
   function handleSearch(event: React.FormEvent) {
     event.preventDefault();
     setLoading(true);
+    setError(null);
     setPage(1);
     setQuery(draftQuery.trim());
+  }
+
+  function handleRetry() {
+    setLoading(true);
+    setError(null);
+    load(page, query)
+      .then((response) => setResult(response))
+      .catch((caught) => setError(errorMessage(caught)))
+      .finally(() => setLoading(false));
   }
 
   const lastPage = result?.meta?.last_page ?? 1;
@@ -114,9 +129,9 @@ export default function HomePage() {
         </div>
 
         <div className="mt-6">
-          {error ? <Alert>{error}</Alert> : null}
-
-          {loading ? (
+          {error ? (
+            <ErrorState message={error} onRetry={handleRetry} />
+          ) : loading ? (
             <Loading label="Memuat kampanye…" />
           ) : result && result.data.length > 0 ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

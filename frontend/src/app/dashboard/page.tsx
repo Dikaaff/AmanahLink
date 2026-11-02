@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth-provider";
 import {
   Alert,
   EmptyState,
+  ErrorState,
   Loading,
   Progress,
   Stat,
@@ -339,6 +340,26 @@ export default function DashboardPage() {
     }
   }
 
+  function handleReload(): void {
+    setLoading(true);
+    setError(null);
+
+    Promise.all([
+      isFundraiser ? api.myCampaigns() : Promise.resolve(null),
+      api.donations(donationPage),
+      isFundraiser ? api.disbursements(disbursementPage) : Promise.resolve(null),
+      isFundraiser ? api.myReceipts(receiptPage) : Promise.resolve(null),
+    ])
+      .then(([mine, myDonations, myDisbursements, myReceipts]) => {
+        if (mine) setCampaigns(mine.data);
+        setDonations(myDonations);
+        if (myDisbursements) setDisbursements(myDisbursements);
+        if (myReceipts) setReceipts(myReceipts);
+      })
+      .catch((caught) => setError(errorMessage(caught)))
+      .finally(() => setLoading(false));
+  }
+
   if (!ready || loading) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -373,7 +394,7 @@ export default function DashboardPage() {
         ) : null}
       </header>
 
-      {error ? <Alert>{error}</Alert> : null}
+      {error ? <ErrorState message={error} onRetry={handleReload} /> : null}
       {notice ? <Alert tone="success">{notice}</Alert> : null}
 
       {isFundraiser ? (

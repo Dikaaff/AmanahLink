@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { Alert, EmptyState, Loading, StatusBadge } from "@/components/ui";
+import { Alert, EmptyState, ErrorState, Loading, StatusBadge } from "@/components/ui";
 import {
   api,
   errorMessage,
@@ -71,6 +71,15 @@ export default function NotificationsPage() {
       cancelled = true;
     };
   }, [ready, user, load, router]);
+
+  function handleReload(): void {
+    setLoading(true);
+    setError(null);
+    load()
+      .then((response) => setResult(response))
+      .catch((caught) => setError(errorMessage(caught)))
+      .finally(() => setLoading(false));
+  }
 
   async function handleRead(notification: AppNotification) {
     if (notification.read_at) return;
@@ -156,23 +165,27 @@ export default function NotificationsPage() {
         Tampilkan yang belum dibaca saja
       </label>
 
-      {error ? <Alert>{error}</Alert> : null}
+      {error ? (
+        <ErrorState message={error} onRetry={handleReload} />
+      ) : null}
       {notice ? <Alert tone="success">{notice}</Alert> : null}
 
       {!result || result.data.length === 0 ? (
-        <EmptyState
-          title={unreadOnly ? "Tidak ada yang belum dibaca" : "Belum ada notifikasi"}
-          description={
-            unreadOnly
-              ? "Notifikasi baru akan muncul di sini saat ada perubahan kampanye."
-              : "Perubahan status kampanye akan muncul di inbox ini."
-          }
-          action={
-            <Link href="/dashboard" className="btn-secondary">
-              Kembali ke dasbor
-            </Link>
-          }
-        />
+        error ? null : (
+          <EmptyState
+            title={unreadOnly ? "Tidak ada yang belum dibaca" : "Belum ada notifikasi"}
+            description={
+              unreadOnly
+                ? "Notifikasi baru akan muncul di sini saat ada perubahan kampanye."
+                : "Perubahan status kampanye akan muncul di inbox ini."
+            }
+            action={
+              <Link href="/dashboard" className="btn-secondary">
+                Kembali ke dasbor
+              </Link>
+            }
+          />
+        )
       ) : (
         <>
           <div className="space-y-3">

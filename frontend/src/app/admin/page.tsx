@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { Alert, Loading, Stat } from "@/components/ui";
+import { Alert, ErrorState, Loading, Stat } from "@/components/ui";
 import { api, errorMessage, type Dashboard } from "@/lib/api";
 import { rupiah } from "@/lib/format";
 
@@ -14,6 +14,8 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(() => api.dashboard(), []);
 
   useEffect(() => {
     if (!ready) return;
@@ -29,8 +31,7 @@ export default function AdminDashboardPage() {
 
     let cancelled = false;
 
-    api
-      .dashboard()
+    load()
       .then((response) => {
         if (!cancelled) setData(response.data);
       })
@@ -44,7 +45,16 @@ export default function AdminDashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [ready, user, router]);
+  }, [load, ready, user, router]);
+
+  function handleRetry() {
+    setLoading(true);
+    setError(null);
+    load()
+      .then((response) => setData(response.data))
+      .catch((caught) => setError(errorMessage(caught)))
+      .finally(() => setLoading(false));
+  }
 
   if (!ready || (user?.role === "admin" && loading)) {
     return (
@@ -92,7 +102,7 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      {error ? <Alert>{error}</Alert> : null}
+      {error ? <ErrorState message={error} onRetry={handleRetry} /> : null}
 
       {data ? (
         <>
