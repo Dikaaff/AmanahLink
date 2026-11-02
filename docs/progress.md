@@ -361,10 +361,12 @@ limit) dan beberapa state/UX.
 ## Langkah berikutnya (ringkas)
 
 1. **GATE 5** — T-02a…T-02e dan T-03 selesai; klik manual UI tinggal dijalankan manusia.
-2. **Redesign PAPER & INK:** P1 ✅ (dossier) dan P2 ✅ (type specimen) —
-   lihat `docs/design/P1-research-dossier.md`, `docs/design/P2-type-specimen.md`,
-   `docs/design/DESIGN_DECISIONS.md`, bukti di `docs/design/screens/`.
-   Berikutnya P3 (token warna/status/jarak) setelah GATE 2.
+2. **Redesign PAPER & INK:** P1 ✅ (dossier), P2 ✅ (type specimen), P3 ✅
+   (token, status, jarak, radius, mode gelap) — lihat
+   `docs/design/P1-research-dossier.md`, `docs/design/P2-type-specimen.md`,
+   `docs/design/P3-tokens.md`, `docs/design/DESIGN_DECISIONS.md`, bukti di
+   `docs/design/screens/`. Berikutnya P4 (komponen + state matrix) setelah
+   GATE 3.
 2. **T-04** verifikasi email (FR-03 satu-satunya FR `M` yang belum ada).
 3. **T-07** ASVS + **T-11** sinkronisasi dokumen sebelum menyentuh Fase 7.
 

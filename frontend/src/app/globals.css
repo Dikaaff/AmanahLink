@@ -1,27 +1,51 @@
 @import "tailwindcss";
 
-@theme {
-  /* Fonts — Geist self-hosted via next/font (§6.1).
-     The legacy serif display face was retired at P2. */
+/* ===========================================================================
+   PAPER & INK — design tokens (P3)
+   Monochrome editorial. No color carries meaning; see components/badge.tsx.
+   Literal values are declared once, then mapped to light/dark. An explicit
+   `data-theme="light|dark"` on any element overrides the OS preference, so a
+   subtree can be pinned without touching the rest of the page.
+   All measured pairs are in docs/design/P3-tokens.md, produced by
+   `node scripts/contrast.mjs`.
+   =========================================================================== */
+
+@theme inline {
+  /* Fonts — Geist self-hosted via next/font (§6.1). Serif retired at P2. */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
     Consolas, monospace;
 
-  /* Paper & Ink — neutral ramp (§5.1). Dark mode values arrive at P3. */
-  --color-canvas: #ffffff;
-  --color-surface: #ffffff;
-  --color-sunken: #fafafa;
-  --color-line: #e4e4e7;
-  --color-line-strong: #d4d4d8;
-  --color-ink-muted: #71717a;
-  --color-ink-secondary: #52525b;
-  --color-ink: #0a0a0a;
-  --color-inverse: #ffffff;
-  --color-overlay: rgba(10, 10, 10, 0.4);
+  /* Semantic colors resolve to the runtime variables below, so a dark override
+     is a single variable change — no duplicated `dark:` utilities. */
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink: var(--ink);
+  --color-inverse: var(--inverse);
+  --color-overlay: var(--overlay);
 
-  /* Type scale (§6.2) — mobile value / desktop value pairs.
-     Pair naming: base token = mobile, `-lg` token = desktop. */
+  /* Legacy aliases — deleted at P5 when the old screens are rebuilt. They map
+     onto neutral tokens so no green or sand survives the palette lock. */
+  --color-brand-50: var(--sunken);
+  --color-brand-100: var(--line);
+  --color-brand-200: var(--line-strong);
+  --color-brand-500: var(--ink-secondary);
+  --color-brand-600: var(--ink);
+  --color-brand-700: var(--ink);
+  --color-brand-900: var(--ink);
+  --color-sand-50: var(--canvas);
+  --color-sand-100: var(--sunken);
+  --color-sand-200: var(--line);
+}
+
+@theme {
+  /* Type scale (§6.2) — base token = mobile, `-lg` / `-md` = desktop. */
   --text-display: 2.125rem;
   --text-display--line-height: 1.08;
   --text-display--letter-spacing: -0.032em;
@@ -70,30 +94,112 @@
   --text-num-sm: 0.875rem;
   --text-num-sm--line-height: 1.4;
 
-  /* Legacy palette — removed when screens migrate at P5. */
-  --color-brand-50: #eef6ef;
-  --color-brand-100: #d8ebdb;
-  --color-brand-200: #b3d8ba;
-  --color-brand-500: #2f7d4f;
-  --color-brand-600: #236640;
-  --color-brand-700: #1b5034;
-  --color-brand-900: #102c1e;
+  /* Radii (§8) — four values in the whole product. Defaults are wiped so
+     `rounded-xl` / `rounded-3xl` cannot be reached by accident. */
+  --radius-*: initial;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  /* Transitional aliases for legacy markup, clamped to 14px. Deleted at P5. */
+  --radius-xl: 14px;
+  --radius-2xl: 14px;
+  --radius-3xl: 14px;
 
-  --color-sand-50: #faf7f1;
-  --color-sand-100: #f3ede1;
-  --color-sand-200: #e7dcc9;
+  /* Exactly one shadow in the product: sheets and dialogs (§8). */
+  --shadow-*: initial;
+  --shadow-sheet: 0 1px 2px rgb(10 10 10 / 0.04),
+    0 12px 32px rgb(10 10 10 / 0.1);
+}
+
+/* Primitive layer: every literal value lives here, once. The semantic layer
+   below only maps primitives, so an audit of hex has a single address. */
+:root {
+  color-scheme: light dark;
+
+  --mono-white: #ffffff;
+  --mono-paper: #fafafa;
+  --mono-ink-950: #0a0a0a;
+  --mono-ink-900: #121212;
+  --mono-ink-850: #161616;
+  --mono-line-100: #e4e4e7;
+  --mono-line-700: #262626;
+  --mono-neutral-400: #a1a1aa;
+  --mono-neutral-450: #8b8b93;
+  --mono-neutral-500: #71717a;
+  --mono-neutral-600: #52525b;
+  /* 3.25:1 on the light canvas. §5.1 asked for 3:1 on interactive borders and
+     printed 3.1:1 for zinc-300; the measured value of that hex was 1.48:1. */
+  --mono-border-300: #8e8e96;
+  /* 3.48:1 on the dark canvas. */
+  --mono-border-800: #66666f;
+}
+
+/* Light mapping: the default, and any subtree pinned to light. */
+:root,
+[data-theme="light"] {
+  --canvas: var(--mono-white);
+  --surface: var(--mono-white);
+  --sunken: var(--mono-paper);
+  --line: var(--mono-line-100);
+  --line-strong: var(--mono-border-300);
+  --ink-muted: var(--mono-neutral-500);
+  --ink-secondary: var(--mono-neutral-600);
+  --ink: var(--mono-ink-950);
+  --inverse: var(--mono-white);
+  --overlay: rgb(10 10 10 / 0.4);
+}
+
+/* OS preference, unless a surface pinned light explicitly. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --canvas: var(--mono-ink-950);
+    --surface: var(--mono-ink-900);
+    --sunken: var(--mono-ink-850);
+    --line: var(--mono-line-700);
+    --line-strong: var(--mono-border-800);
+    --ink-muted: var(--mono-neutral-450);
+    --ink-secondary: var(--mono-neutral-400);
+    --ink: var(--mono-white);
+    --inverse: var(--mono-ink-950);
+    --overlay: rgb(0 0 0 / 0.64);
+  }
+}
+
+/* Explicit pin: any subtree can force a mode, in either direction. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: var(--mono-ink-950);
+  --surface: var(--mono-ink-900);
+  --sunken: var(--mono-ink-850);
+  --line: var(--mono-line-700);
+  --line-strong: var(--mono-border-800);
+  --ink-muted: var(--mono-neutral-450);
+  --ink-secondary: var(--mono-neutral-400);
+  --ink: var(--mono-white);
+  --inverse: var(--mono-ink-950);
+  --overlay: rgb(0 0 0 / 0.64);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
 }
 
 @layer base {
   body {
-    @apply bg-sand-50 text-stone-900 antialiased;
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
     font-family: var(--font-sans);
   }
 
-  /* Serif display retired at P2: Geist is the only display face.
-     Legacy screens inherit it immediately; their layouts are rebuilt at P5. */
+  /* One focus ring, from a token, visible on both canvases. */
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
   ::selection {
-    background: var(--color-brand-200);
+    background-color: var(--color-line-strong);
+    color: var(--color-ink);
   }
 }
 
@@ -104,39 +210,44 @@
     font-feature-settings: "tnum" 1, "ss01" 1;
   }
 
+  /* -------------------------------------------------------------------------
+     Legacy class shims. Same class names as the old UI so existing markup keeps
+     working, Paper & Ink values. Screens are rebuilt at P5; components land
+     with shadcn/ui at P4.
+     ------------------------------------------------------------------------- */
   .card {
-    @apply rounded-2xl border border-stone-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,20,0.04)];
+    @apply rounded-md border border-line bg-surface;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-5 text-body-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm bg-ink px-5 text-body-sm font-medium text-inverse transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-stone-300 bg-white px-5 py-2.5 text-sm font-semibold text-stone-800 transition-colors hover:border-stone-400 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-line-strong bg-canvas px-5 text-body-sm font-medium text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-900 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-3 text-body-sm font-medium text-ink-secondary transition-colors hover:bg-sunken hover:text-ink disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .field-label {
-    @apply mb-1.5 block text-sm font-medium text-stone-700;
+    @apply mb-1 block text-label font-medium uppercase text-ink-secondary;
   }
 
   .input {
-    @apply w-full rounded-xl border border-stone-300 bg-white px-3.5 py-2.5 text-sm text-stone-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:bg-stone-100;
+    @apply min-h-11 w-full rounded-sm border border-line-strong bg-canvas px-3 text-body text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-ink disabled:cursor-not-allowed disabled:bg-sunken disabled:text-ink-muted;
   }
 
   .input[aria-invalid="true"] {
-    @apply border-rose-300 focus:border-rose-500 focus:ring-rose-100;
+    @apply border-ink text-ink;
   }
 
   .table-head {
-    @apply bg-sand-100/80 text-left text-xs font-semibold uppercase tracking-wide text-stone-500;
+    @apply bg-sunken text-left text-label font-medium uppercase text-ink-secondary;
   }
 }

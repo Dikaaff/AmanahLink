@@ -1,50 +1,13 @@
 import type { ReactNode } from "react";
+import { Badge, badgeToneForStatus } from "@/components/badge";
 
-const STATUS_STYLES: Record<string, string> = {
-  active: "bg-brand-50 text-brand-700 ring-brand-200",
-  funded: "bg-brand-50 text-brand-700 ring-brand-200",
-  draft: "bg-stone-100 text-stone-600 ring-stone-200",
-  pending_review: "bg-amber-50 text-amber-700 ring-amber-200",
-  frozen: "bg-sky-50 text-sky-700 ring-sky-200",
-  expired: "bg-stone-100 text-stone-500 ring-stone-200",
-  closed: "bg-stone-100 text-stone-600 ring-stone-200",
-  refunded: "bg-rose-50 text-rose-700 ring-rose-200",
-  settled: "bg-brand-50 text-brand-700 ring-brand-200",
-  initiated: "bg-amber-50 text-amber-700 ring-amber-200",
-  pending: "bg-amber-50 text-amber-700 ring-amber-200",
-  failed: "bg-rose-50 text-rose-700 ring-rose-200",
-  uploaded: "bg-amber-50 text-amber-700 ring-amber-200",
-  extracting: "bg-amber-50 text-amber-700 ring-amber-200",
-  auto_matched: "bg-brand-50 text-brand-700 ring-brand-200",
-  needs_review: "bg-amber-50 text-amber-700 ring-amber-200",
-  verified: "bg-brand-50 text-brand-700 ring-brand-200",
-  approved: "bg-brand-50 text-brand-700 ring-brand-200",
-  rejected: "bg-rose-50 text-rose-700 ring-rose-200",
-  receipt_pending: "bg-amber-50 text-amber-700 ring-amber-200",
-  reconciled: "bg-brand-50 text-brand-700 ring-brand-200",
-  disputed: "bg-rose-50 text-rose-700 ring-rose-200",
-  requested: "bg-amber-50 text-amber-700 ring-amber-200",
-  mcc_validated: "bg-sky-50 text-sky-700 ring-sky-200",
-  authorized: "bg-sky-50 text-sky-700 ring-sky-200",
-  captured: "bg-amber-50 text-amber-700 ring-amber-200",
-};
-
-export function StatusBadge({
-  status,
-  label,
-}: {
-  status: string;
-  label?: string;
-}) {
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${
-        STATUS_STYLES[status] ?? "bg-stone-100 text-stone-600 ring-stone-200"
-      }`}
-    >
-      {label ?? status}
-    </span>
-  );
+/**
+ * Legacy status badge, now backed by the six-tone Paper & Ink system (§5.2).
+ * The API `status_label` is no longer rendered here: badges carry one of six
+ * semantic words, and the precise label becomes row-level detail at P5.
+ */
+export function StatusBadge({ status }: { status: string; label?: string }) {
+  return <Badge tone={badgeToneForStatus(status)} />;
 }
 
 export function Progress({ percent }: { percent: number }) {
