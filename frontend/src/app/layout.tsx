@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { AuthProvider } from "@/components/auth-provider";
 import { Nav } from "@/components/nav";
 import "./globals.css";
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
     "Platform penggalangan dana dengan pencairan terbatas ke merchant terverifikasi dan kategori transaksi (MCC) yang diizinkan kampanye.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  await connection();
+
   return (
     <html lang="id" className="h-full">
       <body className="flex min-h-full flex-col">

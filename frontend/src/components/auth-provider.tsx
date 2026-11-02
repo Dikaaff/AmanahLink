@@ -46,6 +46,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
 
+    function handleUnauthorized() {
+      clearToken();
+      setUser(null);
+      setUnreadNotifications(0);
+    }
+
+    window.addEventListener("amanahlink:unauthorized", handleUnauthorized);
+
     async function hydrate() {
       if (!getToken()) {
         setReady(true);
@@ -69,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       cancelled = true;
+      window.removeEventListener("amanahlink:unauthorized", handleUnauthorized);
     };
   }, [refreshUnreadNotifications]);
 

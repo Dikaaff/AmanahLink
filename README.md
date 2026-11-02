@@ -57,7 +57,7 @@ Platform donasi konvensional mencairkan dana ke rekening penggalang. Setelah dan
 
 ## Status & Roadmap
 
-Proyek berada pada tahap **backend MVP**. Sumber kebenaran status ada di [`docs/progress.md`](docs/progress.md).
+Proyek berada pada tahap **MVP backend + frontend**. Sumber kebenaran status ada di [`docs/progress.md`](docs/progress.md).
 
 | Fase | Cakupan | Status |
 |---|---|---|
@@ -65,13 +65,13 @@ Proyek berada pada tahap **backend MVP**. Sumber kebenaran status ada di [`docs/
 | 2 — Arsitektur & Data | migration, enum, model, factory, seeder, invariant test | ✅ selesai |
 | 3 — API & Ledger | auth/RBAC, kampanye, donasi, webhook, disbursement, refund | ✅ selesai |
 | 4 — OCR Service | Flask `/extract`, upload nota, auto-match, review manual | ✅ selesai |
-| 5 — Frontend | halaman Next.js | ⬜ belum |
-| 6 — Security | hardening + checklist ASVS | ⬜ belum |
+| 5 — Frontend | halaman Next.js | 🟡 MVP implemented; E2E pending |
+| 6 — Security | hardening + checklist ASVS | 🟡 hardening berjalan; checklist penuh pending |
 | 7 — Test Suite | k6, konkurensi, E2E | ⬜ belum |
 | 8 — DevOps | compose, CI, observability, runbook | ⬜ belum |
 
 **Story yang sudah selesai:** US-01 … US-29 (seluruh backlog MVP).
-**Berikutnya:** Fase 5 — frontend Next.js, lalu security, test suite, dan DevOps.
+**Berikutnya:** tuntaskan verifikasi security Fase 6, lalu test suite E2E/k6 dan DevOps.
 
 ---
 
@@ -129,7 +129,7 @@ Proyek berada pada tahap **backend MVP**. Sumber kebenaran status ada di [`docs/
 
 ```mermaid
 flowchart LR
-    C["Client<br/>(Next.js — direncanakan)"] --> API["Laravel 13 API<br/>/api/v1"]
+    C["Client<br/>(Next.js frontend)"] --> API["Laravel 13 API<br/>/api/v1"]
     API --> DB[("MySQL 8.4")]
     API --> Q[("Queue<br/>database")]
     Q --> JOB["ProcessReceiptOcr"]

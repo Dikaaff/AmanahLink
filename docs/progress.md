@@ -10,8 +10,8 @@
 |---|---|
 | Terakhir diperbarui | 2026-11-02 |
 | Fase selesai | Fase 0, 1, 2, 3, 4 |
-| Fase berjalan | Fase 5 — frontend Next.js |
-| Status gate | Seluruh 29 story backlog backend ✅ (Epic 6 dan Epic 7 tuntas) |
+| Fase berjalan | Fase 5 — frontend (MVP selesai, E2E menyusul) |
+| Status gate | 29 story backend ✅; Fase 5 MVP ✅; Fase 6–8 belum ditutup |
 | Referensi | `docs/prd.md`, `docs/backlog.md`, `DECISIONS.md` |
 
 ## Ringkasan Fase
@@ -22,8 +22,8 @@
 | 2 — Arsitektur & Data | migration, enum, model, factory, seeder, invariant test | ✅ selesai |
 | 3 — API & Ledger | US-01…US-21 (auth, kampanye, donasi, webhook, disbursement, refund) | ✅ selesai |
 | 4 — OCR Service | US-22…US-24 (Flask `/extract`, upload nota, auto-match, review) | ✅ selesai |
-| 5 — Frontend | halaman Next.js | ⬜ belum — tunggu US-25 & Epic 7 |
-| 6 — Security | hardening + ASVS checklist | ⬜ belum |
+| 5 — Frontend | halaman Next.js | 🟡 MVP selesai; security headers + CSP nonce terverifikasi, E2E pending |
+| 6 — Security | hardening + ASVS checklist | 🟡 hardening berjalan; checklist penuh pending |
 | 7 — Test Suite | k6, konkurensi, E2E | ⬜ belum |
 | 8 — DevOps | compose, CI, observability, runbook | ⬜ belum |
 
@@ -138,6 +138,8 @@
 | 2026-11-02 | `php artisan test` (backend, setelah US-20 nyata) | **161 passed, 627 assertions** |
 | 2026-11-02 | `tests/Feature/DisbursementConcurrencyTest.php` | 5 proses paralel, saldo 98.000, 5×30.000 → tepat 3 sukses + 2 `INSUFFICIENT_FUNDS`, saldo akhir 8.000, `ledger:verify` exit 0 |
 | 2026-11-02 | `.venv/Scripts/python -m pytest -q` (ocr-service) | **8 passed** |
+| 2026-11-02 | `npm run lint` + `npm run build` (frontend) | bersih; 14 route, semuanya `ƒ (Dynamic)` |
+| 2026-11-02 | `curl -D -` ke `npm run start` (frontend) | `Content-Security-Policy` ada, `X-Powered-By` hilang, `X-Frame-Options: DENY`; HTML produksi **11/11** `<script>` ber-`nonce` |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih (hanya file terpilih karena repo tanpa Git) |
 
 ## Langkah berikutnya (berurutan)

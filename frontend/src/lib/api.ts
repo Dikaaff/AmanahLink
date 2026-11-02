@@ -229,6 +229,13 @@ async function request<T>(
     | null;
 
   if (!response.ok) {
+    if (authenticated && response.status === 401) {
+      clearToken();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("amanahlink:unauthorized"));
+      }
+    }
+
     throw new ApiError(
       response.status,
       body?.error?.code ?? "HTTP_ERROR",

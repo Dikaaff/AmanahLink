@@ -182,12 +182,21 @@
 
 ---
 
+### D-023 — CSP ketat ber-nonce; konsekuensinya semua halaman dirender dinamis
+
+- **Keputusan:** `frontend/src/proxy.ts` membuat nonce baru tiap request lalu menyetel `Content-Security-Policy` pada request **dan** response. `script-src` memakai `'self' 'nonce-…' 'strict-dynamic'` (plus `'unsafe-eval'` hanya saat development). `src/app/layout.tsx` memanggil `await connection()` sehingga seluruh route dirender per request dan Next.js dapat menyisipkan nonce ke setiap tag `<script>`.
+- **Alasan:** Token Sanctum disimpan di browser; `'strict-dynamic'` tanpa nonce tidak mungkin dipakai pada HTML statis karena nonce baru ada saat request. Verifikasi produksi menunjukkan halaman statis menghasilkan 11 tag `<script>` tanpa nonce — CSP seperti itu memblokir seluruh JS sehingga aplikasi mati, bukan sekadar gagal keras di konsol. `await connection()` adalah cara resmi Next 16 (dokumentasi CSP nonce) untuk memaksa render dinamis.
+- **Alternatif yang ditolak:** (a) `script-src 'unsafe-inline'` di `next.config.ts` — mempertahankan halaman statis tetapi membatalkan pertahanan XSS. (b) SRI/hash eksperimental — masih experimental dan tidak menangani script dinamis. (c) Nonce hanya di route tertentu — matriks CSP per route sulit diuji dan mudah bocor.
+- **Konsekuensi:** Semua route menjadi `ƒ (Dynamic)`; tidak ada ISR/CDN cache untuk HTML dan setiap request melakukan SSR ringan (halaman tetap client component). `style-src` masih `'unsafe-inline'` karena React/Tailwind menyisipkan style inline; risiko injeksi style jauh lebih rendah daripada script. Nonce diverifikasi lewat `curl` (header ada) dan hitungan `nonce=` pada HTML (11/11 script).
+
+---
+
 ## 2. Register Asumsi (default yang saya pakai sampai dikoreksi)
 | ID | Asumsi | Default bila salah | Dampak bila berubah |
 |---|---|---|---|
 | A-01 | Docker Desktop + WSL2 tersedia di mesin Windows 11 | **Terkoreksi:** belum ada; dipakai MySQL/Apache Laragon native (D-010) | Struktur repo & skrip demo |
 | A-02 | Bahasa/toolchain: PHP 8.3, Laravel **13.39.0**, Node 24, Python 3.12, MySQL 8.4.3 | Versi dipin saat scaffolding | Minor |
-| A-03 | Versi Next.js/React **belum dipin**; akan dipin persis saat `create-next-app` dijalankan di Fase 5 | — | Fase 5 |
+| A-03 | **Terkoreksi:** Next.js 16.4.3 + React 19.3.0, dipin saat Fase 5 | — | Fase 5 |
 | A-04 | Semua nominal IDR positif; tidak ada desimal fungsional | Tetap `DECIMAL(15,2)` | Kalkulasi refund |
 | A-05 | Satu tenant (satu organisasi platform), tanpa multi-org | Skema butuh `tenant_id` di hampir semua tabel | **Besar** — sebaiknya dikoreksi sebelum Fase 2 |
 | A-06 | Penggalang dana adalah individu/lembaga yang sudah login; donatur boleh anonim di level tampilan | Kolom `is_anonymous` | Kecil |
@@ -225,3 +234,4 @@
 | 1.7 | 2026-11-02 | D-017 freeze/unfreeze, D-018 audit viewer; US-26 dan US-27 selesai |
 | 1.8 | 2026-11-02 | D-019 timestamp + audit penolakan webhook; README utama lengkap |
 | 1.9 | 2026-11-02 | D-020 metrik p95 authorize + dashboard admin; US-25 selesai, Epic 6 tuntas |
+| 1.10 | 2026-11-02 | D-023 CSP nonce + render dinamis; security headers frontend terverifikasi |
