@@ -129,6 +129,10 @@
   nyata atau queue worker yang diverifikasi end-to-end.
 - Alert DLQ baru berupa log `critical`; belum ada integrasi alerting.
 - NFR-03/NFR-10 (availability, backup) tetap belum terverifikasi sampai staging.
+- `npm audit` mencatat 16 moderate di rantai `eslint`/`minimatch` (dev-only).
+  `npm audit fix` tidak menawarkan perbaikan non-breaking; `--force` akan
+  menurunkan/mengganti `eslint-config-next`, jadi sementara dibiarkan dan
+  dicatat. Dependensi produksi bersih.
 
 ## Log Verifikasi
 
@@ -140,6 +144,8 @@
 | 2026-11-02 | `.venv/Scripts/python -m pytest -q` (ocr-service) | **8 passed** |
 | 2026-11-02 | `npm run lint` + `npm run build` (frontend) | bersih; 14 route, semuanya `ƒ (Dynamic)` |
 | 2026-11-02 | `curl -D -` ke `npm run start` (frontend) | `Content-Security-Policy` ada, `X-Powered-By` hilang, `X-Frame-Options: DENY`; HTML produksi **11/11** `<script>` ber-`nonce` |
+| 2026-11-02 | `composer audit` (backend) | **0 advisory** |
+| 2026-11-02 | `npm audit --omit=dev` / `npm audit` (frontend) | produksi **0 kerentanan**; 16 moderate hanya di toolchain lint (`minimatch` via `eslint-config-next`) tanpa fix non-breaking |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih (hanya file terpilih karena repo tanpa Git) |
 
 ## Langkah berikutnya (berurutan)
