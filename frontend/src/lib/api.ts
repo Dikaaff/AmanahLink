@@ -230,8 +230,8 @@ async function request<T>(
   return body as T;
 }
 
-function json(body: unknown): RequestInit {
-  return { method: "POST", body: JSON.stringify(body) };
+function json(body: unknown, method = "POST"): RequestInit {
+  return { method, body: JSON.stringify(body) };
 }
 
 export const api = {
@@ -283,6 +283,17 @@ export const api = {
     deadline_at: string;
     allowed_mcc_array: string[];
   }) => request<{ data: Campaign }>("/campaigns", json(body)),
+
+  updateCampaign: (
+    id: number,
+    body: {
+      title: string;
+      description: string;
+      target_amount: string;
+      deadline_at: string;
+      allowed_mcc_array: string[];
+    },
+  ) => request<{ data: Campaign }>(`/campaigns/${id}`, json(body, "PUT")),
 
   submitCampaign: (id: number) =>
     request<{ data: Campaign }>(`/campaigns/${id}/submit`, { method: "POST" }),

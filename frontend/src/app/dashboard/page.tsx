@@ -329,25 +329,35 @@ export default function DashboardPage() {
                             {dateOnly(campaign.deadline_at)}
                           </td>
                           <td className="px-4 py-3 text-right">
-                            {campaign.status === "draft" ? (
-                              <button
-                                type="button"
-                                className="btn-secondary !px-3 !py-1.5"
-                                disabled={submittingId === campaign.id}
-                                onClick={() => handleSubmitCampaign(campaign)}
-                              >
-                                {submittingId === campaign.id
-                                  ? "Mengajukan…"
-                                  : "Ajukan review"}
-                              </button>
-                            ) : (
-                              <Link
-                                href={`/campaigns/${campaign.slug}`}
-                                className="btn-ghost"
-                              >
-                                Lihat
-                              </Link>
-                            )}
+                            <div className="flex justify-end gap-1">
+                              {campaign.status === "draft" ? (
+                                <button
+                                  type="button"
+                                  className="btn-secondary !px-3 !py-1.5"
+                                  disabled={submittingId === campaign.id}
+                                  onClick={() => handleSubmitCampaign(campaign)}
+                                >
+                                  {submittingId === campaign.id
+                                    ? "Mengajukan…"
+                                    : "Ajukan review"}
+                                </button>
+                              ) : null}
+                              {campaign.status === "draft" ? (
+                                <Link
+                                  href={`/dashboard/campaigns/${campaign.slug}/edit`}
+                                  className="btn-ghost"
+                                >
+                                  Edit
+                                </Link>
+                              ) : (
+                                <Link
+                                  href={`/campaigns/${campaign.slug}`}
+                                  className="btn-ghost"
+                                >
+                                  Lihat
+                                </Link>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
