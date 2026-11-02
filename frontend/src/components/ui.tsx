@@ -23,6 +23,10 @@ const STATUS_STYLES: Record<string, string> = {
   receipt_pending: "bg-amber-50 text-amber-700 ring-amber-200",
   reconciled: "bg-brand-50 text-brand-700 ring-brand-200",
   disputed: "bg-rose-50 text-rose-700 ring-rose-200",
+  requested: "bg-amber-50 text-amber-700 ring-amber-200",
+  mcc_validated: "bg-sky-50 text-sky-700 ring-sky-200",
+  authorized: "bg-sky-50 text-sky-700 ring-sky-200",
+  captured: "bg-amber-50 text-amber-700 ring-amber-200",
 };
 
 export function StatusBadge({

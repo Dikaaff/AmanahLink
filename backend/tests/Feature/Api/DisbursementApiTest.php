@@ -6,10 +6,12 @@ namespace Tests\Feature\Api;
 
 use App\Enums\AccountCode;
 use App\Enums\MerchantStatus;
+use App\Enums\TransactionStatus;
 use App\Models\Campaign;
 use App\Models\DisbursementLimit;
 use App\Models\Donation;
 use App\Models\Merchant;
+use App\Models\Receipt;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\DonationSettlementService;
@@ -249,6 +251,47 @@ final class DisbursementApiTest extends TestCase
 
         $this->pay(User::factory()->campaigner()->create(), $campaign, $merchant, '10000')
             ->assertForbidden();
+    }
+
+    public function test_a_campaigner_can_list_own_disbursements_with_receipt_status(): void
+    {
+        $campaign = Campaign::factory()->active()->create();
+        $merchant = Merchant::factory()->create();
+        $transaction = Transaction::factory()->captured()->create([
+            'campaign_id' => $campaign->id,
+            'user_id' => $campaign->user_id,
+            'merchant_id' => $merchant->id,
+            'status' => TransactionStatus::ReceiptPending,
+        ]);
+        Receipt::factory()->needsReview()->create(['transaction_id' => $transaction->id]);
+
+        $otherCampaign = Campaign::factory()->active()->create();
+        Transaction::factory()->captured()->create([
+            'campaign_id' => $otherCampaign->id,
+            'user_id' => $otherCampaign->user_id,
+        ]);
+
+        Sanctum::actingAs($campaign->campaigner);
+
+        $this->getJson('/api/v1/disbursements')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $transaction->id)
+            ->assertJsonPath('data.0.status', 'receipt_pending')
+            ->assertJsonPath('data.0.status_label', 'Menunggu Nota')
+            ->assertJsonPath('data.0.campaign.slug', $campaign->slug)
+            ->assertJsonPath('data.0.merchant.id', $merchant->id)
+            ->assertJsonPath('data.0.receipt.status', 'needs_review')
+            ->assertJsonPath('data.0.receipt.status_label', 'Perlu Review');
+    }
+
+    public function test_a_donor_cannot_list_disbursements(): void
+    {
+        Sanctum::actingAs(User::factory()->donor()->create());
+
+        $this->getJson('/api/v1/disbursements')
+            ->assertForbidden()
+            ->assertJsonPath('error.code', 'FORBIDDEN');
     }
 
     public function test_only_an_admin_can_set_the_limits(): void

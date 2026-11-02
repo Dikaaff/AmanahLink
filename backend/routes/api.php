@@ -43,6 +43,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('donations', [DonationController::class, 'store']);
 
         Route::post('disbursements', [DisbursementController::class, 'store']);
+        Route::get('disbursements', [DisbursementController::class, 'index']);
         Route::post('disbursements/{transaction}/receipts', [ReceiptController::class, 'store']);
 
         Route::get('receipts', [ReceiptController::class, 'index']);

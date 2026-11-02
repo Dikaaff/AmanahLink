@@ -62,9 +62,19 @@ export interface Disbursement {
   reference_id: string;
   amount: string;
   status: string;
+  status_label: string;
   mcc_used: string | null;
-  campaign?: { id: number; title: string };
+  campaign?: { id: number; title: string; slug: string };
   merchant?: { id: number; name: string };
+  receipt?: {
+    id: number;
+    status: string;
+    status_label: string;
+    confidence: string | null;
+    rejection_reason: string | null;
+    reviewed_at: string | null;
+    created_at: string | null;
+  } | null;
   created_at: string | null;
 }
 
@@ -354,6 +364,12 @@ export const api = {
       ...json(body),
       headers: { "Idempotency-Key": crypto.randomUUID() },
     }),
+
+  disbursements: (page = 1, campaignId?: number) => {
+    const params = new URLSearchParams({ page: String(page) });
+    if (campaignId) params.set("campaign_id", String(campaignId));
+    return request<Paginated<Disbursement>>(`/disbursements?${params.toString()}`);
+  },
 
   upsertDisbursementLimit: (
     campaignId: number,

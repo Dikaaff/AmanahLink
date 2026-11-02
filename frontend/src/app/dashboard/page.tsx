@@ -36,6 +36,8 @@ export default function DashboardPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [donations, setDonations] = useState<Paginated<Donation> | null>(null);
   const [donationPage, setDonationPage] = useState(1);
+  const [disbursements, setDisbursements] = useState<Paginated<Disbursement> | null>(null);
+  const [disbursementPage, setDisbursementPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -75,6 +77,12 @@ export default function DashboardPage() {
     setCampaigns(response.data);
   }, [isFundraiser]);
 
+  const loadDisbursements = useCallback(async () => {
+    if (!isFundraiser) return;
+    const response = await api.disbursements(disbursementPage);
+    setDisbursements(response);
+  }, [disbursementPage, isFundraiser]);
+
   useEffect(() => {
     if (!ready) return;
 
@@ -88,11 +96,13 @@ export default function DashboardPage() {
     Promise.all([
       isFundraiser ? api.myCampaigns() : Promise.resolve(null),
       api.donations(donationPage),
+      isFundraiser ? api.disbursements(disbursementPage) : Promise.resolve(null),
     ])
-      .then(([mine, myDonations]) => {
+      .then(([mine, myDonations, myDisbursements]) => {
         if (cancelled) return;
         if (mine) setCampaigns(mine.data);
         setDonations(myDonations);
+        if (myDisbursements) setDisbursements(myDisbursements);
       })
       .catch((caught) => {
         if (!cancelled) setError(errorMessage(caught));
@@ -104,7 +114,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [ready, user, isFundraiser, donationPage, router]);
+  }, [ready, user, isFundraiser, donationPage, disbursementPage, router]);
 
   const stats = useMemo(() => {
     const total = campaigns.reduce(
@@ -131,7 +141,7 @@ export default function DashboardPage() {
 
     try {
       await api.submitCampaign(campaign.id);
-      await loadCampaigns();
+      await Promise.all([loadCampaigns(), loadDisbursements()]);
       setNotice(`“${campaign.title}” diajukan untuk review.`);
     } catch (caught) {
       setError(errorMessage(caught));
@@ -186,7 +196,7 @@ export default function DashboardPage() {
       setReceiptUploadError(null);
       setReceiptUploadNotice(null);
       setDisbursement({ campaignId: "", merchantId: "", amount: "" });
-      await loadCampaigns();
+      await Promise.all([loadCampaigns(), loadDisbursements()]);
     } catch (caught) {
       setDisbursementError(errorMessage(caught));
     } finally {
@@ -212,6 +222,7 @@ export default function DashboardPage() {
       setReceiptUploadNotice(
         `Nota berhasil diunggah dengan status ${response.data.status_label.toLowerCase()}. OCR akan diproses oleh antrean.`,
       );
+      await loadDisbursements();
     } catch (caught) {
       setReceiptUploadError(errorMessage(caught));
     } finally {
@@ -230,6 +241,7 @@ export default function DashboardPage() {
   if (!user) return null;
 
   const lastDonationPage = donations?.meta?.last_page ?? 1;
+  const lastDisbursementPage = disbursements?.meta?.last_page ?? 1;
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6">
@@ -625,6 +637,132 @@ export default function DashboardPage() {
               ) : null}
             </section>
           ) : null}
+
+          <section className="card overflow-hidden">
+            <div className="border-b border-stone-100 px-6 py-5">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+                    Jejak penggunaan dana
+                  </p>
+                  <h2 className="mt-1 text-xl font-semibold text-stone-900">
+                    Riwayat pencairan
+                  </h2>
+                  <p className="mt-1 text-sm text-stone-500">
+                    Pantau status transaksi dan proses nota tanpa kehilangan jejak audit.
+                  </p>
+                </div>
+                <span className="rounded-full bg-sand-100 px-3 py-1.5 text-xs font-medium text-stone-600">
+                  {disbursements?.meta?.total ?? 0} transaksi
+                </span>
+              </div>
+            </div>
+
+            {!disbursements || disbursements.data.length === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  title="Belum ada pencairan"
+                  description="Pencairan yang berhasil tercatat akan muncul di sini bersama status nota dan merchant penerima."
+                />
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[860px] text-sm">
+                    <thead className="table-head">
+                      <tr>
+                        <th className="px-6 py-3">Kampanye & merchant</th>
+                        <th className="px-4 py-3">Nominal</th>
+                        <th className="px-4 py-3">Transaksi</th>
+                        <th className="px-4 py-3">Nota</th>
+                        <th className="px-6 py-3">Waktu</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100">
+                      {disbursements.data.map((item) => (
+                        <tr key={item.id} className="align-top">
+                          <td className="px-6 py-4">
+                            {item.campaign ? (
+                              <Link
+                                href={`/campaigns/${item.campaign.slug}`}
+                                className="font-semibold text-stone-900 hover:underline"
+                              >
+                                {item.campaign.title}
+                              </Link>
+                            ) : (
+                              "—"
+                            )}
+                            <span className="mt-1 block text-xs text-stone-500">
+                              {item.merchant?.name ?? "Merchant tidak tersedia"}
+                              {item.mcc_used ? ` · MCC ${item.mcc_used}` : ""}
+                            </span>
+                            <span className="mt-1 block font-mono text-[11px] text-stone-400">
+                              {item.reference_id}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 font-semibold text-stone-900">
+                            {rupiah(item.amount)}
+                          </td>
+                          <td className="px-4 py-4">
+                            <StatusBadge status={item.status} label={item.status_label} />
+                          </td>
+                          <td className="px-4 py-4">
+                            {item.receipt ? (
+                              <div>
+                                <StatusBadge
+                                  status={item.receipt.status}
+                                  label={item.receipt.status_label}
+                                />
+                                {item.receipt.confidence !== null ? (
+                                  <span className="mt-1 block text-xs text-stone-500">
+                                    OCR {Math.round(Number(item.receipt.confidence) * 100)}%
+                                  </span>
+                                ) : null}
+                                {item.receipt.rejection_reason ? (
+                                  <span className="mt-1 block max-w-[180px] text-xs text-rose-700">
+                                    {item.receipt.rejection_reason}
+                                  </span>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-stone-500">Belum diunggah</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-xs text-stone-500">
+                            {dateTime(item.created_at)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {lastDisbursementPage > 1 ? (
+                  <div className="flex items-center justify-center gap-3 border-t border-stone-100 px-6 py-4">
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      disabled={disbursementPage <= 1}
+                      onClick={() => setDisbursementPage((current) => current - 1)}
+                    >
+                      Sebelumnya
+                    </button>
+                    <span className="text-sm text-stone-500">
+                      Halaman {disbursementPage} dari {lastDisbursementPage}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      disabled={disbursementPage >= lastDisbursementPage}
+                      onClick={() => setDisbursementPage((current) => current + 1)}
+                    >
+                      Berikutnya
+                    </button>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </section>
         </>
       ) : (
         <Alert tone="info">
