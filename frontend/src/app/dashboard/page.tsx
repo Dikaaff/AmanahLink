@@ -18,6 +18,7 @@ import {
   type Campaign,
   type Disbursement,
   type Donation,
+  type Merchant,
   type Paginated,
 } from "@/lib/api";
 import { dateOnly, dateTime, rupiah } from "@/lib/format";
@@ -38,6 +39,8 @@ export default function DashboardPage() {
   const [donationPage, setDonationPage] = useState(1);
   const [disbursements, setDisbursements] = useState<Paginated<Disbursement> | null>(null);
   const [disbursementPage, setDisbursementPage] = useState(1);
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [merchantsError, setMerchantsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -70,6 +73,22 @@ export default function DashboardPage() {
   const [receiptUploadNotice, setReceiptUploadNotice] = useState<string | null>(null);
 
   const isFundraiser = user?.role === "campaigner" || user?.role === "admin";
+
+  const selectedCampaign = useMemo(
+    () =>
+      campaigns.find(
+        (campaign) => String(campaign.id) === disbursement.campaignId,
+      ) ?? null,
+    [campaigns, disbursement.campaignId],
+  );
+
+  const merchantOptions = useMemo(() => {
+    if (!selectedCampaign) return merchants;
+
+    const allowed = new Set(selectedCampaign.allowed_mcc ?? []);
+
+    return merchants.filter((merchant) => allowed.has(merchant.mcc));
+  }, [merchants, selectedCampaign]);
 
   const loadCampaigns = useCallback(async () => {
     if (!isFundraiser) return;
@@ -110,6 +129,20 @@ export default function DashboardPage() {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
+    if (isFundraiser) {
+      api
+        .merchants()
+        .then((response) => {
+          if (!cancelled) {
+            setMerchants(response.data);
+            setMerchantsError(null);
+          }
+        })
+        .catch((caught) => {
+          if (!cancelled) setMerchantsError(errorMessage(caught));
+        });
+    }
 
     return () => {
       cancelled = true;
@@ -520,6 +553,7 @@ export default function DashboardPage() {
                       setDisbursement((current) => ({
                         ...current,
                         campaignId: event.target.value,
+                        merchantId: "",
                       }))
                     }
                   >
@@ -534,22 +568,34 @@ export default function DashboardPage() {
 
                 <div>
                   <label htmlFor="merchant" className="field-label">
-                    ID merchant terverifikasi
+                    Merchant terverifikasi
                   </label>
-                  <input
+                  <select
                     id="merchant"
                     required
-                    inputMode="numeric"
                     className="input"
-                    placeholder="mis. 1"
                     value={disbursement.merchantId}
                     onChange={(event) =>
                       setDisbursement((current) => ({
                         ...current,
-                        merchantId: event.target.value.replace(/[^\d]/g, ""),
+                        merchantId: event.target.value,
                       }))
                     }
-                  />
+                  >
+                    <option value="">Pilih merchant</option>
+                    {merchantOptions.map((merchant) => (
+                      <option key={merchant.id} value={merchant.id}>
+                        {merchant.name} · {merchant.mcc_title ?? merchant.mcc}
+                        {merchant.city ? ` · ${merchant.city}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedCampaign && merchantOptions.length === 0 ? (
+                    <p className="mt-2 text-xs text-stone-500">
+                      Belum ada merchant terverifikasi untuk kategori kampanye
+                      ini ({selectedCampaign.allowed_mcc.join(", ") || "tanpa MCC"}).
+                    </p>
+                  ) : null}
                 </div>
 
                 <div>
@@ -571,6 +617,14 @@ export default function DashboardPage() {
                     }
                   />
                 </div>
+
+                {merchantsError ? (
+                  <div className="md:col-span-3">
+                    <Alert>
+                      Gagal memuat daftar merchant: {merchantsError}
+                    </Alert>
+                  </div>
+                ) : null}
 
                 <div className="md:col-span-3">
                   {disbursementError ? (

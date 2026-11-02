@@ -101,6 +101,19 @@ export interface DisbursementLimit {
   expires_at: string | null;
 }
 
+export interface Merchant {
+  id: number;
+  name: string;
+  mcc: string;
+  mcc_title?: string | null;
+  category?: string | null;
+  city: string | null;
+  status: string;
+  status_label: string;
+  mid?: string;
+  verified_at?: string | null;
+}
+
 export interface AuditLog {
   id: number;
   actor_id: number | null;
@@ -376,6 +389,13 @@ export const api = {
     const params = new URLSearchParams({ page: String(page) });
     if (campaignId) params.set("campaign_id", String(campaignId));
     return request<Paginated<Disbursement>>(`/disbursements?${params.toString()}`);
+  },
+
+  merchants: (query: { mcc?: string; q?: string } = {}) => {
+    const params = new URLSearchParams();
+    if (query.mcc) params.set("mcc", query.mcc);
+    if (query.q?.trim()) params.set("q", query.q.trim());
+    return request<Paginated<Merchant>>(`/merchants?${params.toString()}`);
   },
 
   upsertDisbursementLimit: (

@@ -147,6 +147,7 @@
 | 2026-11-03 | `composer audit` (backend) | **0 advisory** || 2026-11-03 | `npm audit --omit=dev` / `npm audit` (frontend) | produksi **0 kerentanan**; 16 moderate hanya di toolchain lint (`minimatch` via `eslint-config-next`) tanpa fix non-breaking |
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/MerchantApiTest.php` | **10 passed, 43 assertions** (registry merchant T-02a) |
 | 2026-11-03 | `php artisan test --compact` (setelah T-02a) | **171 passed, 670 assertions** |
+| 2026-11-03 | smoke API + `npm run lint`/`build` (T-02b) | campaigner `GET /merchants` → 2 merchant tanpa `mid`; admin → `mid` ada; lint/build bersih |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
 
 ## Kesiapan dokumen (PRD, backlog, kontrak API) — audit 2026-11-03
@@ -319,8 +320,10 @@ limit) dan beberapa state/UX.
    (field internal `mid`/`verified_at` hanya admin), validasi MCC aktif &
    tidak diblokir, audit `merchant.created/updated/verified`, 10 test di
    `tests/Feature/Api/MerchantApiTest.php`. Lanjut ke T-02b.
-2. **T-02b — Pemilih merchant di UI:** ganti input ID manual dengan `<select>`
-   dari `GET /merchants`; tampilkan MCC + kategori + status verifikasi.
+2. **T-02b — Pemilih merchant di UI:** ✅ **selesai 2026-11-03** —
+   `api.merchants()`, dashboard memuat daftar merchant terverifikasi dan
+   memfilternya berdasarkan `allowed_mcc` kampanye yang dipilih; input ID manual
+   diganti `<select>` (nama · kategori · kota) dengan empty/error state.
 3. **T-02c — Guard limit (D-024):** tambahkan `GET /campaigns/{id}/disbursement-limit`
    (pemilik + admin) dan sembunyikan form edit untuk non-admin; tampilkan sisa
    limit read-only. Test: campaigner GET 200, campaigner PUT 403, admin PUT 200.
