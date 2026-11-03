@@ -10,7 +10,7 @@
 |---|---|
 | Terakhir diperbarui | 2026-11-03 |
 | Fase selesai | Fase 0, 1, 2, 3, 4 |
-| Fase berjalan | Fase 6 — security & kepatuhan (T-04…T-07 selesai; T-11 berikutnya) |
+| Fase berjalan | Fase 7 — test suite (T-04…T-07 dan T-11 selesai) |
 | Status gate | 29/29 story ✅; Fase 5–8 belum ditutup |
 | Referensi | `docs/prd.md`, `docs/backlog.md`, `DECISIONS.md` |
 
@@ -23,7 +23,7 @@
 | 3 — API & Ledger | US-01…US-21 (auth, kampanye, donasi, webhook, disbursement, refund) | ✅ selesai |
 | 4 — OCR Service | US-22…US-24 (Flask `/extract`, upload nota, auto-match, review) | ✅ selesai |
 | 5 — Frontend | halaman Next.js | 🟡 MVP + P5 mobile core implemented; screenshot evidence pending |
-| 6 — Security | hardening + ASVS checklist | 🟡 T-04…T-07 selesai; full ASVS mapping dan sinkronisasi kontrak pending |
+| 6 — Security | hardening + ASVS checklist | ✅ T-04…T-07 selesai; subset ASVS dan sinkronisasi kontrak tersedia |
 | 7 — Test Suite | k6, konkurensi, E2E | ⬜ belum |
 | 8 — DevOps | compose, CI, observability, runbook | ⬜ belum |
 
@@ -155,6 +155,7 @@
 | 2026-11-03 | `php artisan test --compact tests/Feature/HealthCheckTest.php` (T-06) | **4 passed, 26 assertions**; liveness, readiness sehat, OCR gagal, dan queue gagal |
 | 2026-11-03 | `php artisan test --compact tests/Unit/RedactSensitiveDataProcessorTest.php tests/Feature/SecurityHardeningTest.php tests/Feature/Api/ReceiptUploadApiTest.php` (T-07) | **9 passed, 57 assertions**; CORS allowlist, named rate limit, log redaction, dan MIME-content upload validation |
 | 2026-11-03 | `php artisan test --compact` + `php artisan ledger:verify` + `composer audit` + frontend lint/typecheck/build + `npm audit --omit=dev` (T-07) | **193 passed, 778 assertions**; ledger invariant lulus, composer/npm production audit 0 vulnerability, lint/typecheck/build bersih |
+| 2026-11-03 | audit route/migration terhadap PRD, backlog, README, dan `DECISIONS.md` (T-11) | Kontrak diselaraskan; `docs/erd.md` ditambahkan; tidak ada perubahan runtime |
 | 2026-11-03 | smoke API (T-02c) | campaigner `GET /campaigns/{id}/disbursement-limit` → `daily=5000000.00`, `used_today=0.00`; campaigner `PUT` → 403 `FORBIDDEN` |
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/ReceiptReviewApiTest.php tests/Feature/Api/ReceiptUploadApiTest.php` (T-02d) | **11 passed, 53 assertions** |
 | 2026-11-03 | `vendor/bin/pint --test` (4 file T-02d) | bersih |
@@ -180,19 +181,19 @@ Kesenjangan yang harus ditutup (ID dipakai di rencana kerja):
 | ID | Kesenjangan | Bukti | Dampak | Task |
 |---|---|---|---|---|
 | G-01 | Verifikasi email (FR-03, US-04) tidak ada: `MustVerifyEmail` dikomentari, tanpa route/resend/test | **ditutup T-04** — `User` kini `MustVerifyEmail`, signed verify + resend tersedia, guard dan test aktif | — | ✅ T-04 |
-| G-02 | PRD §8 membolehkan campaigner menerbitkan limit; kode admin-only | `CampaignPolicy::manageLimits` | kontrak UI/API ambigu | T-11 |
-| G-03 | Backlog menyebut `POST /disbursement/scan` dan `Idempotency-Key` wajib pada create campaign; kode memakai `/disbursements` dan tidak mewajibkan key di campaign | `routes/api.php`, `docs/backlog.md` US-05/US-15 | agent bisa membuat endpoint duplikat | T-11 |
-| G-04 | Kode webhook memakai `INVALID_SIGNATURE`; PRD §9 menulis `UNAUTHENTICATED` | `PaymentWebhookService`, D-019 | test/regresi salah kode | T-11 |
+| G-02 | PRD §8 membolehkan campaigner menerbitkan limit; kode admin-only | **ditutup T-11** — PRD/README membedakan admin PUT dan owner/admin GET | — | ✅ T-11 |
+| G-03 | Backlog menyebut `POST /disbursement/scan` dan `Idempotency-Key` wajib pada create campaign; kode memakai `/disbursements` dan tidak mewajibkan key di campaign | **ditutup T-11** — backlog/README mengikuti route aktual; key hanya wajib pada donation/disbursement | — | ✅ T-11 |
+| G-04 | Kode webhook memakai `INVALID_SIGNATURE`; PRD §9 menulis `UNAUTHENTICATED` | **ditutup T-11** — katalog PRD/backlog mengikuti `INVALID_SIGNATURE` aktual | — | ✅ T-11 |
 | G-05 | Tidak ada penjadwal `expired` / auto-close + refund window | **ditutup T-05** — `amanah:campaign-cycle` menandai `active/funded → expired`, auto-refund setelah 7 hari, dan mencatat audit | — | ✅ T-05 |
 | G-06 | Tidak ada `/healthz` dan `/readyz`; hanya `/up` bawaan Laravel | **ditutup T-06** — liveness `/healthz`; readiness `/readyz` memeriksa database, queue, dan OCR dengan HTTP `503` saat dependency gagal | — | ✅ T-06 |
 | G-07 | NFR-08 retensi (log 90 jam, nota 24 jam, audit 5 tahun) belum diimplementasikan | tidak ada command/test retensi | klaim kepatuhan palsu | T-13 |
 | G-08 | NFR-06 (WCAG 2.1 AA) belum diuji; tidak ada axe-core | belum ada `docs/a11y.md` | klaim aksesibilitas tak terbukti | T-14 |
 | G-09 | NFR-01 (p95 < 500 ms @200 rps) belum diukur; baru metrik internal aplikasi | tidak ada k6/`docs/perf/` | target performa belum terbukti | T-09 |
-| G-10 | Artefak yang dirujuk PRD belum lengkap: `docs/erd.md`, `docs/runbook.md`, `docs/a11y.md`, `docs/perf/scan-p95.md`, `IdempotencyTest.php`, `RetentionTest.php`, `tests/Concurrency/` | `docs/prd.md` §5; `docs/security/asvs.md` kini tersedia dari T-07 | traceability NFR masih putus di artefak lain | T-11, T-13 |
-| G-11 | Q-01…Q-04 di PRD masih "terbuka" padahal sudah diputuskan di `DECISIONS.md` | `docs/prd.md` §12, D-005/D-015 | agent bisa memutus ulang | T-11 |
-| G-12 | FR-08 menyebut VA **dan QRIS**; `PaymentInstruction` hanya VA | `PaymentGateway`/`FakePaymentGateway` | ekspektasi demo meleset | T-11 |
+| G-10 | Artefak yang dirujuk PRD belum lengkap: `docs/runbook.md`, `docs/a11y.md`, `docs/perf/scan-p95.md`, `IdempotencyTest.php`, `RetentionTest.php`, `tests/Concurrency/` | **ditutup sebagian T-11** — `docs/erd.md` tersedia; artefak test/operasional lain tetap menjadi T-08…T-14 | traceability NFR masih putus di artefak lain | T-13, T-14 |
+| G-11 | Q-01…Q-04 di PRD masih "terbuka" padahal sudah diputuskan di `DECISIONS.md` | **ditutup T-11** — pertanyaan diberi keputusan eksplisit dan dirujuk D-025 | — | ✅ T-11 |
+| G-12 | FR-08 menyebut VA **dan QRIS**; `PaymentInstruction` hanya VA | **ditutup T-11** — PRD/README menyatakan fake saat ini VA; QRIS nyata menunggu adapter | — | ✅ T-11 |
 | G-13 | Token Sanctum disimpan di `localStorage`; CSP nonce sudah aktif tetapi risiko XSS residual tetap ada | **ditutup T-07** — token browser kini in-memory; reload meminta login ulang, API bearer tetap kompatibel | — | ✅ T-07 |
-| G-14 | A-05 single-tenant masih asumsi, bukan keputusan eksplisit | `DECISIONS.md` A-05 | skema sulit diubah bila multi-org | T-11 (terima/tolak) |
+| G-14 | A-05 single-tenant masih asumsi, bukan keputusan eksplisit | **ditutup T-11** — PRD Q-04 dan README menyatakan single-tenant v1.0 | — | ✅ T-11 |
 | G-15 | Registry merchant tidak punya API/UI; campaigner harus mengetik ID merchant (seed saja) | `routes/api.php` tidak punya route merchant; `dashboard/page.tsx:537` | demo & pemakaian nyata rapuh; PRD §8 "kelola merchant" tak terpenuhi | ✅ T-02a/T-02b |
 | G-16 | Form limit disbursement tampil di dashboard campaigner, tetapi API `manageLimits` admin-only | `dashboard/page.tsx`, `CampaignPolicy::manageLimits` | campaigner mendapat 403 dari UI sendiri | ✅ T-02c (form admin-only + GET read-only) |
 
@@ -275,7 +276,7 @@ selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
 | T-05 | Penjadwal siklus: tandai `expired` saat deadline lewat, buka refund window, auto-close + refund, retensi `request_metrics` (G-05) | 4h | ✅ **selesai 2026-11-03** — `amanah:campaign-cycle`, hourly scheduler, 7-day refund window, retention prune, dan `CampaignCycleTest` |
 | T-06 | `/healthz` (liveness) dan `/readyz` (DB + queue + OCR reachability) (G-06) | 2h | ✅ **selesai 2026-11-03** — `HealthController`, route probes, 4 feature test, dan contoh output README |
 | T-07 | `docs/security/asvs.md`: checklist ASVS L2 subset dengan status + bukti per item; perbaiki temuan (CORS, rate limit per route, redaksi log, validasi upload, kebijakan token G-13) | 6h | ✅ **selesai 2026-11-03** — ASVS subset, CORS allowlist, named route limiters, log processor, MIME-content validation, in-memory browser token, dan test |
-| T-11 | Sinkronisasi kontrak: PRD §8/§9/§12, backlog endpoint & AC, `DECISIONS.md` D-024… (G-02, G-03, G-04, G-11, G-12, G-14), buat `docs/erd.md` (G-10) | 3h | dokumen konsisten; tidak ada AC yang menyebut endpoint fiktif |
+| T-11 | Sinkronisasi kontrak: PRD §8/§9/§12, backlog endpoint & AC, `DECISIONS.md` D-024… (G-02, G-03, G-04, G-11, G-12, G-14), buat `docs/erd.md` (G-10) | 3h | ✅ **selesai 2026-11-03** — PRD/backlog/README/decisions mengikuti route + test aktual; `docs/erd.md` tersedia |
 
 ### Fase 7 — test suite (GATE 7)
 
@@ -375,5 +376,5 @@ limit) dan beberapa state/UX.
    `docs/design/P3-tokens.md`, `docs/design/DESIGN_DECISIONS.md`, bukti di
    `docs/design/screens/`. P4 dibuktikan lewat `/design/components`, gallery
    interaktif, dan screenshot `p4-components-*.png`.
-2. **T-11** sinkronisasi kontrak dan artefak dokumentasi.
-3. **T-07** ASVS + **T-11** sinkronisasi dokumen sebelum menyentuh Fase 7.
+2. **T-08** Playwright critical path.
+3. **T-09/T-10** performance dan concurrency.

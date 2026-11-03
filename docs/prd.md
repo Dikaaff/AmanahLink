@@ -66,8 +66,8 @@ Prioritas: **M** = must (MVP), **S** = should (v1.0 bila waktu cukup), **C** = c
 | FR-05 | Campaign | Review & approve/reject kampanye oleh admin | M | CONFLICT_STATE, FORBIDDEN_ROLE |
 | FR-06 | Campaign | Edit terbatas hanya sebelum donasi pertama settle | M | CAMPAIGN_LOCKED |
 | FR-07 | Campaign | Tutup kampanye & refund sisa dana | M | CONFLICT_STATE, INSUFFICIENT_FUNDS |
-| FR-08 | Donation | Generate VA/QRIS pay-in + `expires_at` | M | CAMPAIGN_NOT_ACTIVE |
-| FR-09 | Donation | Webhook settlement idempoten + signature | M | UNAUTHENTICATED, IDEMPOTENCY_MISMATCH |
+| FR-08 | Donation | Generate payment instruction + `expires_at`; driver `fake` saat ini mengembalikan VA | M | CAMPAIGN_NOT_ACTIVE |
+| FR-09 | Donation | Webhook settlement idempoten + signature | M | INVALID_SIGNATURE, IDEMPOTENCY_MISMATCH |
 | FR-10 | Donation | Riwayat donasi donatur (cursor pagination) | M | — |
 | FR-11 | Campaign | Halaman publik kampanye + progress | M | NOT_FOUND |
 | FR-12 | Disburse | Terbitkan limit per kampanye (harian/bulanan/expiry) | M | CONFLICT_STATE |
@@ -183,7 +183,7 @@ uploaded → extracting → auto_matched → verified → reconciled
 | Approve/reject kampanye | — | — | ✓ | ✓ |
 | Donasi | ✓ | ✓ | — | — |
 | Lihat riwayat donasi sendiri | ✓ | — | — | — |
-| Terbitkan limit & authorize disbursement | — | ✓ (milik sendiri) | — | — |
+| Terbitkan limit & authorize disbursement | — | authorize milik sendiri; baca limit milik sendiri | — | terbitkan/ubah limit + authorize |
 | Upload nota | — | ✓ (milik sendiri) | — | — |
 | Review nota | — | — | ✓ | ✓ |
 | Freeze kampanye | — | — | — | ✓ |
@@ -201,7 +201,8 @@ Envelope wajib (§7 master prompt): `{ "error": { "code", "message", "details", 
 | Code | HTTP | Kapan |
 |---|---|---|
 | VALIDATION_ERROR | 422 | Input gagal FormRequest; `details.fields` |
-| UNAUTHENTICATED | 401 | Token tidak ada/invalid, signature webhook salah |
+| UNAUTHENTICATED | 401 | Token tidak ada atau invalid |
+| INVALID_SIGNATURE | 401 | Signature atau timestamp webhook tidak sah; penolakan diaudit |
 | EMAIL_UNVERIFIED | 403 | Aksi sensitif sebelum verifikasi |
 | FORBIDDEN_ROLE | 403 | Role tidak berhak |
 | MCC_NOT_ALLOWED | 403 | MCC di luar `allowed_mcc_array` atau merchant tidak terverifikasi |
@@ -268,7 +269,7 @@ Invariant (diuji, bukan diklaim):
 
 | ID | Pertanyaan | Default bila tidak dijawab |
 |---|---|---|
-| Q-01 | Kebijakan fee: 2% flat? | Pakai 2%, konstanta di config, dicatat di DECISIONS.md |
-| Q-02 | Refund pro-rata ke donatur atau ke kampanye? | Pro-rata ke donatur, tanpa potongan tambahan |
-| Q-03 | Overfunding: batas 150% target lalu auto-close? | Tanpa batas, tetap buka sampai deadline |
-| Q-04 | Single-tenant (A-05) dikonfirmasi? | Single-tenant |
+| Q-01 | Kebijakan fee: 2% flat? | **Diputuskan:** 2%, configurable, dicatat saat settlement |
+| Q-02 | Refund pro-rata ke donatur atau ke kampanye? | **Diputuskan:** pro-rata ke donatur dari saldo neto, tanpa fee tambahan |
+| Q-03 | Overfunding: batas 150% target lalu auto-close? | **Diputuskan:** tanpa batas 150%; tetap menerima sampai deadline |
+| Q-04 | Single-tenant (A-05) dikonfirmasi? | **Diputuskan:** single-tenant untuk v1.0; multi-org di luar scope |

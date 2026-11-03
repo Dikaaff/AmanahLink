@@ -92,7 +92,7 @@ Proyek berada pada tahap **MVP backend + frontend**. Sumber kebenaran status ada
 - Halaman publik kampanye dengan progress dan label kategori.
 
 ### Donasi & Pay-in
-- VA/QRIS melalui interface `PaymentGateway` dengan driver `fake` deterministik.
+- Payment instruction melalui interface `PaymentGateway`; driver `fake` deterministik saat ini mengembalikan VA. QRIS nyata menunggu adapter payment provider.
 - **Idempotency-Key** per pengguna, payload di-hash, replay mengembalikan body identik.
 - Webhook settlement dengan **HMAC-SHA256**, toleransi timestamp 5 menit, deduplikasi `external_id`, dan audit setiap penolakan.
 - Fee platform 2% dicatat sebagai transaksi terpisah.
@@ -514,8 +514,9 @@ Saat dependency gagal, status root menjadi `unavailable` dan HTTP statusnya
 | `POST` | `/campaigns/{id}/freeze` | admin | Alasan wajib |
 | `POST` | `/campaigns/{id}/unfreeze` | admin | Kembali ke `active`/`funded` |
 | `POST` | `/campaigns/{id}/close` | admin | Tutup + refund sisa dana |
-| `PUT` | `/campaigns/{id}/disbursement-limit` | admin | Limit harian/bulanan/expiry |
-| `POST` | `/donations` | token + `Idempotency-Key` | Membuat VA/QRIS |
+| `PUT` | `/campaigns/{id}/disbursement-limit` | admin | Terbitkan/ubah limit harian/bulanan/expiry |
+| `GET` | `/campaigns/{id}/disbursement-limit` | owner/admin | Baca limit dan pemakaian |
+| `POST` | `/donations` | token + `Idempotency-Key` | Membuat payment instruction (fake: VA) |
 | `GET` | `/donations` | token | Riwayat donasi sendiri |
 | `POST` | `/disbursements` | owner/admin + `Idempotency-Key` | Authorize + capture |
 | `POST` | `/disbursements/{transaction}/receipts` | owner/admin | Multipart `file` (JPEG/PNG) |
@@ -564,7 +565,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/donations \
 
 ### Idempotensi
 
-- Header `Idempotency-Key` wajib pada `POST /donations` dan `POST /disbursements`.
+- Header `Idempotency-Key` wajib pada `POST /donations` dan `POST /disbursements`; tidak diperlukan untuk membuat campaign draft.
 - Key di-scope per pengguna; payload di-hash kanonik.
 - Replay dengan hash sama → **200** + body tersimpan (bukan membuat transaksi baru).
 - Key sama, payload berbeda → **422 `IDEMPOTENCY_MISMATCH`**.

@@ -96,8 +96,6 @@ Scenario: MCC terlarang
   When allowed_mcc memuat "5732"
   Then status 422 VALIDATION_ERROR
 
-Scenario: Tanpa Idempotency-Key
-  Then status 422 VALIDATION_ERROR dengan details.fields["Idempotency-Key"]
 ```
 Depends: US-03
 
@@ -196,10 +194,10 @@ Depends: US-10
 ### US-12 — Tolak webhook tanpa signature sah `M` `1h`
 ```gherkin
 Scenario: Signature salah
-  Then status 401 UNAUTHENTICATED, tidak ada mutasi, audit event tercatat
+  Then status 401 INVALID_SIGNATURE, tidak ada mutasi, audit event tercatat
 
 Scenario: Timestamp di luar toleransi 5 menit
-  Then status 401 UNAUTHENTICATED
+  Then status 401 INVALID_SIGNATURE
 ```
 Depends: US-11
 
@@ -230,7 +228,7 @@ Depends: US-07
 ### US-15 — Authorize disbursement (happy path) `M` `4h`
 ```gherkin
 Scenario: Merchant terverifikasi, MCC cocok, saldo cukup
-  When POST /api/v1/disbursement/scan mcc "5912", amount "50000.00"
+  When POST /api/v1/disbursements dengan campaign_id, merchant_id, amount "50000.00" + Idempotency-Key
   Then status 200, transactions.status = "captured"
   And tepat 2 ledger_entries (debit 2200, kredit 2100)
   And campaigns.current_amount berkurang 50.000

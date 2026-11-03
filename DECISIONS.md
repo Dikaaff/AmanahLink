@@ -199,6 +199,22 @@
 - **Konsekuensi:** PRD §8 dan matriks izin harus dikoreksi (T-11). Form limit di `dashboard/page.tsx` wajib diberi guard role (G-16). Test baru: campaigner GET 200, campaigner PUT 403, admin PUT 200.
 - **Status:** diterapkan 2026-11-03 (T-02c) — endpoint GET + `CampaignPolicy::viewLimits`, form edit hanya admin, panel read-only untuk campaigner.
 
+### D-025 — Kontrak publik mengikuti route dan test yang berjalan
+
+- **Keputusan:** Bila PRD/backlog berbeda dari implementasi yang sudah diuji,
+  `routes/api.php`, FormRequest, service, dan feature test menjadi sumber
+  kebenaran kontrak. T-11 menyelaraskan dokumen: authorize memakai
+  `POST /api/v1/disbursements`, limit diterbitkan admin, signature webhook
+  memakai `INVALID_SIGNATURE`, dan payment fake mendokumentasikan VA tanpa
+  mengklaim QRIS nyata.
+- **Alasan:** Nama endpoint atau error code yang fiktif membuat demo dan agent
+  berikutnya mengimplementasikan alur duplikat atau salah. Perubahan kontrak
+  tetap harus mengubah kode, test, dan dokumen dalam satu task.
+- **Alternatif yang ditolak:** Mengubah behavior yang sudah berjalan hanya agar
+  cocok dengan teks backlog lama; itu memperbesar risiko regresi pada ledger,
+  idempotensi, dan policy.
+- **Status:** diterapkan 2026-11-03 (T-11); Q-01…Q-04 ditutup di PRD.
+
 ---
 
 ## 2. Register Asumsi (default yang saya pakai sampai dikoreksi)
@@ -246,3 +262,4 @@
 | 1.9 | 2026-11-02 | D-020 metrik p95 authorize + dashboard admin; US-25 selesai, Epic 6 tuntas |
 | 1.10 | 2026-11-02 | D-023 CSP nonce + render dinamis; security headers frontend terverifikasi |
 | 1.11 | 2026-11-03 | D-024 limit disbursement admin-only (baca untuk pemilik); audit PRD/backlog + rencana T-01…T-14 |
+| 1.12 | 2026-11-03 | D-025 kontrak publik mengikuti route/test; T-11 menyelaraskan PRD, backlog, README, dan ERD |
