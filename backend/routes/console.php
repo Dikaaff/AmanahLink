@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('webhooks:retry')->everyMinute()->withoutOverlapping();
+Schedule::command('amanah:campaign-cycle')->hourly()->withoutOverlapping();

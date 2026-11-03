@@ -31,6 +31,10 @@ return [
 
     'payment_expiry_hours' => (int) env('AMANAH_PAYMENT_EXPIRY_HOURS', 24),
 
+    'campaign_refund_window_days' => (int) env('AMANAH_CAMPAIGN_REFUND_WINDOW_DAYS', 7),
+
+    'request_metrics_retention_hours' => (int) env('AMANAH_REQUEST_METRICS_RETENTION_HOURS', 90),
+
     /*
     |--------------------------------------------------------------------------
     | Webhook Signature
