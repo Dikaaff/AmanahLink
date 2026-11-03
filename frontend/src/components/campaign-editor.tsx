@@ -331,10 +331,8 @@ export function CampaignEditor({
           <div className="border-b border-stone-100 bg-sand-100/70 px-6 py-5">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
-                  Live preview
-                </p>
-                <p className="mt-1 text-xs text-stone-500">Tampilan donatur setelah disimpan</p>
+                <p className="text-label">Live preview</p>
+                <p className="text-xs text-ink-secondary">Tampilan donatur setelah disimpan</p>
               </div>
               <Tag>Pratinjau</Tag>
             </div>
@@ -350,13 +348,13 @@ export function CampaignEditor({
             <p className="mt-3 line-clamp-5 whitespace-pre-line text-sm leading-relaxed text-stone-600">
               {previewDescription}
             </p>
-            <div className="mt-6 rounded-md bg-brand-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Target dana</p>
-              <p className="mt-1 text-2xl font-semibold text-brand-900">{rupiah(previewAmount)}</p>
+            <div className="mt-6 rounded-sm border border-line p-4">
+              <p className="text-label">Target dana</p>
+              <p className="mt-1 text-2xl font-semibold text-ink">{rupiah(previewAmount)}</p>
               <div className="mt-3">
                 <Progress percent={campaign.progress_percent} />
               </div>
-              <p className="mt-2 text-xs text-brand-700">
+              <p className="mt-2 text-xs text-ink-secondary">
                 {rupiah(campaign.current_amount)} sudah terkumpul
               </p>
             </div>
@@ -366,7 +364,7 @@ export function CampaignEditor({
                   <Tag key={code}>{mccTitle(code)}</Tag>
                 ))
               ) : (
-                <span className="text-xs text-stone-400">Belum ada kategori dipilih</span>
+    <span className="text-xs text-ink-muted">Belum ada kategori dipilih</span>
               )}
             </div>
           </CardContent>

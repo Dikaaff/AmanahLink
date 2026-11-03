@@ -6,7 +6,7 @@ import { useAuth } from "@/components/auth-provider";
 
 function BrandMark() {
   return (
-    <span className="flex h-9 w-9 items-center justify-center rounded-md bg-brand-700 text-white">
+    <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm bg-ink text-inverse">
       <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
         <path
           fill="currentColor"
@@ -24,10 +24,10 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+      className={`inline-flex items-center rounded-sm px-3 py-1.5 text-sm font-medium transition-colors ${
         active
-          ? "bg-brand-50 text-brand-700"
-          : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+          ? "bg-sunken text-ink"
+          : "text-ink-secondary hover:bg-sunken hover:text-ink"
       }`}
     >
       {children}
@@ -45,16 +45,14 @@ export function Nav() {
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-stone-200/70 bg-sand-50/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6">
-        <Link href="/" className="flex items-center gap-2.5">
+    <header className="sticky top-0 z-30 border-b border-line bg-canvas">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6 sm:px-8">
+        <Link href="/" className="flex items-center gap-3">
           <BrandMark />
-          <span className="font-display text-lg font-semibold tracking-tight text-stone-900">
-            AmanahLink
-          </span>
+          <span className="text-h3 font-semibold tracking-tight">AmanahLink</span>
         </Link>
 
-        <nav className="flex flex-1 flex-wrap items-center gap-1">
+        <nav className="hidden items-center gap-1 sm:flex">
           <NavLink href="/">Kampanye</NavLink>
           {user ? <NavLink href="/dashboard">Dasbor</NavLink> : null}
           {user ? (
@@ -62,7 +60,7 @@ export function Nav() {
               <span className="inline-flex items-center gap-1.5">
                 Notifikasi
                 {unreadNotifications > 0 ? (
-                  <span className="rounded-full bg-brand-700 px-1.5 py-0.5 text-[10px] leading-none text-white">
+                  <span className="inline-flex items-center justify-center rounded-full bg-ink text-inverse text-label">
                     {unreadNotifications > 99 ? "99+" : unreadNotifications}
                   </span>
                 ) : null}
@@ -82,16 +80,14 @@ export function Nav() {
           {user?.role === "admin" ? <NavLink href="/admin">Admin</NavLink> : null}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {!ready ? (
-            <span className="h-8 w-24 animate-pulse rounded-full bg-stone-200" />
+            <span className="h-9 w-24 animate-pulse rounded-sm bg-sunken" />
           ) : user ? (
             <>
-              <span className="hidden text-right text-xs leading-tight text-stone-500 sm:block">
-                <span className="block font-semibold text-stone-800">
-                  {user.name}
-                </span>
-                {user.role_label}
+              <span className="hidden text-right leading-snug sm:block">
+                <p className="text-label">{user.name}</p>
+                <p className="text-[11px] text-ink-secondary">{user.role_label}</p>
               </span>
               <button type="button" onClick={handleLogout} className="btn-ghost">
                 Keluar
@@ -102,7 +98,7 @@ export function Nav() {
               <Link href="/login" className="btn-ghost">
                 Masuk
               </Link>
-              <Link href="/register" className="btn-primary !px-4 !py-2">
+              <Link href="/register" className="btn-primary">
                 Daftar
               </Link>
             </>

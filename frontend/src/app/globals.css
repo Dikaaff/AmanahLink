@@ -105,6 +105,7 @@
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
+  --radius-full: 9999px;
 
   /* Exactly one shadow in the product: sheets and dialogs (§8). */
   --shadow-*: initial;

@@ -49,6 +49,7 @@ export default function HomePage() {
   function handleRetry() {
     setLoading(true);
     setError(null);
+    setQuery((q) => q);
     load(page, query)
       .then((response) => setResult(response))
       .catch((caught) => setError(errorMessage(caught)))
@@ -61,13 +62,13 @@ export default function HomePage() {
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6">
       <section className="rounded-lg bg-ink px-6 py-12 text-inverse sm:px-10">
         <div className="max-w-2xl">
-          <p className="text-label font-medium uppercase text-inverse-muted">
+          <p className="text-label font-medium uppercase text-ink-secondary">
             Donasi dengan batas tujuan
           </p>
           <h1 className="mt-4 text-h1 font-semibold md:text-h1-lg">
             Dana tidak bisa dipakai sembarangan.
           </h1>
-          <p className="mt-4 max-w-xl text-body text-inverse-muted">
+          <p className="mt-4 max-w-xl text-body text-ink-secondary">
             Setiap pencairan hanya boleh ke merchant terverifikasi dengan
             kategori transaksi yang disetujui kampanye. Semua pergerakan dana
             tercatat di ledger yang tidak dapat diubah.
@@ -78,30 +79,30 @@ export default function HomePage() {
               value={draftQuery}
               onChange={(event) => setDraftQuery(event.target.value)}
               placeholder="Cari kampanye, mis. biaya operasi"
-              className="min-h-11 w-full rounded-sm border border-inverse-line bg-transparent px-4 text-body-sm text-inverse placeholder:text-inverse-muted focus:border-inverse focus:outline-none"
+              className="min-h-11 w-full rounded-sm border border-line-strong bg-canvas px-5 text-body text-ink placeholder:text-ink-muted focus:border-ink focus:outline-none"
               aria-label="Cari kampanye"
             />
             <button
               type="submit"
-              className="min-h-11 rounded-sm bg-inverse px-5 text-body-sm font-medium text-ink transition-colors hover:bg-line"
+              className="min-h-11 rounded-sm bg-ink px-5 text-body font-medium text-inverse transition-colors hover:bg-ink-hover"
             >
               Cari
             </button>
           </form>
         </div>
 
-        <dl className="mt-10 grid max-w-2xl grid-cols-2 gap-4 border-t border-inverse-line pt-6 text-body-sm sm:grid-cols-3">
+        <dl className="mt-10 grid max-w-2xl grid-cols-2 gap-4 border-t border-line-strong pt-6 text-body-sm sm:grid-cols-3">
           <div>
-            <dt className="text-inverse-muted">Bukti dana</dt>
-            <dd className="mt-1 font-medium">Ledger double-entry</dd>
+            <dt className="text-label">Bukti dana</dt>
+            <dd className="mt-1 font-semibold text-ink">Ledger double-entry</dd>
           </div>
           <div>
-            <dt className="text-inverse-muted">Pencairan</dt>
-            <dd className="mt-1 font-medium">Merchant + MCC</dd>
+            <dt className="text-label">Pencairan</dt>
+            <dd className="mt-1 font-semibold text-ink">Merchant + MCC</dd>
           </div>
           <div>
-            <dt className="text-inverse-muted">Nota</dt>
-            <dd className="mt-1 font-medium">OCR + review manual</dd>
+            <dt className="text-label">Nota</dt>
+            <dd className="mt-1 font-semibold text-ink">OCR + review manual</dd>
           </div>
         </dl>
       </section>
@@ -109,17 +110,17 @@ export default function HomePage() {
       <section className="mt-10">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-semibold text-stone-900">
+            <h2 className="text-h1 font-semibold text-ink">
               Kampanye berjalan
             </h2>
-            <p className="mt-1 text-sm text-stone-500">
+            <p className="mt-1 text-body-sm text-ink-secondary">
               {query
                 ? `Hasil untuk “${query}”`
                 : "Pilih kampanye, lihat rinciannya, lalu donasi."}
             </p>
           </div>
           {result?.meta?.total !== undefined ? (
-            <span className="text-sm text-stone-500">
+            <span className="text-body-sm text-ink-secondary">
               {result.meta.total} kampanye
             </span>
           ) : null}
@@ -161,7 +162,7 @@ export default function HomePage() {
             >
               Sebelumnya
             </button>
-            <span className="text-sm text-stone-500">
+            <span className="text-body-sm text-ink-secondary">
               Halaman {page} dari {lastPage}
             </span>
             <button
