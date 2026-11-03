@@ -20,7 +20,7 @@ use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
 /**
- * NFR-02 proof. Five independent PHP processes hit the same campaign at the
+ * NFR-02 proof. Twenty independent PHP processes hit the same campaign at the
  * same time, each with its own MySQL connection. Only the row locks inside
  * DisbursementService stand between them and an overdraft, so this test would
  * fail loudly if the locks (or the ledger balance check) were removed.
@@ -33,6 +33,8 @@ final class DisbursementConcurrencyTest extends TestCase
     private const PAYOUT = '30000';
 
     private const FUNDED = '100000.00';
+
+    private const CONCURRENT_ATTEMPTS = 20;
 
     protected function setUp(): void
     {
@@ -82,7 +84,7 @@ final class DisbursementConcurrencyTest extends TestCase
 
         $processes = [];
 
-        for ($attempt = 1; $attempt <= 5; $attempt++) {
+        for ($attempt = 1; $attempt <= self::CONCURRENT_ATTEMPTS; $attempt++) {
             $process = new Process([
                 PHP_BINARY,
                 'artisan',
@@ -126,8 +128,8 @@ final class DisbursementConcurrencyTest extends TestCase
             static fn (string $output): bool => str_contains($output, '"ok":false'),
         ));
 
-        $this->assertCount(3, $succeeded, 'Hanya 3 dari 5 pencairan yang boleh lolos: '.implode(' | ', $outputs));
-        $this->assertCount(2, $failed, 'Sisanya harus ditolak: '.implode(' | ', $outputs));
+        $this->assertCount(3, $succeeded, 'Hanya 3 dari 20 pencairan yang boleh lolos: '.implode(' | ', $outputs));
+        $this->assertCount(17, $failed, 'Sisanya harus ditolak: '.implode(' | ', $outputs));
 
         foreach ($failed as $output) {
             $this->assertStringContainsString('Saldo kampanye tidak mencukupi', $output);

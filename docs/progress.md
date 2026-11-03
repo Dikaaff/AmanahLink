@@ -8,7 +8,7 @@
 
 | Field | Nilai |
 |---|---|
-| Terakhir diperbarui | 2026-11-03 |
+| Terakhir diperbarui | 2026-11-04 |
 | Fase selesai | Fase 0, 1, 2, 3, 4 |
 | Fase berjalan | Fase 7 — test suite (T-04…T-07 dan T-11 selesai) |
 | Status gate | 29/29 story ✅; Fase 5–8 belum ditutup |
@@ -24,7 +24,7 @@
 | 4 — OCR Service | US-22…US-24 (Flask `/extract`, upload nota, auto-match, review) | ✅ selesai |
 | 5 — Frontend | halaman Next.js | 🟡 MVP + P5 mobile core implemented; screenshot evidence pending |
 | 6 — Security | hardening + ASVS checklist | ✅ T-04…T-07 selesai; subset ASVS dan sinkronisasi kontrak tersedia |
-| 7 — Test Suite | k6, konkurensi, E2E | ⬜ belum |
+| 7 — Test Suite | k6, konkurensi, E2E | 🟡 T-08/T-10 selesai; T-09 full target pending |
 | 8 — DevOps | compose, CI, observability, runbook | ⬜ belum |
 
 ## Status Story
@@ -158,6 +158,7 @@
 | 2026-11-03 | audit route/migration terhadap PRD, backlog, README, dan `DECISIONS.md` (T-11) | Kontrak diselaraskan; `docs/erd.md` ditambahkan; tidak ada perubahan runtime |
 | 2026-11-04 | `npm run e2e` (T-08) | **2 passed**; login campaigner → dashboard dan register donor → dashboard + warning verifikasi email; Playwright report/trace configured |
 | 2026-11-04 | k6 bounded authorize smoke (T-09) | **46 requests, 100% sukses, 29 query/request** pada `RATE=5,DURATION=10s`; p95 **17.32s**, 8 dropped karena single-process `artisan serve`; target 200 rps belum diklaim |
+| 2026-11-04 | `php artisan test --compact tests/Feature/DisbursementConcurrencyTest.php` (T-10) | **1 passed**; 20 proses PHP/MySQL paralel, 3 sukses + 17 `INSUFFICIENT_FUNDS`, saldo akhir 8.000, 3 transaksi, `ledger:verify` exit 0 |
 | 2026-11-03 | smoke API (T-02c) | campaigner `GET /campaigns/{id}/disbursement-limit` → `daily=5000000.00`, `used_today=0.00`; campaigner `PUT` → 403 `FORBIDDEN` |
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/ReceiptReviewApiTest.php tests/Feature/Api/ReceiptUploadApiTest.php` (T-02d) | **11 passed, 53 assertions** |
 | 2026-11-03 | `vendor/bin/pint --test` (4 file T-02d) | bersih |
@@ -286,7 +287,7 @@ selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
 |---|---|---|---|
 | T-08 | Playwright: alur kritis end-to-end terhadap stack lokal (butuh browser Chrome) | 8h | ✅ **selesai 2026-11-04** — `npm run e2e` 2 passed; fixture seeder, webServer backend/frontend, report HTML, screenshot/trace policy |
 | T-09 | k6 authorize: 2 menit, target 200 rps, hitung query per request; tulis `docs/perf/scan-p95.md` (G-09) | 🟡 **instrumentasi selesai 2026-11-04** — `scripts/perf/authorize.js`, query header opt-in, dan runbook tersedia; full target belum dijalankan |
-| T-10 | Perluas uji konkurensi (di luar 5 proses) atau dokumentasikan batas bukti saat ini | 2h | hasil + catatan batas |
+| T-10 | Perluas uji konkurensi (di luar 5 proses) atau dokumentasikan batas bukti saat ini | 2h | ✅ **selesai 2026-11-04** — harness diperluas menjadi 20 proses PHP independen; 3 payout sukses, saldo dan ledger invariant tetap konsisten; target PRD 200 VU × 50 iterasi masih belum diklaim |
 
 ### Fase 8 — DevOps (GATE 8)
 
