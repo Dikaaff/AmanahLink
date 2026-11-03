@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Tests\Feature\Api;
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 final class AuthApiTest extends TestCase
@@ -15,6 +18,8 @@ final class AuthApiTest extends TestCase
 
     public function test_a_user_can_register_and_receives_a_token(): void
     {
+        Notification::fake();
+
         $response = $this->postJson('/api/v1/auth/register', [
             'name' => 'Siti Aminah',
             'email' => 'siti@example.test',
@@ -28,6 +33,9 @@ final class AuthApiTest extends TestCase
             ->assertJsonStructure(['data' => ['token', 'user' => ['id', 'name', 'email', 'role']]]);
 
         $this->assertNotEmpty($response->json('data.token'));
+        $registered = User::query()->findOrFail($response->json('data.user.id'));
+        $this->assertNull($registered->email_verified_at);
+        Notification::assertSentTo($registered, VerifyEmail::class);
         $this->assertDatabaseHas('users', [
             'email' => 'siti@example.test',
             'role' => 'donor',
@@ -48,6 +56,47 @@ final class AuthApiTest extends TestCase
             'email' => 'penyusup@example.test',
             'role' => 'donor',
         ]);
+    }
+
+    public function test_an_unverified_user_can_resend_and_verify_email(): void
+    {
+        Notification::fake();
+        $user = User::factory()->donor()->unverified()->create();
+        $token = $user->createToken('api')->plainTextToken;
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/auth/email/resend')
+            ->assertAccepted()
+            ->assertJsonPath('data.email_verified_at', null);
+
+        Notification::assertSentTo($user, VerifyEmail::class);
+
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(5),
+            ['id' => $user->id, 'hash' => sha1($user->email)],
+        );
+
+        $this->getJson(parse_url($url, PHP_URL_PATH).'?'.parse_url($url, PHP_URL_QUERY))
+            ->assertOk()
+            ->assertJsonPath('data.email', $user->email)
+            ->assertJsonPath('data.email_verified_at', fn (mixed $value): bool => $value !== null);
+
+        $this->assertNotNull($user->fresh()->email_verified_at);
+    }
+
+    public function test_resending_verification_for_a_verified_user_is_idempotent(): void
+    {
+        Notification::fake();
+        $user = User::factory()->donor()->create();
+        $token = $user->createToken('api')->plainTextToken;
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/auth/email/resend')
+            ->assertOk()
+            ->assertJsonPath('data.email_verified_at', fn (mixed $value): bool => $value !== null);
+
+        Notification::assertNothingSent();
     }
 
     public function test_login_with_wrong_password_returns_401_envelope(): void

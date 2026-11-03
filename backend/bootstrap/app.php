@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Exceptions\CampaignLockedException;
 use App\Exceptions\CampaignNotActiveException;
 use App\Exceptions\DuplicateRequestException;
+use App\Exceptions\EmailUnverifiedException;
 use App\Exceptions\IdempotencyMismatchException;
 use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\InvalidSignatureException;
@@ -14,6 +15,7 @@ use App\Exceptions\LimitExceededException;
 use App\Exceptions\LimitExpiredException;
 use App\Exceptions\MccNotAllowedException;
 use App\Http\Middleware\AssignRequestId;
+use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\RecordAuthorizeMetrics;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\ApiError;
@@ -41,6 +43,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(SecurityHeaders::class);
+        $middleware->alias([
+            'email.verified' => EnsureEmailIsVerified::class,
+        ]);
         $middleware->api(prepend: [AssignRequestId::class]);
         $middleware->api(append: [RecordAuthorizeMetrics::class]);
     })
@@ -74,6 +79,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 $e->getMessage() !== '' ? $e->getMessage() : 'Silakan login terlebih dahulu.',
                 401,
             );
+        });
+
+        $exceptions->render(function (EmailUnverifiedException $e, Request $request) use ($isApi) {
+            if (! $isApi($request)) {
+                return null;
+            }
+
+            return ApiError::response('EMAIL_UNVERIFIED', $e->getMessage(), 403);
         });
 
         $exceptions->render(function (AuthorizationException $e, Request $request) use ($isApi) {

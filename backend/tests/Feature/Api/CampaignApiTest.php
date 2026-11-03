@@ -11,6 +11,7 @@ use App\Models\Donation;
 use App\Models\User;
 use Database\Seeders\MccCodeSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -69,6 +70,36 @@ final class CampaignApiTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('audit_logs', ['action' => 'campaign.created']);
+    }
+
+    public function test_an_unverified_campaigner_cannot_create_a_campaign(): void
+    {
+        Sanctum::actingAs(User::factory()->campaigner()->unverified()->create());
+
+        $this->postJson('/api/v1/campaigns', $this->payload())
+            ->assertForbidden()
+            ->assertJsonPath('error.code', 'EMAIL_UNVERIFIED');
+    }
+
+    public function test_a_campaigner_can_create_a_campaign_after_verifying_email(): void
+    {
+        $campaigner = User::factory()->campaigner()->unverified()->create();
+        Sanctum::actingAs($campaigner);
+
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(5),
+            ['id' => $campaigner->id, 'hash' => sha1($campaigner->email)],
+        );
+
+        $this->getJson(parse_url($url, PHP_URL_PATH).'?'.parse_url($url, PHP_URL_QUERY))
+            ->assertOk();
+
+        $campaigner->refresh();
+
+        $this->postJson('/api/v1/campaigns', $this->payload())
+            ->assertCreated()
+            ->assertJsonPath('data.status', 'draft');
     }
 
     public function test_a_blocked_mcc_code_is_rejected(): void

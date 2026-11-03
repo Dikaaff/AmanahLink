@@ -47,6 +47,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [resendingVerification, setResendingVerification] = useState(false);
+  const [verificationNotice, setVerificationNotice] = useState<string | null>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   const [limitForm, setLimitForm] = useState({
     campaignId: "",
@@ -260,6 +263,21 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleResendVerification() {
+    setResendingVerification(true);
+    setVerificationError(null);
+    setVerificationNotice(null);
+
+    try {
+      const response = await api.resendVerification();
+      setVerificationNotice(response.message ?? "Tautan verifikasi email sudah dikirim ulang.");
+    } catch (caught) {
+      setVerificationError(errorMessage(caught));
+    } finally {
+      setResendingVerification(false);
+    }
+  }
+
   async function handleLimitSubmit(event: React.FormEvent) {
     event.preventDefault();
     setSavingLimit(true);
@@ -396,6 +414,27 @@ export default function DashboardPage() {
 
       {error ? <ErrorState message={error} onRetry={handleReload} /> : null}
       {notice ? <Alert tone="success">{notice}</Alert> : null}
+      {!user.email_verified_at ? (
+        <Alert
+          tone="warning"
+          title="Email belum diverifikasi"
+        >
+          Verifikasi email sebelum membuat kampanye, berdonasi, atau memindahkan dana.
+          Tautan verifikasi berlaku 60 menit.
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="btn-secondary"
+              disabled={resendingVerification}
+              onClick={handleResendVerification}
+            >
+              {resendingVerification ? "Mengirim…" : "Kirim ulang tautan"}
+            </button>
+            {verificationNotice ? <span className="text-body-sm">{verificationNotice}</span> : null}
+            {verificationError ? <span className="text-body-sm">{verificationError}</span> : null}
+          </div>
+        </Alert>
+      ) : null}
 
       {isFundraiser ? (
         <>

@@ -11,6 +11,7 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Support\ApiError;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -31,6 +32,8 @@ final class AuthController
             'password' => $request->string('password')->toString(),
             'role' => UserRole::Donor,
         ]);
+
+        event(new Registered($user));
 
         $token = $user->createToken('api', ['*'])->plainTextToken;
 

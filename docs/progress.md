@@ -11,7 +11,7 @@
 | Terakhir diperbarui | 2026-11-03 |
 | Fase selesai | Fase 0, 1, 2, 3, 4 |
 | Fase berjalan | Fase 5 — frontend (MVP selesai, T-01…T-03 menutup gate) |
-| Status gate | 28/29 story ✅; US-04 (verifikasi email) 🟡 belum; Fase 5–8 belum ditutup |
+| Status gate | 29/29 story ✅; Fase 5–8 belum ditutup |
 | Referensi | `docs/prd.md`, `docs/backlog.md`, `DECISIONS.md` |
 
 ## Ringkasan Fase
@@ -34,7 +34,7 @@
 | US-01 | Registrasi akun donatur | ✅ | `tests/Feature/Api/AuthApiTest.php` |
 | US-02 | Login, token, lockout | ✅ | `tests/Feature/Api/AuthApiTest.php` |
 | US-03 | RBAC & kepemilikan | ✅ | `tests/Feature/Api/CampaignApiTest.php` |
-| US-04 | Verifikasi email | 🟡 **belum** — `MustVerifyEmail` dikomentari di `User`, tidak ada route verifikasi/resend, tidak ada test | — (lihat G-01) |
+| US-04 | Verifikasi email | ✅ — signed verify + resend, guard `EMAIL_UNVERIFIED`, banner dashboard, dan test end-to-end | `tests/Feature/Api/AuthApiTest.php`, `tests/Feature/Api/CampaignApiTest.php` |
 | US-05 | Buat kampanye draft | ✅ | `tests/Feature/Api/CampaignApiTest.php` |
 | US-06 | Ajukan review | ✅ | `tests/Feature/Api/CampaignApiTest.php` |
 | US-07 | Approve/reject kampanye | ✅ | `tests/Feature/Api/CampaignApiTest.php` |
@@ -150,6 +150,7 @@
 | 2026-11-03 | smoke API + `npm run lint`/`build` (T-02b) | campaigner `GET /merchants` → 2 merchant tanpa `mid`; admin → `mid` ada; lint/build bersih |
 | 2026-11-03 | `npm run lint` + `npx tsc --noEmit` + `npm run build` (P4 components) | lint/typecheck/build bersih; `/design/components`, `/design/type`, `/design/tokens` ter-build; 17 route dan Proxy terdeteksi |
 | 2026-11-03 | `npm run lint` + `npx tsc --noEmit` + `npm run build` (P5 mobile core) | lint/typecheck/build bersih; mobile bottom nav, sticky CTA detail, dan mobile card lists ter-build; screenshot viewport pending |
+| 2026-11-03 | `php artisan test --compact tests/Feature/Api/AuthApiTest.php` + `CampaignApiTest.php` (T-04) | **27 passed, 105+ assertions**; registration sends verification, resend/verify works, unverified campaign creation returns `EMAIL_UNVERIFIED`, verified campaigner can create draft |
 | 2026-11-03 | smoke API (T-02c) | campaigner `GET /campaigns/{id}/disbursement-limit` → `daily=5000000.00`, `used_today=0.00`; campaigner `PUT` → 403 `FORBIDDEN` |
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/ReceiptReviewApiTest.php tests/Feature/Api/ReceiptUploadApiTest.php` (T-02d) | **11 passed, 53 assertions** |
 | 2026-11-03 | `vendor/bin/pint --test` (4 file T-02d) | bersih |
@@ -174,7 +175,7 @@ Kesenjangan yang harus ditutup (ID dipakai di rencana kerja):
 
 | ID | Kesenjangan | Bukti | Dampak | Task |
 |---|---|---|---|---|
-| G-01 | Verifikasi email (FR-03, US-04) tidak ada: `MustVerifyEmail` dikomentari, tanpa route/resend/test | `app/Models/User.php:5`, `routes/api.php` | FR `M` tidak terpenuhi; klaim ✅ sebelumnya salah | T-04 |
+| G-01 | Verifikasi email (FR-03, US-04) tidak ada: `MustVerifyEmail` dikomentari, tanpa route/resend/test | **ditutup T-04** — `User` kini `MustVerifyEmail`, signed verify + resend tersedia, guard dan test aktif | — | ✅ T-04 |
 | G-02 | PRD §8 membolehkan campaigner menerbitkan limit; kode admin-only | `CampaignPolicy::manageLimits` | kontrak UI/API ambigu | T-11 |
 | G-03 | Backlog menyebut `POST /disbursement/scan` dan `Idempotency-Key` wajib pada create campaign; kode memakai `/disbursements` dan tidak mewajibkan key di campaign | `routes/api.php`, `docs/backlog.md` US-05/US-15 | agent bisa membuat endpoint duplikat | T-11 |
 | G-04 | Kode webhook memakai `INVALID_SIGNATURE`; PRD §9 menulis `UNAUTHENTICATED` | `PaymentWebhookService`, D-019 | test/regresi salah kode | T-11 |
@@ -321,7 +322,7 @@ limit) dan beberapa state/UX.
 | Webhook events + replay | `/admin/webhook-events*` | `/admin/webhooks` | ✅ |
 | Dashboard admin | `GET /admin/dashboard` | `/admin` | ✅ |
 | Registry merchant | — (tidak ada route) | — | ❌ G-15 |
-| Verifikasi email | — (tidak ada route) | — | ❌ G-01 |
+| Verifikasi email | `GET /auth/email/verify/{id}/{hash}`, `POST /auth/email/resend` | `/dashboard` banner + resend action | ✅ T-04 |
 
 **Rincian T-02 (urutan kerja):**
 
@@ -370,5 +371,5 @@ limit) dan beberapa state/UX.
    `docs/design/P3-tokens.md`, `docs/design/DESIGN_DECISIONS.md`, bukti di
    `docs/design/screens/`. P4 dibuktikan lewat `/design/components`, gallery
    interaktif, dan screenshot `p4-components-*.png`.
-2. **T-04** verifikasi email (FR-03 satu-satunya FR `M` yang belum ada).
+2. **T-05** scheduler expired, auto-close, refund window.
 3. **T-07** ASVS + **T-11** sinkronisasi dokumen sebelum menyentuh Fase 7.

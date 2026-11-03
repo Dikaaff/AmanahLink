@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\CampaignController;
 use App\Http\Controllers\Api\V1\DisbursementController;
 use App\Http\Controllers\Api\V1\DisbursementLimitController;
 use App\Http\Controllers\Api\V1\DonationController;
+use App\Http\Controllers\Api\V1\EmailVerificationController;
 use App\Http\Controllers\Api\V1\MerchantController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
@@ -19,6 +20,9 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function (): void {
     Route::post('auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
     Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
+    Route::get('auth/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->name('verification.verify')
+        ->middleware('signed');
 
     Route::post('webhooks/payments/{provider}', [PaymentWebhookController::class, 'handle'])
         ->middleware('throttle:120,1');
@@ -28,30 +32,34 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('auth/me', [AuthController::class, 'me']);
         Route::post('auth/logout', [AuthController::class, 'logout']);
+        Route::post('auth/email/resend', [EmailVerificationController::class, 'resend'])
+            ->middleware('throttle:6,1');
 
         Route::get('campaigns/mine', [CampaignController::class, 'mine']);
         Route::get('campaigns/review-queue', [CampaignController::class, 'reviewQueue']);
-        Route::post('campaigns', [CampaignController::class, 'store']);
-        Route::put('campaigns/{campaign}', [CampaignController::class, 'update']);
-        Route::post('campaigns/{campaign}/submit', [CampaignController::class, 'submit']);
+        Route::middleware('email.verified')->group(function (): void {
+            Route::post('campaigns', [CampaignController::class, 'store']);
+            Route::put('campaigns/{campaign}', [CampaignController::class, 'update']);
+            Route::post('campaigns/{campaign}/submit', [CampaignController::class, 'submit']);
+            Route::post('campaigns/{campaign}/freeze', [CampaignController::class, 'freeze']);
+            Route::post('campaigns/{campaign}/unfreeze', [CampaignController::class, 'unfreeze']);
+            Route::post('campaigns/{campaign}/close', [CampaignController::class, 'close']);
+            Route::put('campaigns/{campaign}/disbursement-limit', [DisbursementLimitController::class, 'upsert']);
+            Route::post('donations', [DonationController::class, 'store']);
+            Route::post('disbursements', [DisbursementController::class, 'store']);
+            Route::post('disbursements/{transaction}/receipts', [ReceiptController::class, 'store']);
+        });
         Route::post('campaigns/{campaign}/review', [CampaignController::class, 'review']);
-        Route::post('campaigns/{campaign}/freeze', [CampaignController::class, 'freeze']);
-        Route::post('campaigns/{campaign}/unfreeze', [CampaignController::class, 'unfreeze']);
-        Route::post('campaigns/{campaign}/close', [CampaignController::class, 'close']);
         Route::get('campaigns/{campaign}/disbursement-limit', [DisbursementLimitController::class, 'show']);
-        Route::put('campaigns/{campaign}/disbursement-limit', [DisbursementLimitController::class, 'upsert']);
 
         Route::get('donations', [DonationController::class, 'index']);
-        Route::post('donations', [DonationController::class, 'store']);
 
         Route::get('merchants', [MerchantController::class, 'index']);
         Route::post('merchants', [MerchantController::class, 'store']);
         Route::put('merchants/{merchant}', [MerchantController::class, 'update']);
         Route::patch('merchants/{merchant}/verify', [MerchantController::class, 'verify']);
 
-        Route::post('disbursements', [DisbursementController::class, 'store']);
         Route::get('disbursements', [DisbursementController::class, 'index']);
-        Route::post('disbursements/{transaction}/receipts', [ReceiptController::class, 'store']);
 
         Route::get('receipts', [ReceiptController::class, 'index']);
         Route::post('receipts/{receipt}/review', [ReceiptController::class, 'review']);

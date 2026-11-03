@@ -295,6 +295,11 @@ export const api = {
 
   me: () => request<{ data: User }>("/auth/me"),
 
+  resendVerification: () =>
+    request<{ data: User; message?: string }>("/auth/email/resend", {
+      method: "POST",
+    }),
+
   campaigns: (query: { page?: number; q?: string } = {}) => {
     const params = new URLSearchParams();
     if (query.page) params.set("page", String(query.page));
