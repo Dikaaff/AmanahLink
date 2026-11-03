@@ -56,5 +56,28 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(60)->by('api:'.$key);
         });
+
+        RateLimiter::for('auth.register', function (Request $request): Limit {
+            return Limit::perMinute(10)->by('auth.register:'.$request->ip());
+        });
+
+        RateLimiter::for('auth.login', function (Request $request): Limit {
+            return Limit::perMinute(20)->by('auth.login:'.$request->ip());
+        });
+
+        RateLimiter::for('auth.email.resend', function (Request $request): Limit {
+            $actor = $request->user();
+            $key = $actor === null
+                ? 'ip:'.$request->ip()
+                : 'user:'.$actor->getAuthIdentifier().'|ip:'.$request->ip();
+
+            return Limit::perMinute(6)->by('auth.email.resend:'.$key);
+        });
+
+        RateLimiter::for('webhooks.payments', function (Request $request): Limit {
+            return Limit::perMinute(120)->by(
+                'webhooks.payments:'.$request->route('provider').':'.$request->ip(),
+            );
+        });
     }
 }

@@ -25,7 +25,13 @@ final class StoreReceiptRequest extends FormRequest
         $maxKilobytes = intdiv((int) config('amanahlink.receipt_max_bytes'), 1024);
 
         return [
-            'file' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:'.$maxKilobytes],
+            'file' => [
+                'required',
+                'file',
+                'mimes:jpg,jpeg,png',
+                'mimetypes:image/jpeg,image/png',
+                'max:'.$maxKilobytes,
+            ],
         ];
     }
 
@@ -37,6 +43,7 @@ final class StoreReceiptRequest extends FormRequest
         return [
             'file.required' => 'Berkas nota wajib diunggah.',
             'file.mimes' => 'Nota harus berupa JPEG atau PNG.',
+            'file.mimetypes' => 'Isi berkas nota harus berupa gambar JPEG atau PNG.',
             'file.max' => 'Ukuran nota melebihi batas yang diizinkan.',
         ];
     }

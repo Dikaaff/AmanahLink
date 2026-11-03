@@ -1,7 +1,7 @@
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api/v1";
 
-const TOKEN_KEY = "amanahlink.token";
+let accessToken: string | null = null;
 
 export type UserRole = "donor" | "campaigner" | "verifier" | "admin";
 
@@ -185,16 +185,15 @@ export interface Paginated<T> {
 }
 
 export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(TOKEN_KEY);
+  return accessToken;
 }
 
 export function setToken(token: string): void {
-  window.localStorage.setItem(TOKEN_KEY, token);
+  accessToken = token;
 }
 
 export function clearToken(): void {
-  window.localStorage.removeItem(TOKEN_KEY);
+  accessToken = null;
 }
 
 export class ApiError extends Error {

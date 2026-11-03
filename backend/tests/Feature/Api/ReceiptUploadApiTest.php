@@ -94,6 +94,22 @@ final class ReceiptUploadApiTest extends TestCase
         $this->assertSame(0, Receipt::query()->count());
     }
 
+    public function test_a_file_with_an_image_extension_but_non_image_content_is_rejected(): void
+    {
+        $transaction = $this->capturedTransaction();
+
+        $this->upload(
+            $transaction->campaign->campaigner,
+            $transaction,
+            UploadedFile::fake()->create('nota.jpg', 100, 'text/plain'),
+        )
+            ->assertUnprocessable()
+            ->assertJsonPath('error.code', 'VALIDATION_ERROR')
+            ->assertJsonStructure(['error' => ['details' => ['fields' => ['file']]]]);
+
+        $this->assertSame(0, Receipt::query()->count());
+    }
+
     public function test_a_stranger_cannot_upload_a_receipt(): void
     {
         $transaction = $this->capturedTransaction();

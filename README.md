@@ -79,6 +79,7 @@ Proyek berada pada tahap **MVP backend + frontend**. Sumber kebenaran status ada
 
 ### Autentikasi & Otorisasi
 - Registrasi dan login dengan **Laravel Sanctum** (bearer token).
+- Browser client menyimpan token hanya di memori; reload halaman meminta login ulang.
 - Empat role: `donor`, `campaigner`, `verifier`, `admin`.
 - RBAC dan kepemilikan resource ditegakkan lewat **Policy**, bukan filter query di controller.
 - Rate limiting login/registrasi dan lockout berbasis throttle.
@@ -394,6 +395,7 @@ cd ocr-service
 | `AMANAH_PAYMENT_EXPIRY_HOURS` | `24` | Masa berlaku instruksi pembayaran |
 | `AMANAH_CAMPAIGN_REFUND_WINDOW_DAYS` | `7` | Jeda setelah deadline sebelum auto-close + refund |
 | `AMANAH_REQUEST_METRICS_RETENTION_HOURS` | `90` | Retensi metrik request sebelum dipangkas scheduler |
+| `CORS_ALLOWED_ORIGINS` | frontend lokal (`3000`, `3104`) | Daftar origin frontend dipisahkan koma; production wajib eksplisit |
 | `AMANAH_PAYMENT_WEBHOOK_SECRET` | *(kosong)* | HMAC secret. Kosong = semua webhook ditolak |
 | `AMANAH_PAYMENT_WEBHOOK_TOLERANCE` | `300` | Toleransi timestamp webhook (detik) |
 | `AMANAH_OCR_DRIVER` | `fake` | `fake` (offline) atau `http` (Flask) |
@@ -422,6 +424,7 @@ cd ocr-service
 - **Content-Type:** `application/json` (kecuali upload nota: `multipart/form-data`)
 - **Uang:** selalu string desimal dua angka, mis. `"100000.00"` — bukan float
 - **Trace ID:** setiap error envelope menyertakan `trace_id` yang bisa dicocokkan dengan log
+- **CORS:** origin di-allowlist melalui `CORS_ALLOWED_ORIGINS`; credentials cookie dimatikan
 
 ### Health probes
 

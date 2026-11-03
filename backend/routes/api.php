@@ -18,14 +18,14 @@ use App\Http\Controllers\Api\V1\WebhookEventController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
-    Route::post('auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
-    Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
+    Route::post('auth/register', [AuthController::class, 'register'])->middleware('throttle:auth.register');
+    Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:auth.login');
     Route::get('auth/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
         ->name('verification.verify')
         ->middleware('signed');
 
     Route::post('webhooks/payments/{provider}', [PaymentWebhookController::class, 'handle'])
-        ->middleware('throttle:120,1');
+        ->middleware('throttle:webhooks.payments');
 
     Route::get('campaigns', [CampaignController::class, 'index']);
 
@@ -33,7 +33,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('auth/me', [AuthController::class, 'me']);
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::post('auth/email/resend', [EmailVerificationController::class, 'resend'])
-            ->middleware('throttle:6,1');
+            ->middleware('throttle:auth.email.resend');
 
         Route::get('campaigns/mine', [CampaignController::class, 'mine']);
         Route::get('campaigns/review-queue', [CampaignController::class, 'reviewQueue']);
