@@ -156,6 +156,7 @@
 | 2026-11-03 | `php artisan test --compact tests/Unit/RedactSensitiveDataProcessorTest.php tests/Feature/SecurityHardeningTest.php tests/Feature/Api/ReceiptUploadApiTest.php` (T-07) | **9 passed, 57 assertions**; CORS allowlist, named rate limit, log redaction, dan MIME-content upload validation |
 | 2026-11-03 | `php artisan test --compact` + `php artisan ledger:verify` + `composer audit` + frontend lint/typecheck/build + `npm audit --omit=dev` (T-07) | **193 passed, 778 assertions**; ledger invariant lulus, composer/npm production audit 0 vulnerability, lint/typecheck/build bersih |
 | 2026-11-03 | audit route/migration terhadap PRD, backlog, README, dan `DECISIONS.md` (T-11) | Kontrak diselaraskan; `docs/erd.md` ditambahkan; tidak ada perubahan runtime |
+| 2026-11-04 | `npm run e2e` (T-08) | **2 passed**; login campaigner → dashboard dan register donor → dashboard + warning verifikasi email; Playwright report/trace configured |
 | 2026-11-03 | smoke API (T-02c) | campaigner `GET /campaigns/{id}/disbursement-limit` → `daily=5000000.00`, `used_today=0.00`; campaigner `PUT` → 403 `FORBIDDEN` |
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/ReceiptReviewApiTest.php tests/Feature/Api/ReceiptUploadApiTest.php` (T-02d) | **11 passed, 53 assertions** |
 | 2026-11-03 | `vendor/bin/pint --test` (4 file T-02d) | bersih |
@@ -282,7 +283,7 @@ selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
 
 | ID | Task | Estimasi | Bukti/DoD |
 |---|---|---|---|
-| T-08 | Playwright: alur kritis end-to-end terhadap stack lokal (butuh unduh browser) | 8h | `npm run e2e` hijau; artefak trace |
+| T-08 | Playwright: alur kritis end-to-end terhadap stack lokal (butuh browser Chrome) | 8h | ✅ **selesai 2026-11-04** — `npm run e2e` 2 passed; fixture seeder, webServer backend/frontend, report HTML, screenshot/trace policy |
 | T-09 | k6 authorize: 2 menit, target 200 rps, hitung query per request; tulis `docs/perf/scan-p95.md` (G-09) | 4h | hasil p95 + grafik/angka |
 | T-10 | Perluas uji konkurensi (di luar 5 proses) atau dokumentasikan batas bukti saat ini | 2h | hasil + catatan batas |
 

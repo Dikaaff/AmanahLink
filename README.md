@@ -635,14 +635,25 @@ php artisan test
 cd ocr-service
 .venv/Scripts/python -m pytest -q     # Windows
 # .venv/bin/python -m pytest -q       # Linux/macOS
+
+# Frontend critical-path E2E (backend + Next.js dijalankan otomatis)
+cd frontend
+npm run e2e
 ```
 
-Hasil verifikasi terakhir (2026-11-02):
+Playwright memakai Chrome lokal melalui channel `chrome`, menjalankan
+`MccCodeSeeder` dan `DemoSeeder` sebagai fixture, lalu menguji login
+campaigner serta registrasi donatur dengan warning verifikasi email. Laporan
+HTML ada di `frontend/playwright-report/` dan artefak failure di
+`frontend/test-results/` (keduanya di-ignore Git).
+
+Hasil verifikasi terakhir (2026-11-04):
 
 | Suite | Hasil |
 |---|---|
-| PHPUnit | **142 passed (515 assertions)**, tanpa warning/failure |
+| PHPUnit | **193 passed (778 assertions)**, tanpa warning/failure |
 | pytest | **8 passed** |
+| Playwright | **2 passed**, login campaigner dan register donor |
 
 Cakupan utama: auth/RBAC, siklus kampanye, validasi MCC, limit & saldo, idempotensi, replay webhook, invariant ledger, konkurensi double-spend, refund proporsional, upload/auto-match/review nota, freeze/unfreeze, audit viewer, serta kontrak OCR Flask.
 
