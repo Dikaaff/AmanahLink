@@ -22,11 +22,13 @@ class DemoSeeder extends Seeder
             ['email' => 'budi@amanahlink.test'],
             ['name' => 'Budi Santoso', 'role' => UserRole::Campaigner, 'password' => 'password'],
         );
+        $campaigner->markEmailAsVerified();
 
         $donor = User::firstOrCreate(
             ['email' => 'siti@amanahlink.test'],
             ['name' => 'Siti Aminah', 'role' => UserRole::Donor, 'password' => 'password'],
         );
+        $donor->markEmailAsVerified();
 
         $this->merchant('Apotek Sehat Sentosa', '5912', 'MID-DEMO-APOTEK', 'Jakarta');
         $this->merchant('RS Harapan Bunda', '8062', 'MID-DEMO-RSHB', 'Bandung');

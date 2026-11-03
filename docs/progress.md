@@ -157,6 +157,7 @@
 | 2026-11-03 | `php artisan test --compact` + `php artisan ledger:verify` + `composer audit` + frontend lint/typecheck/build + `npm audit --omit=dev` (T-07) | **193 passed, 778 assertions**; ledger invariant lulus, composer/npm production audit 0 vulnerability, lint/typecheck/build bersih |
 | 2026-11-03 | audit route/migration terhadap PRD, backlog, README, dan `DECISIONS.md` (T-11) | Kontrak diselaraskan; `docs/erd.md` ditambahkan; tidak ada perubahan runtime |
 | 2026-11-04 | `npm run e2e` (T-08) | **2 passed**; login campaigner → dashboard dan register donor → dashboard + warning verifikasi email; Playwright report/trace configured |
+| 2026-11-04 | k6 bounded authorize smoke (T-09) | **46 requests, 100% sukses, 29 query/request** pada `RATE=5,DURATION=10s`; p95 **17.32s**, 8 dropped karena single-process `artisan serve`; target 200 rps belum diklaim |
 | 2026-11-03 | smoke API (T-02c) | campaigner `GET /campaigns/{id}/disbursement-limit` → `daily=5000000.00`, `used_today=0.00`; campaigner `PUT` → 403 `FORBIDDEN` |
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/ReceiptReviewApiTest.php tests/Feature/Api/ReceiptUploadApiTest.php` (T-02d) | **11 passed, 53 assertions** |
 | 2026-11-03 | `vendor/bin/pint --test` (4 file T-02d) | bersih |
@@ -189,7 +190,7 @@ Kesenjangan yang harus ditutup (ID dipakai di rencana kerja):
 | G-06 | Tidak ada `/healthz` dan `/readyz`; hanya `/up` bawaan Laravel | **ditutup T-06** — liveness `/healthz`; readiness `/readyz` memeriksa database, queue, dan OCR dengan HTTP `503` saat dependency gagal | — | ✅ T-06 |
 | G-07 | NFR-08 retensi (log 90 jam, nota 24 jam, audit 5 tahun) belum diimplementasikan | tidak ada command/test retensi | klaim kepatuhan palsu | T-13 |
 | G-08 | NFR-06 (WCAG 2.1 AA) belum diuji; tidak ada axe-core | belum ada `docs/a11y.md` | klaim aksesibilitas tak terbukti | T-14 |
-| G-09 | NFR-01 (p95 < 500 ms @200 rps) belum diukur; baru metrik internal aplikasi | tidak ada k6/`docs/perf/` | target performa belum terbukti | T-09 |
+| G-09 | NFR-01 (p95 < 500 ms @200 rps) belum terukur pada full workload | **ditutup sebagian T-09** — k6 script + query-count instrumentation + reproducible runbook tersedia; full 200 rps × 2 menit masih pending | target performa belum terbukti | T-09 |
 | G-10 | Artefak yang dirujuk PRD belum lengkap: `docs/runbook.md`, `docs/a11y.md`, `docs/perf/scan-p95.md`, `IdempotencyTest.php`, `RetentionTest.php`, `tests/Concurrency/` | **ditutup sebagian T-11** — `docs/erd.md` tersedia; artefak test/operasional lain tetap menjadi T-08…T-14 | traceability NFR masih putus di artefak lain | T-13, T-14 |
 | G-11 | Q-01…Q-04 di PRD masih "terbuka" padahal sudah diputuskan di `DECISIONS.md` | **ditutup T-11** — pertanyaan diberi keputusan eksplisit dan dirujuk D-025 | — | ✅ T-11 |
 | G-12 | FR-08 menyebut VA **dan QRIS**; `PaymentInstruction` hanya VA | **ditutup T-11** — PRD/README menyatakan fake saat ini VA; QRIS nyata menunggu adapter | — | ✅ T-11 |
@@ -284,7 +285,7 @@ selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
 | ID | Task | Estimasi | Bukti/DoD |
 |---|---|---|---|
 | T-08 | Playwright: alur kritis end-to-end terhadap stack lokal (butuh browser Chrome) | 8h | ✅ **selesai 2026-11-04** — `npm run e2e` 2 passed; fixture seeder, webServer backend/frontend, report HTML, screenshot/trace policy |
-| T-09 | k6 authorize: 2 menit, target 200 rps, hitung query per request; tulis `docs/perf/scan-p95.md` (G-09) | 4h | hasil p95 + grafik/angka |
+| T-09 | k6 authorize: 2 menit, target 200 rps, hitung query per request; tulis `docs/perf/scan-p95.md` (G-09) | 🟡 **instrumentasi selesai 2026-11-04** — `scripts/perf/authorize.js`, query header opt-in, dan runbook tersedia; full target belum dijalankan |
 | T-10 | Perluas uji konkurensi (di luar 5 proses) atau dokumentasikan batas bukti saat ini | 2h | hasil + catatan batas |
 
 ### Fase 8 — DevOps (GATE 8)

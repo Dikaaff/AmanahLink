@@ -123,6 +123,19 @@ final class DisbursementApiTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'disbursement.captured']);
     }
 
+    public function test_authorize_can_expose_query_count_for_local_profiling(): void
+    {
+        config(['amanahlink.profile_queries' => true]);
+        $campaign = $this->fundedCampaign();
+        $this->limit($campaign);
+        $merchant = $this->merchant();
+
+        $response = $this->pay($campaign->campaigner, $campaign, $merchant, '1', 'disb-profile');
+
+        $response->assertCreated()->assertHeader('X-Perf-Query-Count');
+        $this->assertGreaterThan(0, (int) $response->headers->get('X-Perf-Query-Count'));
+    }
+
     public function test_replaying_the_same_key_does_not_spend_twice(): void
     {
         $campaign = $this->fundedCampaign();

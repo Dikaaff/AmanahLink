@@ -20,6 +20,14 @@ final class RecordAuthorizeMetrics
     public function handle(Request $request, Closure $next): Response
     {
         $records = $request->isMethod('post') && $request->is('api/v1/disbursements');
+        $profileQueries = $records && (bool) config('amanahlink.profile_queries', false);
+        $queryCount = 0;
+
+        if ($profileQueries) {
+            DB::listen(static function () use (&$queryCount): void {
+                $queryCount++;
+            });
+        }
 
         $startedAt = hrtime(true);
         $response = $next($request);
@@ -37,6 +45,10 @@ final class RecordAuthorizeMetrics
             ]);
         } catch (\Throwable) {
             // Observability must never fail the business request.
+        }
+
+        if ($profileQueries) {
+            $response->headers->set('X-Perf-Query-Count', (string) max(0, $queryCount - 1));
         }
 
         return $response;

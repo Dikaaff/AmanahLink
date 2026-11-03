@@ -72,4 +72,6 @@ return [
     'ocr_service_url' => env('AMANAH_OCR_SERVICE_URL', 'http://127.0.0.1:5001'),
     'ocr_timeout_seconds' => (int) env('AMANAH_OCR_TIMEOUT', 10),
     'receipt_max_bytes' => (int) env('AMANAH_RECEIPT_MAX_BYTES', 5 * 1024 * 1024),
+
+    'profile_queries' => (bool) env('AMANAH_PROFILE_QUERIES', false),
 ];
