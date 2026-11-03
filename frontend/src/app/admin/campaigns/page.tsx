@@ -322,7 +322,7 @@ export default function CampaignOperationsPage() {
                   </div>
 
                   <div className="mt-4 max-w-xl">
-                    <Progress percent={campaign.progress_percent} />
+                    <Progress value={campaign.progress_percent} />
                   </div>
 
                   <div className="mt-4 flex flex-wrap gap-2">

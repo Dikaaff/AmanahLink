@@ -450,7 +450,7 @@ export default function DashboardPage() {
                               {campaign.title}
                             </Link>
                             <div className="mt-1 max-w-[240px]">
-                              <Progress percent={campaign.progress_percent} />
+                              <Progress value={Math.round(campaign.progress_percent)} />
                             </div>
                           </td>
                           <td className="px-4 py-3">

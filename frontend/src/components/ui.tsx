@@ -1,11 +1,9 @@
 import type { ReactNode } from "react";
 import { Inbox } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
-import { Badge, badgeToneForStatus } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Empty } from "@/components/ui/empty";
-import { Stat, StatusBadge } from "./stat";
 
 /**
  * Legacy surface still imported by screens that will be rebuilt at P5. Every

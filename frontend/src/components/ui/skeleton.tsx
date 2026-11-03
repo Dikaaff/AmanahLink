@@ -1,57 +1,56 @@
-import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Skeleton (§9.1): shaped like the content it replaces, never a full-screen
- * spinner. The pulse stops under `prefers-reduced-motion`.
+ * Skeleton berbentuk konten (§9.2). Merupakan dukungan visual, bukan spinner
+ * penuh layar.
  */
-export function Skeleton({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function Skeleton({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      aria-hidden="true"
-      className={cn(
-        "animate-pulse rounded-sm bg-line motion-reduce:animate-none",
-        className,
-      )}
+      className={cn("animate-pulse rounded-sm bg-sunken", className)}
       {...props}
     />
   );
 }
 
-/** Three lines of body text, at 100% / 92% / 64% width. */
-export function SkeletonText({ lines = 3 }: { lines?: number }) {
-  const widths = ["w-full", "w-11/12", "w-2/3"];
-
+export function SkeletonText({
+  lines = 2,
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLParagraphElement> & { lines?: number }) {
   return (
-    <div className="space-y-2">
-      {Array.from({ length: lines }).map((_, index) => (
-        <Skeleton key={index} className={cn("h-4", widths[index % 3])} />
+    <p
+      className={cn("space-y-2", className)}
+      {...props}
+    >
+      {Array.from({ length: lines }, (_, index) => (
+        <Skeleton
+          key={index}
+          className={cn("h-4", index === lines - 1 ? "w-1/2" : "w-3/4")}
+        />
       ))}
+    </p>
+  );
+}
+
+export function SkeletonCard({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={cn("space-y-3 rounded-sm border border-line p-5", className)} {...props}>
+      <Skeleton className="h-4 w-1/3" />
+      <Skeleton className="h-8 w-2/3" />
+      <Skeleton className="h-4 w-full" />
     </div>
   );
 }
 
-/** A list row at the product row height (56px for one line). */
-export function SkeletonRow() {
+export function SkeletonRow({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className="flex h-14 items-center justify-between gap-4 border-b border-line">
-      <div className="flex-1 space-y-2">
-        <Skeleton className="h-4 w-2/5" />
-        <Skeleton className="h-3 w-1/4" />
-      </div>
-      <Skeleton className="h-6 w-20" />
-    </div>
-  );
-}
-
-export function SkeletonCard() {
-  return (
-    <div className="rounded-md border border-line p-5">
-      <Skeleton className="h-6 w-24" />
-      <div className="mt-4">
-        <SkeletonText lines={2} />
-      </div>
-      <Skeleton className="mt-5 h-2 w-full" />
+    <div className={cn("flex items-center justify-between gap-4 py-3", className)} {...props}>
+      <Skeleton className="h-4 w-1/3" />
+      <Skeleton className="h-4 w-1/4" />
     </div>
   );
 }

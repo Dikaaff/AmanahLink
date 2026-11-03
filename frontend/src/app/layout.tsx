@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { connection } from "next/server";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
     "Platform penggalangan dana dengan pencairan terbatas ke merchant terverifikasi dan kategori transaksi (MCC) yang diizinkan kampanye.",
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
   await connection();
 
   return (

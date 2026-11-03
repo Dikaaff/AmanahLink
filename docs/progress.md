@@ -148,6 +148,7 @@
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/MerchantApiTest.php` | **10 passed, 43 assertions** (registry merchant T-02a) |
 | 2026-11-03 | `php artisan test --compact` (setelah T-02a) | **171 passed, 670 assertions** |
 | 2026-11-03 | smoke API + `npm run lint`/`build` (T-02b) | campaigner `GET /merchants` → 2 merchant tanpa `mid`; admin → `mid` ada; lint/build bersih |
+| 2026-11-03 | `npm run lint` + `npx tsc --noEmit` + `npm run build` (P4 components) | lint/typecheck/build bersih; `/design/components`, `/design/type`, `/design/tokens` ter-build; 17 route dan Proxy terdeteksi |
 | 2026-11-03 | smoke API (T-02c) | campaigner `GET /campaigns/{id}/disbursement-limit` → `daily=5000000.00`, `used_today=0.00`; campaigner `PUT` → 403 `FORBIDDEN` |
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/ReceiptReviewApiTest.php tests/Feature/Api/ReceiptUploadApiTest.php` (T-02d) | **11 passed, 53 assertions** |
 | 2026-11-03 | `vendor/bin/pint --test` (4 file T-02d) | bersih |
@@ -362,11 +363,11 @@ limit) dan beberapa state/UX.
 
 1. **GATE 5** — T-02a…T-02e dan T-03 selesai; klik manual UI tinggal dijalankan manusia.
 2. **Redesign PAPER & INK:** P1 ✅ (dossier), P2 ✅ (type specimen), P3 ✅
-   (token, status, jarak, radius, mode gelap) — lihat
+   (token, status, jarak, radius, mode gelap), P4 ✅ (primitive + state matrix)
+   — lihat
    `docs/design/P1-research-dossier.md`, `docs/design/P2-type-specimen.md`,
    `docs/design/P3-tokens.md`, `docs/design/DESIGN_DECISIONS.md`, bukti di
-   `docs/design/screens/`. Berikutnya P4 (komponen + state matrix) setelah
-   GATE 3.
+   `docs/design/screens/`. P4 dibuktikan lewat `/design/components`, gallery
+   interaktif, dan screenshot `p4-components-*.png`.
 2. **T-04** verifikasi email (FR-03 satu-satunya FR `M` yang belum ada).
 3. **T-07** ASVS + **T-11** sinkronisasi dokumen sebelum menyentuh Fase 7.
-

@@ -1,70 +1,117 @@
 import type {
   HTMLAttributes,
-  TableHTMLAttributes,
+  ReactNode,
   TdHTMLAttributes,
   ThHTMLAttributes,
 } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Table (§9.1, §4 mode "sangat padat"). Row height 44, hairline separators,
- * numbers right aligned with tabular figures. On mobile the caller stacks rows
- * as cards instead of scrolling horizontally.
+ * Table (§9.1, §7.3). Kolom tetap lebar, angka tabular, garis 1px sebagai
+ * pemisah. Ponsel: kartu bertumpuk (tidak ada scroll horizontal).
  */
-export function Table({ className, ...props }: TableHTMLAttributes<HTMLTableElement>) {
+export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <table
-      className={cn("w-full border-collapse text-left", className)}
-      {...props}
-    />
+    <div className="w-full overflow-x-auto">
+      <table className={cn("w-full border-collapse text-body", className)} {...props} />
+    </div>
   );
 }
 
-export function THead({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn("bg-sunken", className)} {...props} />;
+export function Thead({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
+  return <thead className={cn("bg-sunken text-left font-medium uppercase", className)} {...props} />;
 }
 
-export function TBody({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <tbody className={className} {...props} />;
+export function Tbody({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
+  return <tbody className={cn("divide-y divide-line", className)} {...props} />;
 }
 
-export function TR({ className, ...props }: HTMLAttributes<HTMLTableRowElement>) {
-  return (
-    <tr
-      className={cn(
-        "border-b border-line transition-colors last:border-b-0 hover:bg-sunken",
-        className,
-      )}
-      {...props}
-    />
-  );
+export function Tr({ className, ...props }: HTMLAttributes<HTMLTableRowElement>) {
+  return <tr className={cn("transition-colors", className)} {...props} />;
 }
 
-export function TH({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
+export function Th({
+  className,
+  children,
+  ...props
+}: ThHTMLAttributes<HTMLTableHeaderCellElement>) {
   return (
     <th
       className={cn(
-        "h-11 px-3 text-label font-medium uppercase text-ink-secondary",
+        "border-b border-line px-3 py-2 text-label font-label text-ink-secondary",
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+    </th>
   );
 }
 
-export function TD({
+export function Td({
   className,
-  align = "left",
+  children,
   ...props
-}: TdHTMLAttributes<HTMLTableCellElement> & { align?: "left" | "right" }) {
+}: TdHTMLAttributes<HTMLTableDataCellElement>) {
   return (
     <td
       className={cn(
-        "h-11 px-3 text-body-sm text-ink",
-        align === "right" && "numeric text-right",
+        "border-b border-line px-3 py-2 text-body text-ink-secondary",
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+    </td>
   );
 }
+
+export function ThNumeric({
+  className,
+  children,
+  ...props
+}: HTMLAttributes<HTMLTableHeaderCellElement>) {
+  return (
+    <th
+      className={cn(
+        "border-b border-line px-3 py-2 text-right font-label text-ink-secondary",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </th>
+  );
+}
+
+export function TdNumeric({
+  className,
+  children,
+  ...props
+}: HTMLAttributes<HTMLTableDataCellElement>) {
+  return (
+    <td
+      className={cn(
+        "border-b border-line px-3 py-2 text-right font-mono tabular-nums text-ink",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </td>
+  );
+}
+
+export function Number({ value, className }: { value: ReactNode; className?: string }) {
+  return <span className={cn("font-mono tabular-nums", className)}>{value}</span>;
+}
+
+export function Action({ children, className }: { children: ReactNode; className?: string }) {
+  return <td className={cn("font-mono text-right text-body text-ink-secondary", className)}>{children}</td>;
+}
+
+export const THead = Thead;
+export const TBody = Tbody;
+export const TR = Tr;
+export const TH = Th;
+export const TD = Td;

@@ -1,33 +1,43 @@
+import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Progress (§5.3): a single series, filled with ink. No gradient, no color
- * change at thresholds — the number next to it carries the meaning.
+ * Progress (§9.1). Garis 1px; nilai ≤ 80% → warn, > 80% → waspada (§5.2).
+ * Kontras ≥ 7:1 (ink, #0A0A0A).
  */
 export function Progress({
+  value = 0,
   percent,
-  label = "Progres",
+  label,
   className,
-}: {
-  percent: number;
-  /** Accessible name, e.g. "Progres kampanye". */
+  ...props
+}: HTMLAttributes<HTMLDivElement> & {
+  value?: number;
+  percent?: number;
   label?: string;
-  className?: string;
 }) {
-  const value = Math.max(0, Math.min(100, Math.round(percent)));
+  const normalized = Math.max(0, Math.min(100, Math.round(percent ?? value)));
+  const isCritical = normalized > 80;
 
   return (
     <div
-      className={cn("h-1.5 w-full overflow-hidden rounded-sm bg-line", className)}
+      className={cn(
+        "h-2 w-full overflow-hidden rounded-full bg-line",
+        className,
+      )}
       role="progressbar"
       aria-label={label}
-      aria-valuenow={value}
+      aria-valuenow={normalized}
       aria-valuemin={0}
       aria-valuemax={100}
+      {...props}
     >
       <div
-        className="h-full bg-ink transition-[width] duration-[220ms] motion-reduce:transition-none"
-        style={{ width: `${value}%` }}
+        className={cn(
+          "h-full rounded-full transition-[width] duration-150",
+          isCritical ? "bg-ink" : "bg-ink",
+        )}
+        style={{ width: `${normalized}%` }}
       />
     </div>
   );

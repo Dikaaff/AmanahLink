@@ -94,7 +94,7 @@ function SpecRow({ label, mobile, desktop, mono, note }: (typeof rows)[0]) {
       <p
         className="mt-3 font-mono"
         style={{
-          fontFamily: "var(--font-geist-mono)",
+           fontFamily: mono ? "var(--font-geist-mono)" : "var(--font-geist-sans)",
           fontSize: 18,
           lineHeight: 1.4,
         }}

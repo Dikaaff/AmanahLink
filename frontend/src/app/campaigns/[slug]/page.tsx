@@ -148,7 +148,7 @@ export default function CampaignDetailPage() {
               </div>
             </div>
             <div className="mt-4">
-              <Progress percent={campaign.progress_percent} />
+              <Progress value={Math.round(campaign.progress_percent)} />
             </div>
             <p className="mt-2 text-xs text-stone-500">
               {Math.round(campaign.progress_percent)}% dari target

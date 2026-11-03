@@ -113,7 +113,7 @@ export function Gallery() {
             <Button loading>Menyimpan</Button>
           </Cell>
           <Cell state="Galat">
-            <NotApplicable note="Tidak berlaku — tombol tidak punya keadaan galat (§9.2)." />
+            <NotApplicable note="Tidak berlaku G�� tombol tidak punya keadaan galat (-�9.2)." />
           </Cell>
           <Cell state="Sekunder">
             <Button variant="secondary">Lihat rincian</Button>
@@ -238,8 +238,8 @@ export function Gallery() {
           <TBody>
             <TR>
               <TD className="font-mono">2026-11-03</TD>
-              <TD>Pemakaian — Apotek Sehat Sentosa</TD>
-              <TD align="right">−Rp50.000</TD>
+              <TD>Pemakaian G�� Apotek Sehat Sentosa</TD>
+              <TD align="right">G��Rp50.000</TD>
             </TR>
             <TR>
               <TD className="font-mono">2026-11-03</TD>
@@ -249,7 +249,7 @@ export function Gallery() {
             <TR>
               <TD className="font-mono">2026-11-04</TD>
               <TD>Biaya platform (2%)</TD>
-              <TD align="right">−Rp1.960</TD>
+              <TD align="right">G��Rp1.960</TD>
             </TR>
           </TBody>
         </Table>

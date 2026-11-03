@@ -2,23 +2,19 @@ import type { InputHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Input (§9.2). The border is the only boundary, so it uses `line-strong`
- * (measured 3.25:1 light / 3.48:1 dark). Error state switches the border to
- * ink and adds a message — never a color-only cue.
+ * Input (§9.1, §9.2). Label persisten, kontras teks ≥ 7:1, ring + garis ink
+ * pada focus, pesan error inline di bawah field.
  */
 export function Input({
   className,
+  id,
   ...props
 }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
+      id={id}
       className={cn(
-        "min-h-11 w-full rounded-sm border border-line-strong bg-canvas px-3 text-body text-ink",
-        "placeholder:text-ink-muted",
-        "transition-colors duration-100",
-        "focus:border-ink",
-        "disabled:cursor-not-allowed disabled:border-line disabled:bg-sunken disabled:text-ink-muted",
-        "aria-[invalid=true]:border-2 aria-[invalid=true]:border-ink",
+        "min-h-11 w-full rounded-sm border border-line-strong bg-canvas px-3 text-body text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-ink focus:ring-2 focus:ring-ink/20 disabled:cursor-not-allowed disabled:bg-sunken disabled:text-ink-muted",
         className,
       )}
       {...props}
