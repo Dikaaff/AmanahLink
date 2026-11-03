@@ -5,6 +5,7 @@ import { Badge, badgeToneForStatus } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Empty } from "@/components/ui/empty";
+import { Stat, StatusBadge } from "./stat";
 
 /**
  * Legacy surface still imported by screens that will be rebuilt at P5. Every
@@ -13,10 +14,7 @@ import { Empty } from "@/components/ui/empty";
  */
 export { Alert } from "@/components/ui/alert";
 export { Progress } from "@/components/ui/progress";
-
-export function StatusBadge({ status }: { status: string; label?: string }) {
-  return <Badge tone={badgeToneForStatus(status)} />;
-}
+export { Stat, StatusBadge } from "./stat";
 
 export function ErrorState({
   message,
@@ -69,25 +67,5 @@ export function EmptyState({
       description={description}
       action={action}
     />
-  );
-}
-
-export function Stat({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: ReactNode;
-  hint?: string;
-}) {
-  return (
-    <div className="border-t border-line pt-3">
-      <p className="text-label font-medium uppercase text-ink-secondary">
-        {label}
-      </p>
-      <p className="numeric mt-1 text-num-md font-medium text-ink">{value}</p>
-      {hint ? <p className="mt-1 text-body-sm text-ink-muted">{hint}</p> : null}
-    </div>
   );
 }
