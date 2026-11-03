@@ -106,7 +106,7 @@ export default function CampaignDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:py-10 md:pb-10">
       <Link href="/" className="text-sm font-medium text-stone-500 hover:text-stone-800">
         ← Semua kampanye
       </Link>
@@ -128,7 +128,7 @@ export default function CampaignDetailPage() {
             Dikelola oleh {campaign.campaigner?.name ?? "penggalang dana"}
           </p>
 
-          <div className="card mt-6 p-5">
+          <div className="card mt-6 p-4 sm:p-5">
             <div className="flex items-baseline justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
@@ -198,7 +198,7 @@ export default function CampaignDetailPage() {
           </section>
         </div>
 
-        <aside className="card p-5 lg:sticky lg:top-24">
+        <aside id="donation-panel" className="card scroll-mt-20 p-5 lg:sticky lg:top-24">
           <h2 className="text-lg font-semibold text-stone-900">Donasi sekarang</h2>
 
           {campaign.is_accepting_donations ? (
@@ -305,6 +305,15 @@ export default function CampaignDetailPage() {
             </div>
           )}
         </aside>
+      </div>
+
+      <div className="fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 md:hidden">
+        <a
+          href="#donation-panel"
+          className="flex min-h-[52px] items-center justify-center rounded-sm bg-ink px-5 text-body-sm font-medium text-inverse shadow-sheet"
+        >
+          {campaign.is_accepting_donations ? "Donasi sekarang" : "Lihat status kampanye"}
+        </a>
       </div>
     </div>
   );

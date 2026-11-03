@@ -60,7 +60,7 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6">
-      <section className="rounded-lg bg-ink px-6 py-12 text-inverse sm:px-10">
+      <section id="cara-kerja" className="rounded-lg bg-ink px-5 py-8 text-inverse sm:px-10 sm:py-12">
         <div className="max-w-2xl">
           <p className="text-label font-medium uppercase text-ink-secondary">
             Donasi dengan batas tujuan
@@ -94,15 +94,15 @@ export default function HomePage() {
         <dl className="mt-10 grid max-w-2xl grid-cols-2 gap-4 border-t border-line-strong pt-6 text-body-sm sm:grid-cols-3">
           <div>
             <dt className="text-label">Bukti dana</dt>
-            <dd className="mt-1 font-semibold text-ink">Ledger double-entry</dd>
+            <dd className="mt-1 font-semibold text-inverse">Ledger double-entry</dd>
           </div>
           <div>
             <dt className="text-label">Pencairan</dt>
-            <dd className="mt-1 font-semibold text-ink">Merchant + MCC</dd>
+            <dd className="mt-1 font-semibold text-inverse">Merchant + MCC</dd>
           </div>
           <div>
             <dt className="text-label">Nota</dt>
-            <dd className="mt-1 font-semibold text-ink">OCR + review manual</dd>
+            <dd className="mt-1 font-semibold text-inverse">OCR + review manual</dd>
           </div>
         </dl>
       </section>

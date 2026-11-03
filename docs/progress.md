@@ -22,7 +22,7 @@
 | 2 — Arsitektur & Data | migration, enum, model, factory, seeder, invariant test | ✅ selesai |
 | 3 — API & Ledger | US-01…US-21 (auth, kampanye, donasi, webhook, disbursement, refund) | ✅ selesai |
 | 4 — OCR Service | US-22…US-24 (Flask `/extract`, upload nota, auto-match, review) | ✅ selesai |
-| 5 — Frontend | halaman Next.js | 🟡 MVP selesai; security headers + CSP nonce terverifikasi, E2E pending |
+| 5 — Frontend | halaman Next.js | 🟡 MVP + P5 mobile core implemented; screenshot evidence pending |
 | 6 — Security | hardening + ASVS checklist | 🟡 hardening berjalan; checklist penuh pending |
 | 7 — Test Suite | k6, konkurensi, E2E | ⬜ belum |
 | 8 — DevOps | compose, CI, observability, runbook | ⬜ belum |
@@ -149,6 +149,7 @@
 | 2026-11-03 | `php artisan test --compact` (setelah T-02a) | **171 passed, 670 assertions** |
 | 2026-11-03 | smoke API + `npm run lint`/`build` (T-02b) | campaigner `GET /merchants` → 2 merchant tanpa `mid`; admin → `mid` ada; lint/build bersih |
 | 2026-11-03 | `npm run lint` + `npx tsc --noEmit` + `npm run build` (P4 components) | lint/typecheck/build bersih; `/design/components`, `/design/type`, `/design/tokens` ter-build; 17 route dan Proxy terdeteksi |
+| 2026-11-03 | `npm run lint` + `npx tsc --noEmit` + `npm run build` (P5 mobile core) | lint/typecheck/build bersih; mobile bottom nav, sticky CTA detail, dan mobile card lists ter-build; screenshot viewport pending |
 | 2026-11-03 | smoke API (T-02c) | campaigner `GET /campaigns/{id}/disbursement-limit` → `daily=5000000.00`, `used_today=0.00`; campaigner `PUT` → 403 `FORBIDDEN` |
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/ReceiptReviewApiTest.php tests/Feature/Api/ReceiptUploadApiTest.php` (T-02d) | **11 passed, 53 assertions** |
 | 2026-11-03 | `vendor/bin/pint --test` (4 file T-02d) | bersih |

@@ -428,8 +428,8 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="card mt-4 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[720px] text-sm">
+                <div className="hidden overflow-x-auto md:block">
+                  <table className="w-full text-sm">
                     <thead className="table-head">
                       <tr>
                         <th className="px-4 py-3">Kampanye</th>
@@ -505,6 +505,53 @@ export default function DashboardPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+                <div className="space-y-3 p-4 md:hidden">
+                  {campaigns.map((campaign) => (
+                    <article key={campaign.id} className="rounded-md border border-line p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <Link
+                          href={`/campaigns/${campaign.slug}`}
+                          className="font-semibold text-ink hover:underline"
+                        >
+                          {campaign.title}
+                        </Link>
+                        <StatusBadge status={campaign.status} label={campaign.status_label} />
+                      </div>
+                      <div className="mt-3 flex items-baseline justify-between text-body-sm">
+                        <span className="font-semibold text-ink">
+                          {rupiah(campaign.current_amount)}
+                        </span>
+                        <span className="text-ink-secondary">
+                          {dateOnly(campaign.deadline_at)}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {campaign.status === "draft" ? (
+                          <Link
+                            href={`/dashboard/campaigns/${campaign.slug}/edit`}
+                            className="btn-secondary"
+                          >
+                            Edit draf
+                          </Link>
+                        ) : null}
+                        {campaign.status === "draft" ? (
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={submittingId === campaign.id}
+                            onClick={() => handleSubmitCampaign(campaign)}
+                          >
+                            {submittingId === campaign.id ? "Mengajukan…" : "Ajukan review"}
+                          </button>
+                        ) : (
+                          <Link href={`/campaigns/${campaign.slug}`} className="btn-secondary">
+                            Lihat kampanye
+                          </Link>
+                        )}
+                      </div>
+                    </article>
+                  ))}
                 </div>
               </div>
             )}
@@ -924,8 +971,8 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[820px] text-sm">
+                <div className="hidden overflow-x-auto md:block">
+                  <table className="w-full text-sm">
                     <thead className="table-head">
                       <tr>
                         <th className="px-6 py-3">Kampanye</th>
@@ -982,6 +1029,30 @@ export default function DashboardPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+                <div className="space-y-3 p-4 md:hidden">
+                  {receipts.data.map((receipt) => (
+                    <article key={receipt.id} className="rounded-md border border-line p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-ink">
+                            {receipt.transaction?.campaign?.title ?? "Nota transaksi"}
+                          </p>
+                          <p className="mt-1 text-xs text-ink-secondary">
+                            {receipt.transaction ? rupiah(receipt.transaction.amount) : "—"}
+                            {receipt.confidence !== null
+                              ? ` · OCR ${Math.round(Number(receipt.confidence) * 100)}%`
+                              : ""}
+                          </p>
+                        </div>
+                        <StatusBadge status={receipt.status} label={receipt.status_label} />
+                      </div>
+                      {receipt.rejection_reason ? (
+                        <p className="mt-3 text-body-sm text-ink">{receipt.rejection_reason}</p>
+                      ) : null}
+                      <p className="mt-3 text-xs text-ink-muted">{dateTime(receipt.created_at)}</p>
+                    </article>
+                  ))}
                 </div>
 
                 {(receipts.meta?.last_page ?? 1) > 1 ? (
@@ -1040,8 +1111,8 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[860px] text-sm">
+                <div className="hidden overflow-x-auto md:block">
+                  <table className="w-full text-sm">
                     <thead className="table-head">
                       <tr>
                         <th className="px-6 py-3">Kampanye & merchant</th>
@@ -1109,6 +1180,39 @@ export default function DashboardPage() {
                     </tbody>
                   </table>
                 </div>
+                <div className="space-y-3 p-4 md:hidden">
+                  {disbursements.data.map((item) => (
+                    <article key={item.id} className="rounded-md border border-line p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          {item.campaign ? (
+                            <Link href={`/campaigns/${item.campaign.slug}`} className="font-semibold text-ink hover:underline">
+                              {item.campaign.title}
+                            </Link>
+                          ) : (
+                            <p className="font-semibold text-ink">Pencairan dana</p>
+                          )}
+                          <p className="mt-1 text-xs text-ink-secondary">
+                            {item.merchant?.name ?? "Merchant tidak tersedia"}
+                            {item.mcc_used ? ` · MCC ${item.mcc_used}` : ""}
+                          </p>
+                        </div>
+                        <StatusBadge status={item.status} label={item.status_label} />
+                      </div>
+                      <div className="mt-3 flex items-baseline justify-between">
+                        <span className="font-semibold text-ink">{rupiah(item.amount)}</span>
+                        <span className="text-xs text-ink-muted">{dateTime(item.created_at)}</span>
+                      </div>
+                      <div className="mt-3">
+                        {item.receipt ? (
+                          <StatusBadge status={item.receipt.status} label={`Nota: ${item.receipt.status_label}`} />
+                        ) : (
+                          <span className="text-xs text-ink-secondary">Nota belum diunggah</span>
+                        )}
+                      </div>
+                    </article>
+                  ))}
+                </div>
 
                 {lastDisbursementPage > 1 ? (
                   <div className="flex items-center justify-center gap-3 border-t border-stone-100 px-6 py-4">
@@ -1162,8 +1266,8 @@ export default function DashboardPage() {
         ) : (
           <>
             <div className="card mt-4 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[640px] text-sm">
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full text-sm">
                   <thead className="table-head">
                     <tr>
                       <th className="px-4 py-3">Kampanye</th>
@@ -1208,6 +1312,26 @@ export default function DashboardPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="space-y-3 p-4 md:hidden">
+                {donations.data.map((donation) => (
+                  <article key={donation.id} className="rounded-md border border-line p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        {donation.campaign ? (
+                          <Link href={`/campaigns/${donation.campaign.slug}`} className="font-semibold text-ink hover:underline">
+                            {donation.campaign.title}
+                          </Link>
+                        ) : (
+                          <p className="font-semibold text-ink">Donasi</p>
+                        )}
+                        <p className="mt-1 text-xs text-ink-muted">{dateTime(donation.created_at)}</p>
+                      </div>
+                      <StatusBadge status={donation.status} label={donation.status_label} />
+                    </div>
+                    <p className="mt-3 text-num-md font-semibold text-ink">{rupiah(donation.amount)}</p>
+                  </article>
+                ))}
               </div>
             </div>
 

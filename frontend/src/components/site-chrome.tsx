@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { Nav } from "@/components/nav";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
 /**
  * Product chrome (navigation + footer) is legacy styling until P5. Design
@@ -20,7 +21,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
   return (
     <>
       <Nav />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-20 md:pb-0">{children}</main>
       <footer className="mt-16 border-t border-stone-200/70 bg-white/60">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-xs text-stone-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>
@@ -30,6 +31,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
           <p>IDR · Asia/Jakarta · MVP</p>
         </div>
       </footer>
+      <MobileBottomNav />
     </>
   );
 }
