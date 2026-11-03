@@ -316,7 +316,18 @@ Seeder membuat registry MCC, merchant demo, kampanye demo, serta akun berikut (*
 php artisan serve
 ```
 
-API tersedia di `http://127.0.0.1:8000/api/v1`. Cek kesehatan framework di `/up`.
+API tersedia di `http://127.0.0.1:8000/api/v1`. Probe operasional tersedia di
+`/healthz` (liveness) dan `/readyz` (database, queue, serta OCR).
+
+```bash
+curl http://127.0.0.1:8000/healthz
+curl http://127.0.0.1:8000/readyz
+```
+
+`/healthz` mengembalikan HTTP `200` selama proses API hidup. `/readyz`
+mengembalikan HTTP `200` ketika semua dependency siap, atau HTTP `503` dengan
+status tiap check ketika ada dependency yang belum tersedia. Detail exception
+tidak dikirim ke client.
 
 Karena proses OCR memakai queue, jalankan worker di terminal terpisah:
 
@@ -381,6 +392,8 @@ cd ocr-service
 | `AMANAH_MAX_DONATION` | `1000000000.00` | Nominal donasi maksimum |
 | `AMANAH_PAYMENT_DRIVER` | `fake` | Driver `PaymentGateway` (`fake` saat ini satu-satunya) |
 | `AMANAH_PAYMENT_EXPIRY_HOURS` | `24` | Masa berlaku instruksi pembayaran |
+| `AMANAH_CAMPAIGN_REFUND_WINDOW_DAYS` | `7` | Jeda setelah deadline sebelum auto-close + refund |
+| `AMANAH_REQUEST_METRICS_RETENTION_HOURS` | `90` | Retensi metrik request sebelum dipangkas scheduler |
 | `AMANAH_PAYMENT_WEBHOOK_SECRET` | *(kosong)* | HMAC secret. Kosong = semua webhook ditolak |
 | `AMANAH_PAYMENT_WEBHOOK_TOLERANCE` | `300` | Toleransi timestamp webhook (detik) |
 | `AMANAH_OCR_DRIVER` | `fake` | `fake` (offline) atau `http` (Flask) |
@@ -409,6 +422,35 @@ cd ocr-service
 - **Content-Type:** `application/json` (kecuali upload nota: `multipart/form-data`)
 - **Uang:** selalu string desimal dua angka, mis. `"100000.00"` — bukan float
 - **Trace ID:** setiap error envelope menyertakan `trace_id` yang bisa dicocokkan dengan log
+
+### Health probes
+
+`GET /healthz` mengembalikan liveness API:
+
+```json
+{
+  "status": "ok",
+  "checks": {},
+  "timestamp": "2026-11-03T12:00:00+00:00"
+}
+```
+
+`GET /readyz` memeriksa database, queue, dan service OCR:
+
+```json
+{
+  "status": "ok",
+  "checks": {
+    "database": {"status": "ok", "driver": "mysql"},
+    "queue": {"status": "ok", "driver": "database", "pending": 0},
+    "ocr": {"status": "ok", "driver": "fake"}
+  },
+  "timestamp": "2026-11-03T12:00:00+00:00"
+}
+```
+
+Saat dependency gagal, status root menjadi `unavailable` dan HTTP statusnya
+`503`; detail exception tidak dikirim ke client.
 
 ### Error Envelope
 

@@ -152,6 +152,7 @@
 | 2026-11-03 | `npm run lint` + `npx tsc --noEmit` + `npm run build` (P5 mobile core) | lint/typecheck/build bersih; mobile bottom nav, sticky CTA detail, dan mobile card lists ter-build; screenshot viewport pending |
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/AuthApiTest.php` + `CampaignApiTest.php` (T-04) | **27 passed, 105+ assertions**; registration sends verification, resend/verify works, unverified campaign creation returns `EMAIL_UNVERIFIED`, verified campaigner can create draft |
 | 2026-11-03 | `php artisan test --compact tests/Feature/CampaignCycleTest.php` (T-05) | **4 passed, 14 assertions**; expiry + audit, refund after 7-day window, no early refund, request-metrics retention |
+| 2026-11-03 | `php artisan test --compact tests/Feature/HealthCheckTest.php` (T-06) | **4 passed, 26 assertions**; liveness, readiness sehat, OCR gagal, dan queue gagal |
 | 2026-11-03 | smoke API (T-02c) | campaigner `GET /campaigns/{id}/disbursement-limit` → `daily=5000000.00`, `used_today=0.00`; campaigner `PUT` → 403 `FORBIDDEN` |
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/ReceiptReviewApiTest.php tests/Feature/Api/ReceiptUploadApiTest.php` (T-02d) | **11 passed, 53 assertions** |
 | 2026-11-03 | `vendor/bin/pint --test` (4 file T-02d) | bersih |
@@ -181,7 +182,7 @@ Kesenjangan yang harus ditutup (ID dipakai di rencana kerja):
 | G-03 | Backlog menyebut `POST /disbursement/scan` dan `Idempotency-Key` wajib pada create campaign; kode memakai `/disbursements` dan tidak mewajibkan key di campaign | `routes/api.php`, `docs/backlog.md` US-05/US-15 | agent bisa membuat endpoint duplikat | T-11 |
 | G-04 | Kode webhook memakai `INVALID_SIGNATURE`; PRD §9 menulis `UNAUTHENTICATED` | `PaymentWebhookService`, D-019 | test/regresi salah kode | T-11 |
 | G-05 | Tidak ada penjadwal `expired` / auto-close + refund window | **ditutup T-05** — `amanah:campaign-cycle` menandai `active/funded → expired`, auto-refund setelah 7 hari, dan mencatat audit | — | ✅ T-05 |
-| G-06 | Tidak ada `/healthz` dan `/readyz`; hanya `/up` bawaan Laravel | `php artisan route:list --path=up` | NFR-03/NFR-09 tak bisa diverifikasi | T-06 |
+| G-06 | Tidak ada `/healthz` dan `/readyz`; hanya `/up` bawaan Laravel | **ditutup T-06** — liveness `/healthz`; readiness `/readyz` memeriksa database, queue, dan OCR dengan HTTP `503` saat dependency gagal | — | ✅ T-06 |
 | G-07 | NFR-08 retensi (log 90 jam, nota 24 jam, audit 5 tahun) belum diimplementasikan | tidak ada command/test retensi | klaim kepatuhan palsu | T-13 |
 | G-08 | NFR-06 (WCAG 2.1 AA) belum diuji; tidak ada axe-core | belum ada `docs/a11y.md` | klaim aksesibilitas tak terbukti | T-14 |
 | G-09 | NFR-01 (p95 < 500 ms @200 rps) belum diukur; baru metrik internal aplikasi | tidak ada k6/`docs/perf/` | target performa belum terbukti | T-09 |
@@ -270,7 +271,7 @@ selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
 |---|---|---|---|
 | T-04 | Verifikasi email end-to-end (G-01): aktifkan `MustVerifyEmail`, route signed verify + resend, gate aksi sensitif (`EMAIL_UNVERIFIED`), test 3 skenario, banner UI | 4h | test baru di `AuthApiTest` + `CampaignApiTest`; FR-03 ✅ |
 | T-05 | Penjadwal siklus: tandai `expired` saat deadline lewat, buka refund window, auto-close + refund, retensi `request_metrics` (G-05) | 4h | ✅ **selesai 2026-11-03** — `amanah:campaign-cycle`, hourly scheduler, 7-day refund window, retention prune, dan `CampaignCycleTest` |
-| T-06 | `/healthz` (liveness) dan `/readyz` (DB + queue + OCR reachability) (G-06) | 2h | test feature; contoh output di README |
+| T-06 | `/healthz` (liveness) dan `/readyz` (DB + queue + OCR reachability) (G-06) | 2h | ✅ **selesai 2026-11-03** — `HealthController`, route probes, 4 feature test, dan contoh output README |
 | T-07 | `docs/security/asvs.md`: checklist ASVS L2 subset dengan status + bukti per item; perbaiki temuan (CORS, rate limit per route, redaksi log, validasi upload, kebijakan token G-13) | 6h | dokumen + test untuk setiap perbaikan |
 | T-11 | Sinkronisasi kontrak: PRD §8/§9/§12, backlog endpoint & AC, `DECISIONS.md` D-024… (G-02, G-03, G-04, G-11, G-12, G-14), buat `docs/erd.md` (G-10) | 3h | dokumen konsisten; tidak ada AC yang menyebut endpoint fiktif |
 
@@ -372,5 +373,5 @@ limit) dan beberapa state/UX.
    `docs/design/P3-tokens.md`, `docs/design/DESIGN_DECISIONS.md`, bukti di
    `docs/design/screens/`. P4 dibuktikan lewat `/design/components`, gallery
    interaktif, dan screenshot `p4-components-*.png`.
-2. **T-06** endpoint `/healthz` dan `/readyz`.
+2. **T-07** ASVS + hardening keamanan.
 3. **T-07** ASVS + **T-11** sinkronisasi dokumen sebelum menyentuh Fase 7.
