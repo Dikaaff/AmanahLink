@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import { AuthProvider } from "@/components/auth-provider";
 import { SiteChrome } from "@/components/site-chrome";
+import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <AuthProvider>
           <SiteChrome>{children}</SiteChrome>
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

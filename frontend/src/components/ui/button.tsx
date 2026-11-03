@@ -1,38 +1,74 @@
 import type { ButtonHTMLAttributes } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/**
+ * Button (§9.1, §9.2). One primary action per screen; secondary actions are
+ * outline or text weight. Height comes from the 4pt scale: 44 / 48 / 52.
+ */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-brand-200 disabled:pointer-events-none disabled:opacity-50",
+  [
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm",
+    "font-medium transition-[background-color,border-color,color,transform] duration-100",
+    "active:translate-y-px",
+    "disabled:pointer-events-none disabled:opacity-40 aria-busy:opacity-100",
+  ],
   {
     variants: {
       variant: {
-        primary: "bg-brand-700 px-5 py-2.5 text-white hover:bg-brand-600",
+        primary: "bg-ink text-inverse hover:bg-ink-hover",
         secondary:
-          "border border-stone-300 bg-white px-5 py-2.5 text-stone-800 hover:border-stone-400 hover:bg-stone-50",
-        ghost: "px-3 py-1.5 text-stone-600 hover:bg-stone-100 hover:text-stone-900",
+          "border border-line-strong bg-canvas text-ink hover:border-ink",
+        ghost: "text-ink-secondary hover:bg-sunken hover:text-ink",
       },
       size: {
-        default: "",
-        sm: "px-3 py-1.5 text-xs",
+        sm: "min-h-11 px-4 text-body-sm",
+        md: "min-h-12 px-5 text-body",
+        cta: "min-h-13 w-full px-5 text-body",
       },
     },
     defaultVariants: {
       variant: "primary",
-      size: "default",
+      size: "sm",
     },
   },
 );
 
 export interface ButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
+    VariantProps<typeof buttonVariants> {
+  /** Keeps the label, swaps it for a spinner and blocks the action. */
+  loading?: boolean;
+}
 
-export function Button({ className, variant, size, ...props }: ButtonProps) {
+export function Button({
+  className,
+  variant,
+  size,
+  loading = false,
+  disabled,
+  children,
+  ...props
+}: ButtonProps) {
   return (
     <button
       className={cn(buttonVariants({ variant, size }), className)}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
       {...props}
-    />
+    >
+      {loading ? (
+        <Loader2
+          aria-hidden="true"
+          size={14}
+          strokeWidth={2}
+          className="animate-spin motion-reduce:animate-none"
+        />
+      ) : null}
+      {children}
+    </button>
   );
 }
+
+export { buttonVariants };

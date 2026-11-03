@@ -27,7 +27,12 @@
   --color-ink-muted: var(--ink-muted);
   --color-ink-secondary: var(--ink-secondary);
   --color-ink: var(--ink);
+  /* Alpha modifiers (`text-inverse/70`) do not compile on var-based colors, so
+     the few tints the product needs are tokens, not slash opacities. */
+  --color-ink-hover: var(--ink-hover);
   --color-inverse: var(--inverse);
+  --color-inverse-muted: var(--inverse-muted);
+  --color-inverse-line: var(--inverse-line);
   --color-overlay: var(--overlay);
 
   /* Legacy aliases — deleted at P5 when the old screens are rebuilt. They map
@@ -141,7 +146,10 @@
   --ink-muted: var(--mono-neutral-500);
   --ink-secondary: var(--mono-neutral-600);
   --ink: var(--mono-ink-950);
+  --ink-hover: var(--mono-ink-900);
   --inverse: var(--mono-white);
+  --inverse-muted: var(--mono-neutral-400);
+  --inverse-line: var(--mono-neutral-600);
   --overlay: rgb(10 10 10 / 0.4);
 }
 
@@ -156,7 +164,10 @@
     --ink-muted: var(--mono-neutral-450);
     --ink-secondary: var(--mono-neutral-400);
     --ink: var(--mono-white);
+    --ink-hover: var(--mono-line-100);
     --inverse: var(--mono-ink-950);
+    --inverse-muted: var(--mono-neutral-600);
+    --inverse-line: var(--mono-line-100);
     --overlay: rgb(0 0 0 / 0.64);
   }
 }
@@ -172,7 +183,10 @@
   --ink-muted: var(--mono-neutral-450);
   --ink-secondary: var(--mono-neutral-400);
   --ink: var(--mono-white);
+  --ink-hover: var(--mono-line-100);
   --inverse: var(--mono-ink-950);
+  --inverse-muted: var(--mono-neutral-600);
+  --inverse-line: var(--mono-line-100);
   --overlay: rgb(0 0 0 / 0.64);
 }
 

@@ -61,13 +61,13 @@ export default function HomePage() {
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6">
       <section className="rounded-lg bg-ink px-6 py-12 text-inverse sm:px-10">
         <div className="max-w-2xl">
-          <p className="text-label font-medium uppercase text-inverse/70">
+          <p className="text-label font-medium uppercase text-inverse-muted">
             Donasi dengan batas tujuan
           </p>
           <h1 className="mt-4 text-h1 font-semibold md:text-h1-lg">
             Dana tidak bisa dipakai sembarangan.
           </h1>
-          <p className="mt-4 max-w-xl text-body text-inverse/80">
+          <p className="mt-4 max-w-xl text-body text-inverse-muted">
             Setiap pencairan hanya boleh ke merchant terverifikasi dengan
             kategori transaksi yang disetujui kampanye. Semua pergerakan dana
             tercatat di ledger yang tidak dapat diubah.
@@ -78,29 +78,29 @@ export default function HomePage() {
               value={draftQuery}
               onChange={(event) => setDraftQuery(event.target.value)}
               placeholder="Cari kampanye, mis. biaya operasi"
-              className="min-h-11 w-full rounded-sm border border-inverse/40 bg-transparent px-4 text-body-sm text-inverse placeholder:text-inverse/60 focus:border-inverse focus:outline-none"
+              className="min-h-11 w-full rounded-sm border border-inverse-line bg-transparent px-4 text-body-sm text-inverse placeholder:text-inverse-muted focus:border-inverse focus:outline-none"
               aria-label="Cari kampanye"
             />
             <button
               type="submit"
-              className="min-h-11 rounded-sm bg-inverse px-5 text-body-sm font-medium text-ink transition-colors hover:bg-inverse/90"
+              className="min-h-11 rounded-sm bg-inverse px-5 text-body-sm font-medium text-ink transition-colors hover:bg-line"
             >
               Cari
             </button>
           </form>
         </div>
 
-        <dl className="mt-10 grid max-w-2xl grid-cols-2 gap-4 border-t border-inverse/20 pt-6 text-body-sm sm:grid-cols-3">
+        <dl className="mt-10 grid max-w-2xl grid-cols-2 gap-4 border-t border-inverse-line pt-6 text-body-sm sm:grid-cols-3">
           <div>
-            <dt className="text-inverse/70">Bukti dana</dt>
+            <dt className="text-inverse-muted">Bukti dana</dt>
             <dd className="mt-1 font-medium">Ledger double-entry</dd>
           </div>
           <div>
-            <dt className="text-inverse/70">Pencairan</dt>
+            <dt className="text-inverse-muted">Pencairan</dt>
             <dd className="mt-1 font-medium">Merchant + MCC</dd>
           </div>
           <div>
-            <dt className="text-inverse/70">Nota</dt>
+            <dt className="text-inverse-muted">Nota</dt>
             <dd className="mt-1 font-medium">OCR + review manual</dd>
           </div>
         </dl>
