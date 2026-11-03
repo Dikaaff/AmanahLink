@@ -3,9 +3,9 @@
 /* ===========================================================================
    PAPER & INK — design tokens (P3)
    Monochrome editorial. No color carries meaning; see components/badge.tsx.
-   Literal values are declared once, then mapped to light/dark. An explicit
-   `data-theme="light|dark"` on any element overrides the OS preference, so a
-   subtree can be pinned without touching the rest of the page.
+   Literal values are declared once and mapped to the product's fixed light
+   canvas. AmanahLink deliberately does not follow the operating system's dark
+   preference: paper stays white and ink stays black on every product route.
    All measured pairs are in docs/design/P3-tokens.md, produced by
    `node scripts/contrast.mjs`.
    =========================================================================== */
@@ -17,8 +17,7 @@
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
     Consolas, monospace;
 
-  /* Semantic colors resolve to the runtime variables below, so a dark override
-     is a single variable change — no duplicated `dark:` utilities. */
+   /* Semantic colors resolve to the fixed paper-and-ink variables below. */
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
   --color-sunken: var(--sunken);
@@ -116,7 +115,7 @@
 /* Primitive layer: every literal value lives here, once. The semantic layer
    below only maps primitives, so an audit of hex has a single address. */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
   --mono-white: #ffffff;
   --mono-paper: #fafafa;
@@ -136,7 +135,7 @@
   --mono-border-800: #66666f;
 }
 
-/* Light mapping: the default, and any subtree pinned to light. */
+/* Fixed light mapping for every route. */
 :root,
 [data-theme="light"] {
   --canvas: var(--mono-white);
@@ -154,43 +153,8 @@
   --overlay: rgb(10 10 10 / 0.4);
 }
 
-/* OS preference, unless a surface pinned light explicitly. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --canvas: var(--mono-ink-950);
-    --surface: var(--mono-ink-900);
-    --sunken: var(--mono-ink-850);
-    --line: var(--mono-line-700);
-    --line-strong: var(--mono-border-800);
-    --ink-muted: var(--mono-neutral-450);
-    --ink-secondary: var(--mono-neutral-400);
-    --ink: var(--mono-white);
-    --ink-hover: var(--mono-line-100);
-    --inverse: var(--mono-ink-950);
-    --inverse-muted: var(--mono-neutral-600);
-    --inverse-line: var(--mono-line-100);
-    --overlay: rgb(0 0 0 / 0.64);
-  }
-}
-
-/* Explicit pin: any subtree can force a mode, in either direction. */
-[data-theme="dark"] {
-  color-scheme: dark;
-  --canvas: var(--mono-ink-950);
-  --surface: var(--mono-ink-900);
-  --sunken: var(--mono-ink-850);
-  --line: var(--mono-line-700);
-  --line-strong: var(--mono-border-800);
-  --ink-muted: var(--mono-neutral-450);
-  --ink-secondary: var(--mono-neutral-400);
-  --ink: var(--mono-white);
-  --ink-hover: var(--mono-line-100);
-  --inverse: var(--mono-ink-950);
-  --inverse-muted: var(--mono-neutral-600);
-  --inverse-line: var(--mono-line-100);
-  --overlay: rgb(0 0 0 / 0.64);
-}
-
+/* Keep legacy specimen attributes harmless: product surfaces remain light. */
+[data-theme="dark"],
 [data-theme="light"] {
   color-scheme: light;
 }
