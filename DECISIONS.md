@@ -259,6 +259,29 @@
 
 ---
 
+### D-028 — GATE 7/8 disetujui dengan bukti performa dan Docker tertunda
+
+- **Keputusan:** Fase 7 dan 8 ditutup secara fungsional atas persetujuan manusia
+  (2026-11-04). Dua bukti tetap dicatat sebagai **tertunda**, bukan selesai:
+  (a) NFR-01 `200 rps × 2 menit`, p95 < 500 ms, belum dijalankan karena mesin ini
+  tidak punya PHP-FPM/`mod_fcgid`; (b) T-12 `docker compose up --build` belum
+  dieksekusi karena Docker Desktop tidak tersedia.
+- **Alasan:** Seluruh DoD lain terpenuhi dan dapat diulang: CI GitHub Actions
+  hijau (backend 198 test/811 assertion, frontend lint/build/audit, OCR 8 test),
+  Playwright 6 lulus, 20 proses konkurensi, drill restore + `ledger:verify`,
+  axe 0 violations. Menahan gate hanya karena dua alat yang tidak ada di mesin
+  lokal tidak menambah bukti.
+- **Alternatif yang ditolak:** (a) Menjalankan benchmark pada `artisan serve`
+  lalu mengklaim NFR-01 — hasilnya mengukur antrean single-process, bukan
+  runtime target. (b) Menandai T-12 selesai tanpa eksekusi — melanggar aturan
+  "jangan menandai ✅ tanpa output".
+- **Konsekuensi:** status fase 7/8 = selesai dengan catatan; T-09 tetap 🟡 dan
+  T-12 tetap 🟡 di `docs/progress.md`; NFR-01/NFR-03/NFR-10 dinyatakan belum
+  terverifikasi sampai staging/Docker. Agent berikutnya wajib menjalankan kedua
+  bukti itu sebelum mengklaim kesiapan produksi.
+
+---
+
 ## 2. Register Asumsi (default yang saya pakai sampai dikoreksi)
 | ID | Asumsi | Default bila salah | Dampak bila berubah |
 |---|---|---|---|
@@ -308,3 +331,4 @@
 | 1.13 | 2026-11-04 | D-026 retensi NFR-08 + command `amanah:retention`; CI GitHub Actions + test retensi |
 | 1.14 | 2026-11-04 | D-027 axe-core Playwright + `docs/a11y.md`; `docs/runbook.md` + drill restore lokal |
 | 1.15 | 2026-11-04 | T-12 compose + Dockerfile; referensi artefak NFR-02/NFR-07 di PRD diselaraskan ke test nyata |
+| 1.16 | 2026-11-04 | D-028 GATE 7/8 disetujui dengan catatan; CI hijau (run #5/#6); bug `.env.example` + `pythonpath` OCR diperbaiki |

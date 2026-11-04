@@ -9,9 +9,9 @@
 | Field | Nilai |
 |---|---|
 | Terakhir diperbarui | 2026-11-04 |
-| Fase selesai | Fase 0, 1, 2, 3, 4 |
-| Fase berjalan | Fase 8 — DevOps (T-12 compose pending; T-09 full target butuh runtime staging) |
-| Status gate | 29/29 story ✅; Fase 5–8 belum ditutup |
+| Fase selesai | Fase 0, 1, 2, 3, 4, 6, 7, 8 (7/8 dengan catatan D-028) |
+| Fase berjalan | Fase 5 — bukti screenshot mobile; bukti tertunda: T-09 performa & T-12 Docker (butuh staging/Docker) |
+| Status gate | 29/29 story ✅; GATE 7/8 disetujui 2026-11-04 dengan catatan; Fase 5 belum ditutup |
 | Referensi | `docs/prd.md`, `docs/backlog.md`, `DECISIONS.md` |
 
 ## Ringkasan Fase
@@ -24,8 +24,8 @@
 | 4 — OCR Service | US-22…US-24 (Flask `/extract`, upload nota, auto-match, review) | ✅ selesai |
 | 5 — Frontend | halaman Next.js | 🟡 MVP + P5 mobile core implemented; screenshot evidence pending |
 | 6 — Security | hardening + ASVS checklist | ✅ T-04…T-07 selesai; subset ASVS dan sinkronisasi kontrak tersedia |
-| 7 — Test Suite | k6, konkurensi, E2E | 🟡 T-08/T-10 selesai; T-09 full target pending |
-| 8 — DevOps | compose, CI, observability, runbook | 🟡 T-13, T-14 selesai; T-12 compose ditulis, eksekusi menunggu Docker |
+| 7 — Test Suite | k6, konkurensi, E2E | ✅ GATE disetujui 2026-11-04 — T-08/T-10 lulus; T-09 instrumen siap, target 200 rps tertunda (D-028) |
+| 8 — DevOps | compose, CI, observability, runbook | ✅ GATE disetujui 2026-11-04 — T-13/T-14 lulus, CI hijau; eksekusi T-12 tertunda (D-028) |
 
 ## Status Story
 
@@ -175,6 +175,7 @@
 | 2026-11-04 | validasi YAML `docker-compose.yml` (T-12) dengan PyYAML | `compose yaml ok`; service `api/mysql/ocr/queue/scheduler/web`; volume `mysql-data`/`backend-storage`; eksekusi compose belum dilakukan |
 | 2026-11-04 | GitHub Actions run #5 (`8c87eaa`, push) | **success** — job Backend, Frontend, dan OCR semuanya lulus (pint, 198 test, composer audit; lint/build/npm audit; 8 pytest) |
 | 2026-11-04 | penyebab CI run #1–#4 gagal | `backend/.env.example` berisi baris tidak valid `[TEMPLATE]` sehingga `php artisan key:generate` gagal; `pytest` tanpa `pythonpath` tidak bisa `import app`. Diperbaiki di `8c87eaa` (+ `ocr-service/pytest.ini`) |
+| 2026-11-04 | persetujuan GATE 7/8 oleh manusia | **disetujui dengan catatan** — T-09 (perf target) dan T-12 (eksekusi Docker) tetap tertunda; dicatat sebagai D-028 |
 | 2026-11-03 | `npm run lint` + `npm run build` (P2 type specimen) | lint bersih; build sukses, 15 route termasuk `ƒ /design/type`; CSS memuat 2 `@font-face` Geist |
 | 2026-11-03 | Chrome headless `/design/type` (P2) | tangkapan 512 dan 1440; `innerWidth=512` saat diminta 390 (batas tool dicatat di `P2-type-specimen.md` §5) |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
@@ -296,15 +297,15 @@ selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
 | ID | Task | Estimasi | Bukti/DoD |
 |---|---|---|---|
 | T-08 | Playwright: alur kritis end-to-end terhadap stack lokal (butuh browser Chrome) | 8h | ✅ **selesai 2026-11-04** — `npm run e2e` 2 passed; fixture seeder, webServer backend/frontend, report HTML, screenshot/trace policy |
-| T-09 | k6 authorize: 2 menit, target 200 rps, hitung query per request; tulis `docs/perf/scan-p95.md` (G-09) | 🟡 **instrumentasi selesai 2026-11-04** — `scripts/perf/authorize.js`, query header opt-in, dan runbook tersedia; full target belum dijalankan |
+| T-09 | k6 authorize: 2 menit, target 200 rps, hitung query per request; tulis `docs/perf/scan-p95.md` (G-09) | 🟡 **instrumentasi selesai 2026-11-04** — `scripts/perf/authorize.js`, query header opt-in, dan runbook tersedia; full target belum dijalankan. **GATE 7 disetujui dengan bukti ini tertunda (D-028)** |
 | T-10 | Perluas uji konkurensi (di luar 5 proses) atau dokumentasikan batas bukti saat ini | 2h | ✅ **selesai 2026-11-04** — harness diperluas menjadi 20 proses PHP independen; 3 payout sukses, saldo dan ledger invariant tetap konsisten; target PRD 200 VU × 50 iterasi masih belum diklaim |
 
 ### Fase 8 — DevOps (GATE 8)
 
 | ID | Task | Estimasi | Bukti/DoD |
 |---|---|---|---|
-| T-12 | `docker-compose.yml`: mysql, api, queue, scheduler, ocr, web + healthcheck + volume | 5h | 🟡 **ditulis 2026-11-04** — compose 6 service + `backend/Dockerfile`, `frontend/Dockerfile`, `.env.docker.example`, healthcheck, volume `mysql-data`/`backend-storage`; YAML valid. `docker compose up --build` belum dijalankan (Docker tidak ada di mesin ini) |
-| T-13 | CI GitHub Actions: php test + pint + `composer audit`, es lint/build/audit, pytest, (opsional) k6 smoke; retensi sesuai NFR-08 | 4h | 🟡 **retensi + workflow selesai 2026-11-04** — `.github/workflows/ci.yml` (backend MySQL 8.4, frontend Node 24, OCR pytest) dan `amanah:retention` + `RetentionTest` (4 passed); status hijau menunggu run di GitHub |
+| T-12 | `docker-compose.yml`: mysql, api, queue, scheduler, ocr, web + healthcheck + volume | 5h | 🟡 **ditulis 2026-11-04** — compose 6 service + `backend/Dockerfile`, `frontend/Dockerfile`, `.env.docker.example`, healthcheck, volume `mysql-data`/`backend-storage`; YAML valid. `docker compose up --build` belum dijalankan (Docker tidak ada di mesin ini); **bukti tertunda disetujui di GATE 8 (D-028)** |
+| T-13 | CI GitHub Actions: php test + pint + `composer audit`, es lint/build/audit, pytest, (opsional) k6 smoke; retensi sesuai NFR-08 | 4h | ✅ **selesai 2026-11-04** — `.github/workflows/ci.yml` (backend MySQL 8.4, frontend Node 24, OCR pytest) dan `amanah:retention` + `RetentionTest` (4 passed); GitHub Actions run #5/#6 **success** setelah `8c87eaa` memperbaiki `.env.example` dan `pythonpath` pytest |
 | T-14 | Observability + `docs/runbook.md` + drill backup/restore + axe-core (G-08, G-10) | 6h | ✅ **selesai 2026-11-04** — `docs/runbook.md` (health, 3 alert, retensi, RTO/RPO) + drill restore MySQL (52 transaksi, `ledger:verify` exit 0, trigger immutability terbukti); `@axe-core/playwright` 4.14.0 + 4 test WCAG 2.1 AA (0 violations) di `docs/a11y.md` |
 
 **Total sisa ± 51 jam** (≈13 sesi 4 jam), belum termasuk perbaikan yang muncul
@@ -381,11 +382,13 @@ limit) dan beberapa state/UX.
 
 ## Langkah berikutnya (ringkas)
 
-1. **Verifikasi T-12 di mesin ber-Docker:** `docker compose up --build`, cek 6
-   service sehat, login demo, lalu tandai T-12 selesai penuh.
-2. **T-09 full target:** jalankan `k6 run scripts/perf/authorize.js` dengan
-   `RATE=200`, `DURATION=2m` pada PHP-FPM/Apache atau staging (bukan
-   `artisan serve`), lalu isi bagian Result di `docs/perf/scan-p95.md`.
-3. **G-10 sudah tertutup:** referensi artefak PRD diselaraskan ke test nyata.
-4. **GATE 7/8:** setelah T-09 dan T-12 terbukti, tulis ringkasan gate dan minta
-   persetujuan manusia sebelum polish lanjutan.
+1. **Bukti tertunda T-12 (Docker):** di mesin ber-Docker jalankan
+   `docker compose up --build`, cek 6 service sehat, login demo, lalu ubah T-12
+   menjadi ✅ dengan output perintah.
+2. **Bukti tertunda T-09 (performa):** jalankan `k6 run scripts/perf/authorize.js`
+   dengan `RATE=200`, `DURATION=2m` pada PHP-FPM/Apache Linux atau staging
+   (bukan `artisan serve`), lalu isi bagian Result di `docs/perf/scan-p95.md`.
+3. **Fase 5:** lengkapi bukti screenshot viewport mobile, lalu tutup fase dengan
+   GATE.
+4. **GATE 7/8 sudah disetujui (D-028)** dengan catatan; jangan klaim NFR-01,
+   NFR-03, atau NFR-10 sebelum bukti staging tersedia.
