@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, errorMessage, type Campaign, type Paginated } from "@/lib/api";
 import { CampaignCard } from "@/components/campaign-card";
-import { EmptyState, ErrorState, Loading } from "@/components/ui";
+import { CampaignGridSkeleton } from "@/components/loading-skeletons";
+import { EmptyState, ErrorState } from "@/components/ui";
 
 export default function HomePage() {
   const [draftQuery, setDraftQuery] = useState("");
@@ -133,7 +134,7 @@ export default function HomePage() {
           {error ? (
             <ErrorState message={error} onRetry={handleRetry} />
           ) : loading ? (
-            <Loading label="Memuat kampanye…" />
+            <CampaignGridSkeleton count={3} />
           ) : result && result.data.length > 0 ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {result.data.map((campaign) => (

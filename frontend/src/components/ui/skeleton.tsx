@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+﻿import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -54,7 +54,7 @@ export function SkeletonCard({
   );
 }
 
-/** Campaign card: 16:9 media, two title lines, progress, one button. */
+/** Mirrors `CampaignCard`: status row, two title lines, three description lines. */
 export function SkeletonCampaignCard({
   className,
   ...props
@@ -62,22 +62,34 @@ export function SkeletonCampaignCard({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-md border border-line bg-surface",
+        "flex flex-col rounded-md border border-line bg-surface p-5",
         className,
       )}
       {...props}
     >
-      <Skeleton className="aspect-video w-full rounded-none" />
-      <div className="space-y-3 p-5">
-        <div className="space-y-2">
-          <Skeleton className="h-5 w-4/5" />
-          <Skeleton className="h-5 w-3/5" />
-        </div>
+      <div className="flex items-start justify-between gap-3">
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-3 w-16" />
+      </div>
+      <div className="mt-3 space-y-2">
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-6 w-4/5" />
+      </div>
+      <div className="mt-2 flex-1 space-y-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+      <div className="mt-4 space-y-2">
         <Skeleton className="h-2 w-full rounded-full" />
         <div className="flex items-center justify-between gap-4">
           <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-11 w-32" />
+          <Skeleton className="h-4 w-28" />
         </div>
+      </div>
+      <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
+        <Skeleton className="h-3 w-28" />
+        <Skeleton className="h-3 w-20" />
       </div>
     </div>
   );

@@ -178,6 +178,8 @@
 | 2026-11-04 | penyebab CI run #1–#4 gagal | `backend/.env.example` berisi baris tidak valid `[TEMPLATE]` sehingga `php artisan key:generate` gagal; `pytest` tanpa `pythonpath` tidak bisa `import app`. Diperbaiki di `8c87eaa` (+ `ocr-service/pytest.ini`) |
 | 2026-11-04 | demo settlement donor, notifikasi, dan loading state UI | backend `DonationSimulationTest` 3 passed / 11 assertions; API donor: donation 11 `settled`, saldo kampanye 734.952 -> 832.952 (+98.000 net); notifikasi `donation_settled` unread; `npm run lint` + `npx tsc --noEmit` bersih; E2E `donation-demo.spec.ts` 1 passed |
 | 2026-11-04 | persetujuan GATE 7/8 oleh manusia | **disetujui dengan catatan** — T-09 (perf target) dan T-12 (eksekusi Docker) tetap tertunda; dicatat sebagai D-028 |
+| 2026-11-04 | P1 functional UX v5.0 | `Sheet`, `Dialog`, `AlertDialog`, `Skeleton`, Sonner, `Progress` terpasang dengan token v4.0; `UX_DECISIONS.md` UX-01…UX-06; lint/typecheck/build bersih; E2E `primitives.spec.ts` 1 passed; commit `ff7864f` |
+| 2026-11-04 | P2 loading v5.0 | skeleton L04/L09/L19 mengikuti DOM akhir; CLS L04 **0.0006**, L09/L19 **0.0001** (target <0.02); viewport 390 tanpa overflow horizontal; lint/typecheck/build bersih; L10 ditunda karena belum ada route/endpoint detail (UX-07) |
 | 2026-11-03 | `npm run lint` + `npm run build` (P2 type specimen) | lint bersih; build sukses, 15 route termasuk `ƒ /design/type`; CSS memuat 2 `@font-face` Geist |
 | 2026-11-03 | Chrome headless `/design/type` (P2) | tangkapan 512 dan 1440; `innerWidth=512` saat diminta 390 (batas tool dicatat di `P2-type-specimen.md` §5) |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |

@@ -13,6 +13,7 @@ import {
   Stat,
   StatusBadge,
 } from "@/components/ui";
+import { DashboardSkeleton } from "@/components/loading-skeletons";
 import {
   api,
   errorMessage,
@@ -379,11 +380,7 @@ export default function DashboardPage() {
   }
 
   if (!ready || loading) {
-    return (
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <Loading label="Memuat dasbor…" />
-      </div>
-    );
+    return <DashboardSkeleton user={user} fundraiser={isFundraiser} />;
   }
 
   if (!user) return null;
