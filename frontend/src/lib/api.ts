@@ -97,6 +97,19 @@ export interface Receipt {
   };
 }
 
+export interface DisbursementSimulation {
+  allowed: boolean;
+  code: string | null;
+  message: string;
+  mcc?: string;
+  allowed_mcc?: string[];
+  ledger_balance?: string;
+  remaining_today?: string;
+  remaining_month?: string;
+  limit_expires_at?: string | null;
+  details?: { scope: "daily" | "monthly"; remaining: string } | null;
+}
+
 export interface DisbursementLimit {
   campaign_id: number;
   daily_limit: string;
@@ -401,6 +414,13 @@ export const api = {
       ...json(body),
       headers: { "Idempotency-Key": crypto.randomUUID() },
     }),
+
+  simulateDisbursement: (body: {
+    campaign_id: number;
+    merchant_id: number;
+    amount: string;
+  }) =>
+    request<{ data: DisbursementSimulation }>("/disbursements/simulate", json(body)),
 
   disbursements: (page = 1, campaignId?: number) => {
     const params = new URLSearchParams({ page: String(page) });

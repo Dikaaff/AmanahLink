@@ -5,8 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\TransactionType;
+use App\Exceptions\CampaignNotActiveException;
+use App\Exceptions\InsufficientFundsException;
+use App\Exceptions\LimitExceededException;
+use App\Exceptions\LimitExpiredException;
+use App\Exceptions\MccNotAllowedException;
 use App\Http\Requests\StoreDisbursementRequest;
 use App\Http\Resources\DisbursementResource;
+use App\Models\Campaign;
+use App\Models\Merchant;
 use App\Models\Transaction;
 use App\Services\DisbursementService;
 use App\Support\Money;
@@ -41,6 +48,43 @@ final class DisbursementController
         return DisbursementResource::collection($query->paginate(15)->withQueryString());
     }
 
+    public function simulate(StoreDisbursementRequest $request): JsonResponse
+    {
+        $campaign = Campaign::query()->findOrFail($request->integer('campaign_id'));
+        $merchant = Merchant::query()->findOrFail($request->integer('merchant_id'));
+
+        try {
+            $preview = $this->disbursements->preview(
+                $campaign,
+                $merchant,
+                Money::of((string) $request->input('amount')),
+            );
+        } catch (CampaignNotActiveException|MccNotAllowedException|InsufficientFundsException|LimitExceededException|LimitExpiredException $exception) {
+            return response()->json([
+                'data' => [
+                    'allowed' => false,
+                    'code' => $this->simulationCode($exception),
+                    'message' => $exception->getMessage(),
+                    'details' => $exception instanceof LimitExceededException
+                        ? [
+                            'scope' => $exception->scope,
+                            'remaining' => $exception->remaining->toDecimalString(),
+                        ]
+                        : null,
+                ],
+            ]);
+        }
+
+        return response()->json([
+            'data' => [
+                'allowed' => true,
+                'code' => null,
+                'message' => 'Pencairan dapat diproses.',
+                ...$preview,
+            ],
+        ]);
+    }
+
     public function store(StoreDisbursementRequest $request): JsonResponse
     {
         $key = trim((string) $request->header('Idempotency-Key'));
@@ -65,5 +109,17 @@ final class DisbursementController
             ),
             'meta' => ['replayed' => $result['replayed']],
         ], $result['replayed'] ? 200 : 201);
+    }
+
+    private function simulationCode(
+        CampaignNotActiveException|MccNotAllowedException|InsufficientFundsException|LimitExceededException|LimitExpiredException $exception,
+    ): string {
+        return match (true) {
+            $exception instanceof CampaignNotActiveException => 'CAMPAIGN_NOT_ACTIVE',
+            $exception instanceof MccNotAllowedException => 'MCC_NOT_ALLOWED',
+            $exception instanceof InsufficientFundsException => 'INSUFFICIENT_FUNDS',
+            $exception instanceof LimitExceededException => 'LIMIT_EXCEEDED',
+            default => 'LIMIT_EXPIRED',
+        };
     }
 }

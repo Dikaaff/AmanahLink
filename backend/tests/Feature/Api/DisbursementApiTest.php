@@ -266,6 +266,114 @@ final class DisbursementApiTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_a_simulation_previews_a_valid_payout_without_persisting(): void
+    {
+        $campaign = $this->fundedCampaign();
+        $this->limit($campaign);
+        $merchant = $this->merchant();
+
+        Sanctum::actingAs($campaign->campaigner);
+
+        $this->postJson('/api/v1/disbursements/simulate', [
+            'campaign_id' => $campaign->id,
+            'merchant_id' => $merchant->id,
+            'amount' => '30000',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.allowed', true)
+            ->assertJsonPath('data.code', null)
+            ->assertJsonPath('data.mcc', '5912')
+            ->assertJsonPath('data.remaining_today', '100000.00')
+            ->assertJsonPath('data.remaining_month', '1000000.00')
+            ->assertJsonPath('data.ledger_balance', '98000.00');
+
+        $this->assertSame(0, Transaction::query()->where('type', 'disbursement')->count());
+        $this->assertDatabaseHas('campaigns', [
+            'id' => $campaign->id,
+            'current_amount' => '98000.00',
+        ]);
+        $this->assertDatabaseHas('disbursement_limits', [
+            'campaign_id' => $campaign->id,
+            'used_today' => '0.00',
+            'used_this_month' => '0.00',
+        ]);
+    }
+
+    public function test_a_simulation_reports_mcc_rejection_without_persisting(): void
+    {
+        $campaign = $this->fundedCampaign();
+        $this->limit($campaign);
+        $merchant = $this->merchant('8011');
+
+        Sanctum::actingAs($campaign->campaigner);
+
+        $this->postJson('/api/v1/disbursements/simulate', [
+            'campaign_id' => $campaign->id,
+            'merchant_id' => $merchant->id,
+            'amount' => '10000',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.allowed', false)
+            ->assertJsonPath('data.code', 'MCC_NOT_ALLOWED');
+
+        $this->assertSame(0, Transaction::query()->where('type', 'disbursement')->count());
+    }
+
+    public function test_a_simulation_reports_insufficient_funds(): void
+    {
+        $campaign = $this->fundedCampaign();
+        $this->limit($campaign, '1000000', '1000000');
+        $merchant = $this->merchant();
+
+        Sanctum::actingAs($campaign->campaigner);
+
+        $this->postJson('/api/v1/disbursements/simulate', [
+            'campaign_id' => $campaign->id,
+            'merchant_id' => $merchant->id,
+            'amount' => '200000',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.allowed', false)
+            ->assertJsonPath('data.code', 'INSUFFICIENT_FUNDS');
+
+        $this->assertSame(0, Transaction::query()->where('type', 'disbursement')->count());
+    }
+
+    public function test_a_simulation_reports_the_daily_limit_scope_and_remaining(): void
+    {
+        $campaign = $this->fundedCampaign();
+        $this->limit($campaign, '20000', '1000000');
+        $merchant = $this->merchant();
+
+        Sanctum::actingAs($campaign->campaigner);
+
+        $this->postJson('/api/v1/disbursements/simulate', [
+            'campaign_id' => $campaign->id,
+            'merchant_id' => $merchant->id,
+            'amount' => '30000',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.allowed', false)
+            ->assertJsonPath('data.code', 'LIMIT_EXCEEDED')
+            ->assertJsonPath('data.details.scope', 'daily')
+            ->assertJsonPath('data.details.remaining', '20000.00');
+    }
+
+    public function test_a_stranger_cannot_simulate_someone_elses_campaign(): void
+    {
+        $campaign = $this->fundedCampaign();
+        $this->limit($campaign);
+        $merchant = $this->merchant();
+
+        Sanctum::actingAs(User::factory()->campaigner()->create());
+
+        $this->postJson('/api/v1/disbursements/simulate', [
+            'campaign_id' => $campaign->id,
+            'merchant_id' => $merchant->id,
+            'amount' => '10000',
+        ])->assertForbidden();
+    }
+
     public function test_a_campaigner_can_list_own_disbursements_with_receipt_status(): void
     {
         $campaign = Campaign::factory()->active()->create();

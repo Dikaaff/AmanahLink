@@ -1,4 +1,10 @@
+import { mkdirSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { expect, test, type Page } from "@playwright/test";
+
+const outDir = resolve(__dirname, "..", "..", "..", "docs", "e2e", "screenshots");
+mkdirSync(outDir, { recursive: true });
 
 /**
  * P6 — mobile secondary surfaces at 390x844.
@@ -130,6 +136,7 @@ function paginated<T>(rows: T[], meta: Record<string, number> = {}) {
 interface Scenario {
   disbursementReply?: { status: number; json: unknown };
   campaignReply?: { status: number; json: unknown };
+  simulationReply?: { status: number; json: unknown };
 }
 
 async function mockApi(page: Page, scenario: Scenario = {}) {
@@ -202,6 +209,27 @@ async function mockApi(page: Page, scenario: Scenario = {}) {
       return route.fulfill({
         json: paginated([donation(1, activeCampaign.title)]),
       });
+    }
+
+    if (path === "/disbursements/simulate" && method === "POST") {
+      return route.fulfill(
+        scenario.simulationReply ?? {
+          json: {
+            data: {
+              allowed: true,
+              code: null,
+              message: "Pencairan dapat diproses.",
+              mcc: "5912",
+              allowed_mcc: ["5912"],
+              ledger_balance: "2500000.00",
+              remaining_today: "4000000.00",
+              remaining_month: "17000000.00",
+              limit_expires_at: "2026-12-31T00:00:00+00:00",
+              details: null,
+            },
+          },
+        },
+      );
     }
 
     if (path === "/disbursements" && method === "POST") {
@@ -405,6 +433,108 @@ test.describe("P6 mobile secondary @390", () => {
     await page.getByRole("button", { name: "Simpan draf" }).click();
 
     await expect(page).toHaveURL(/\/campaigns\/kampanye-baru$/);
+  });
+
+  test("L17 simulation route previews without moving money", async ({ page }) => {
+    await mockApi(page);
+    await login(page);
+
+    await page.getByRole("link", { name: "Simulasi pindai" }).click();
+    await expect(page).toHaveURL(/\/dashboard\/simulasi$/);
+    await page.locator("#simulation-campaign").selectOption("1");
+    await page.locator("#simulation-merchant").selectOption("1");
+    await page.locator("#simulation-amount").fill("50000");
+    await page.getByRole("button", { name: "Periksa kelayakan" }).click();
+
+    await expect(
+      page.getByText("Pencairan dapat diproses", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText(/Sisa limit hari ini/)).toBeVisible();
+    await expectNoOverflow(page, "L17 simulation @390");
+  });
+
+  test("L17 simulation shows the rejection scope and remaining limit", async ({
+    page,
+  }) => {
+    await mockApi(page, {
+      simulationReply: {
+        status: 200,
+        json: {
+          data: {
+            allowed: false,
+            code: "LIMIT_EXCEEDED",
+            message: "Pencairan melebihi limit harian kampanye.",
+            details: { scope: "daily", remaining: "10000.00" },
+          },
+        },
+      },
+    });
+    await login(page);
+
+    await page.getByRole("link", { name: "Simulasi pindai" }).click();
+    await page.locator("#simulation-campaign").selectOption("1");
+    await page.locator("#simulation-merchant").selectOption("1");
+    await page.locator("#simulation-amount").fill("50000");
+    await page.getByRole("button", { name: "Periksa kelayakan" }).click();
+
+    await expect(
+      page.getByText("Pencairan akan ditolak", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText(/Sisa limit harian: Rp\s?10\.000/)).toBeVisible();
+    await expectNoOverflow(page, "L17 rejected simulation @390");
+  });
+
+  test("captures the P6 390 evidence", async ({ page }) => {
+    await mockApi(page);
+    await login(page);
+
+    await page.screenshot({
+      path: resolve(outDir, "p6-l11-dashboard-390.png"),
+      fullPage: true,
+    });
+
+    await page.getByRole("link", { name: "Buat kampanye" }).click();
+    await expect(page).toHaveURL(/\/dashboard\/new$/);
+    await page.screenshot({
+      path: resolve(outDir, "p6-l12-campaign-form-390.png"),
+      fullPage: true,
+    });
+
+    await page.getByRole("link", { name: "← Dasbor" }).click();
+    await page.locator("#limit-view-campaign").selectOption("1");
+    await expect(page.getByText(/Rp\s?5\.000\.000/)).toBeVisible();
+    await page
+      .locator("section")
+      .filter({
+        has: page.getByRole("heading", { name: "Limit pencairan" }),
+      })
+      .first()
+      .screenshot({
+        path: resolve(outDir, "p6-l16-limit-card-390.png"),
+      });
+
+    await page.getByRole("link", { name: "Simulasi pindai" }).click();
+    await page.locator("#simulation-campaign").selectOption("1");
+    await page.locator("#simulation-merchant").selectOption("1");
+    await page.locator("#simulation-amount").fill("50000");
+    await page.getByRole("button", { name: "Periksa kelayakan" }).click();
+    await expect(page.getByText(/Sisa limit hari ini/)).toBeVisible();
+    await page.screenshot({
+      path: resolve(outDir, "p6-l17-simulasi-390.png"),
+      fullPage: true,
+    });
+
+    await page.getByRole("link", { name: "← Dasbor" }).click();
+    await expect(
+      page.getByText(/Apotek Sehat Sentosa/).filter({ visible: true }),
+    ).toBeVisible();
+    await page
+      .locator("section")
+      .filter({ hasText: "Apotek Sehat Sentosa" })
+      .first()
+      .screenshot({
+        path: resolve(outDir, "p6-l19-riwayat-390.png"),
+      });
   });
 
   test("L12 shows an inline field error when the API rejects the draft", async ({

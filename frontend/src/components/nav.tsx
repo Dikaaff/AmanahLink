@@ -24,7 +24,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className={`inline-flex items-center rounded-sm px-3 py-1.5 text-sm font-medium transition-colors ${
+      className={`inline-flex items-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-colors ${
         active
           ? "bg-sunken text-ink"
           : "text-ink-secondary hover:bg-sunken hover:text-ink"
@@ -46,7 +46,7 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-canvas">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-8">
+      <div className="mx-auto flex min-h-14 max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-8">
         <Link href="/" className="flex items-center gap-3">
           <BrandMark />
           <span className="sr-only text-h3 font-semibold tracking-tight min-[360px]:not-sr-only">
@@ -54,7 +54,7 @@ export function Nav() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 sm:flex">
+        <nav className="hidden flex-wrap items-center gap-1 sm:flex">
           <NavLink href="/">Kampanye</NavLink>
           {user ? <NavLink href="/dashboard">Dasbor</NavLink> : null}
           {user ? (
@@ -87,7 +87,7 @@ export function Nav() {
             <span className="h-9 w-24 animate-pulse rounded-sm bg-sunken" />
           ) : user ? (
             <>
-              <span className="hidden text-right leading-snug sm:block">
+              <span className="hidden text-right leading-snug lg:block">
                 <p className="text-label">{user.name}</p>
                 <p className="text-[11px] text-ink-secondary">{user.role_label}</p>
               </span>

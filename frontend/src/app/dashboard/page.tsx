@@ -791,9 +791,14 @@ export default function DashboardPage() {
           </section>
 
           <section className="card p-6">
-            <h2 className="text-xl font-semibold text-stone-900">
-              Cairkan dana ke merchant
-            </h2>
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 className="text-xl font-semibold text-stone-900">
+                Cairkan dana ke merchant
+              </h2>
+              <Link href="/dashboard/simulasi" className="btn-secondary">
+                Simulasi pindai
+              </Link>
+            </div>
             <p className="mt-1 max-w-2xl text-sm text-stone-600">
               Pencairan hanya berhasil ke merchant terverifikasi dengan kategori
               transaksi yang diizinkan kampanye, selama limit harian/bulanan dan

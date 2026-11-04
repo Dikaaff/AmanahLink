@@ -47,6 +47,7 @@ Route::prefix('v1')->group(function (): void {
             Route::put('campaigns/{campaign}/disbursement-limit', [DisbursementLimitController::class, 'upsert']);
             Route::post('donations', [DonationController::class, 'store']);
             Route::post('donations/{donation}/simulate-payment', [DonationController::class, 'simulatePayment']);
+            Route::post('disbursements/simulate', [DisbursementController::class, 'simulate']);
             Route::post('disbursements', [DisbursementController::class, 'store']);
             Route::post('disbursements/{transaction}/receipts', [ReceiptController::class, 'store']);
         });

@@ -68,5 +68,6 @@ erDiagram
 | Donation pay-in | `POST /api/v1/donations` | `donations`, `idempotency_keys`, `transactions` |
 | Payment settlement | `POST /api/v1/webhooks/payments/{provider}` | `webhook_events`, `donations`, `ledger_entries` |
 | Disbursement authorize | `POST /api/v1/disbursements` | `transactions`, `merchants`, `disbursement_limits`, `ledger_entries` |
+| Disbursement dry-run | `POST /api/v1/disbursements/simulate` | `campaigns`, `merchants`, `disbursement_limits` (baca saja) |
 | Receipt upload | `POST /api/v1/disbursements/{transaction}/receipts` | `receipts`, `transactions`, `jobs` |
 | Campaign close/refund | `POST /api/v1/campaigns/{campaign}/close` | `campaigns`, `donations`, `ledger_entries` |

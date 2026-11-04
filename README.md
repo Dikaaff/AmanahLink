@@ -519,6 +519,7 @@ Saat dependency gagal, status root menjadi `unavailable` dan HTTP statusnya
 | `POST` | `/donations` | token + `Idempotency-Key` | Membuat payment instruction (fake: VA) |
 | `GET` | `/donations` | token | Riwayat donasi sendiri |
 | `POST` | `/disbursements` | owner/admin + `Idempotency-Key` | Authorize + capture |
+| `POST` | `/disbursements/simulate` | owner/admin | Dry-run read-only: status, MCC, saldo, limit; tanpa tulis ledger |
 | `POST` | `/disbursements/{transaction}/receipts` | owner/admin | Multipart `file` (JPEG/PNG) |
 | `GET` | `/receipts` | verifier/admin (semua), campaigner (milik sendiri) | Filter `status`, mis. `needs_review` |
 | `POST` | `/receipts/{receipt}/review` | verifier/admin | Approve/reject nota |

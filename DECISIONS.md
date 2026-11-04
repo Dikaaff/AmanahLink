@@ -300,6 +300,15 @@
 
 ---
 
+### D-030 - Simulasi pencairan memakai dry-run read-only di service yang sama
+
+- **Keputusan:** `POST /api/v1/disbursements/simulate` (auth Sanctum + `email.verified`, policy `disburse` lewat `StoreDisbursementRequest`) memanggil `DisbursementService::preview()` yang memeriksa status kampanye, MCC merchant, saldo ledger, limit harian/bulanan, dan expiry tanpa lock, tulis transaksi, atau reset jendela limit. Respons selalu `200` berisi `data.allowed`; penolakan membawa `code` (`CAMPAIGN_NOT_ACTIVE`, `MCC_NOT_ALLOWED`, `INSUFFICIENT_FUNDS`, `LIMIT_EXCEEDED`, `LIMIT_EXPIRED`) dan `message` yang sama dengan capture. Route tidak memakai `Idempotency-Key` karena tidak ada mutasi. UI `/dashboard/simulasi` memanggil endpoint ini; capture tetap hanya lewat `POST /disbursements`.
+- **Alasan:** UX-09 menolak validasi klien karena hasilnya tidak dijamin ledger. Dry-run sisi server memberi umpan balik jujur tanpa menduplikasi aturan uang dan tanpa risiko pencairan tak sengaja.
+- **Alternatif yang ditolak:** (a) Klien menyalin aturan MCC/saldo/limit - cepat menyimpang dari service. (b) Memakai `POST /disbursements` sebagai simulasi - setiap percobaan menulis transaksi dan entri ledger nyata.
+- **Konsekuensi:** Aturan tetap satu sumber di `DisbursementService`; test feature menutup jalur sukses dan tiap kode penolakan. Karena penolakan bukan error envelope, klien wajib memeriksa `allowed`, bukan hanya status HTTP.
+
+---
+
 ## 2. Register Asumsi (default yang saya pakai sampai dikoreksi)
 | ID | Asumsi | Default bila salah | Dampak bila berubah |
 |---|---|---|---|
@@ -351,3 +360,4 @@
 | 1.15 | 2026-11-04 | T-12 compose + Dockerfile; referensi artefak NFR-02/NFR-07 di PRD diselaraskan ke test nyata |
 | 1.16 | 2026-11-04 | D-028 GATE 7/8 disetujui dengan catatan; CI hijau (run #5/#6); bug `.env.example` + `pythonpath` OCR diperbaiki |
 | 1.17 | 2026-11-04 | D-029 simulasi pembayaran demo (`fake` + local/testing), notifikasi `donation_settled`, loading state UI |
+| 1.18 | 2026-11-04 | D-030 dry-run pencairan `POST /disbursements/simulate` + route `/dashboard/simulasi`; nav 768 dibungkus |

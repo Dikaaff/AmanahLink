@@ -173,6 +173,71 @@ final class DisbursementService
         return ['transaction' => $transaction, 'replayed' => $replayed];
     }
 
+    /**
+     * Read-only authorization preview for the L17 scan simulation. It mirrors
+     * pay() without locking, writing, or resetting the limit windows.
+     *
+     * @return array<string, mixed>
+     */
+    public function preview(Campaign $campaign, Merchant $merchant, Money $amount): array
+    {
+        if (! $amount->isPositive()) {
+            throw new InsufficientFundsException;
+        }
+
+        if (! $campaign->allowsDisbursement()) {
+            throw new CampaignNotActiveException('Kampanye tidak dapat mencairkan dana saat ini.');
+        }
+
+        $this->assertMerchantAllowed($campaign, $merchant);
+
+        $limit = DisbursementLimit::query()
+            ->where('campaign_id', $campaign->getKey())
+            ->first();
+
+        if ($limit === null) {
+            throw new LimitExpiredException('Limit pencairan kampanye belum diatur.');
+        }
+
+        if ($limit->isExpired()) {
+            throw new LimitExpiredException('Limit pencairan kampanye sudah kedaluwarsa.');
+        }
+
+        $usedToday = $limit->daily_window?->toDateString() === now()->toDateString()
+            ? Money::of($limit->used_today)
+            : Money::zero();
+        $usedMonth = $limit->monthly_window === now()->format('Y-m')
+            ? Money::of($limit->used_this_month)
+            : Money::zero();
+
+        $available = $this->balances->expected($campaign);
+
+        if ($amount->isGreaterThan($available)) {
+            throw new InsufficientFundsException;
+        }
+
+        $remainingToday = Money::of($limit->daily_limit)->minus($usedToday);
+
+        if ($amount->isGreaterThan($remainingToday)) {
+            throw new LimitExceededException('daily', $remainingToday);
+        }
+
+        $remainingMonth = Money::of($limit->monthly_limit)->minus($usedMonth);
+
+        if ($amount->isGreaterThan($remainingMonth)) {
+            throw new LimitExceededException('monthly', $remainingMonth);
+        }
+
+        return [
+            'mcc' => $merchant->mcc,
+            'allowed_mcc' => $campaign->allowed_mcc_array ?? [],
+            'ledger_balance' => $available->toDecimalString(),
+            'remaining_today' => $remainingToday->toDecimalString(),
+            'remaining_month' => $remainingMonth->toDecimalString(),
+            'limit_expires_at' => $limit->expires_at?->toIso8601String(),
+        ];
+    }
+
     private function assertMerchantAllowed(Campaign $campaign, Merchant $merchant): void
     {
         if ($merchant->status !== MerchantStatus::Verified) {
