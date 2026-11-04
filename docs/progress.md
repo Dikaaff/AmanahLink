@@ -173,6 +173,8 @@
 | 2026-11-04 | `npx playwright test tests/e2e/a11y.spec.ts` (T-14, `@axe-core/playwright` 4.14.0) | **4 passed**; `/`, `/login`, `/register`, `/dashboard` → **0 violations** WCAG 2.1 A/AA |
 | 2026-11-04 | drill backup/restore MySQL (T-14) | dump 93.956 byte; restore exit 0; baris `users/campaigns/transactions/ledger_entries/audit_logs` = 8/1/52/104/50 (identik); `ledger:verify` exit 0; delete ledger ditolak trigger (ERROR 1644) |
 | 2026-11-04 | validasi YAML `docker-compose.yml` (T-12) dengan PyYAML | `compose yaml ok`; service `api/mysql/ocr/queue/scheduler/web`; volume `mysql-data`/`backend-storage`; eksekusi compose belum dilakukan |
+| 2026-11-04 | GitHub Actions run #5 (`8c87eaa`, push) | **success** — job Backend, Frontend, dan OCR semuanya lulus (pint, 198 test, composer audit; lint/build/npm audit; 8 pytest) |
+| 2026-11-04 | penyebab CI run #1–#4 gagal | `backend/.env.example` berisi baris tidak valid `[TEMPLATE]` sehingga `php artisan key:generate` gagal; `pytest` tanpa `pythonpath` tidak bisa `import app`. Diperbaiki di `8c87eaa` (+ `ocr-service/pytest.ini`) |
 | 2026-11-03 | `npm run lint` + `npm run build` (P2 type specimen) | lint bersih; build sukses, 15 route termasuk `ƒ /design/type`; CSS memuat 2 `@font-face` Geist |
 | 2026-11-03 | Chrome headless `/design/type` (P2) | tangkapan 512 dan 1440; `innerWidth=512` saat diminta 390 (batas tool dicatat di `P2-type-specimen.md` §5) |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |

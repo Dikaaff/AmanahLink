@@ -63,3 +63,17 @@ p95, failure rate, and query trend before marking NFR-01 complete.
 
 This distinction is intentional: a short smoke run or a single-process local
 server cannot prove the PRD target of 200 rps for two minutes.
+
+### Why the target cannot run on this Windows workspace (2026-11-04)
+
+- The bundled Laragon PHP 8.3 has **no PHP-FPM** (`php-cgi.exe` only), and the
+  bundled Apache 2.4.66 ships **no `mod_fcgid`** (`mod_proxy_fcgi` exists but
+  requires an external FastCGI process manager that is not installed).
+- `php artisan serve` is single-process, so concurrency is capped well below
+  200 rps; the bounded smoke already shows a 17.32 s p95 from queueing alone.
+- Writing 24 000 disbursements also repeatedly locks the same campaign and
+  limit rows, so a local run would measure lock contention rather than the
+  production runtime.
+
+The workload itself is unchanged. Produce the NFR-01 evidence on PHP-FPM
+(Linux/Docker) or staging, and record the exact runtime in this file.
