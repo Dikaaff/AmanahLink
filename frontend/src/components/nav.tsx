@@ -46,10 +46,12 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-canvas">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6 sm:px-8">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-8">
         <Link href="/" className="flex items-center gap-3">
           <BrandMark />
-          <span className="text-h3 font-semibold tracking-tight">AmanahLink</span>
+          <span className="sr-only text-h3 font-semibold tracking-tight min-[360px]:not-sr-only">
+            AmanahLink
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-1 sm:flex">

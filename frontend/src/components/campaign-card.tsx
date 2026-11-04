@@ -6,13 +6,13 @@ import { StatusBadge } from "@/components/stat";
 
 export function CampaignCard({ campaign }: { campaign: Campaign }) {
   return (
-    <article className="group flex flex-col rounded-md border border-line bg-surface p-5 transition-colors hover:border-ink">
+    <article className="group flex min-w-0 flex-col rounded-md border border-line bg-surface p-5 transition-colors hover:border-ink">
       <div className="flex items-start justify-between gap-3">
         <StatusBadge status={campaign.status} label={campaign.status_label} />
         <span className="text-xs text-ink-secondary">{daysLeft(campaign.deadline_at)}</span>
       </div>
 
-      <h3 className="mt-3 text-h3 font-semibold leading-snug text-ink">
+      <h3 className="mt-3 break-words text-h3 font-semibold leading-snug text-ink">
         <Link href={`/campaigns/${campaign.slug}`} className="hover:underline">
           {campaign.title}
         </Link>

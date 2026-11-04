@@ -480,10 +480,10 @@ export default function DashboardPage() {
                       {campaigns.map((campaign) => (
                         <tr key={campaign.id} className="align-middle">
                           <td className="px-4 py-3">
-                            <Link
-                              href={`/campaigns/${campaign.slug}`}
-                              className="font-semibold text-stone-900 hover:underline"
-                            >
+                        <Link
+                          href={`/campaigns/${campaign.slug}`}
+                          className="break-words font-semibold text-stone-900 hover:underline"
+                        >
                               {campaign.title}
                             </Link>
                             <div className="mt-1 max-w-[240px]">
@@ -548,8 +548,7 @@ export default function DashboardPage() {
                     <article key={campaign.id} className="rounded-md border border-line p-4">
                       <div className="flex items-start justify-between gap-3">
                         <Link
-                          href={`/campaigns/${campaign.slug}`}
-                          className="font-semibold text-ink hover:underline"
+                          href={`/campaigns/${campaign.slug}`}                              className="min-w-0 break-words font-semibold text-ink hover:underline"
                         >
                           {campaign.title}
                         </Link>
@@ -1041,7 +1040,7 @@ export default function DashboardPage() {
                       {receipts.data.map((receipt) => (
                         <tr key={receipt.id} className="align-top">
                           <td className="px-6 py-4">
-                            <span className="font-semibold text-stone-900">
+                            <span className="break-words font-semibold text-stone-900">
                               {receipt.transaction?.campaign?.title ?? "—"}
                             </span>
                             <span className="mt-1 block text-xs text-stone-500">
@@ -1069,7 +1068,7 @@ export default function DashboardPage() {
                           </td>
                           <td className="px-4 py-4">
                             {receipt.rejection_reason ? (
-                              <span className="block max-w-[220px] text-xs text-ink">
+                              <span className="block max-w-[220px] break-words text-xs text-ink">
                                 {receipt.rejection_reason}
                               </span>
                             ) : (
@@ -1088,8 +1087,8 @@ export default function DashboardPage() {
                   {receipts.data.map((receipt) => (
                     <article key={receipt.id} className="rounded-md border border-line p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-semibold text-ink">
+                        <div className="min-w-0">
+                          <p className="break-words font-semibold text-ink">
                             {receipt.transaction?.campaign?.title ?? "Nota transaksi"}
                           </p>
                           <p className="mt-1 text-xs text-ink-secondary">
@@ -1102,7 +1101,7 @@ export default function DashboardPage() {
                         <StatusBadge status={receipt.status} label={receipt.status_label} />
                       </div>
                       {receipt.rejection_reason ? (
-                        <p className="mt-3 text-body-sm text-ink">{receipt.rejection_reason}</p>
+                        <p className="mt-3 break-words text-body-sm text-ink">{receipt.rejection_reason}</p>
                       ) : null}
                       <p className="mt-3 text-xs text-ink-muted">{dateTime(receipt.created_at)}</p>
                     </article>
@@ -1217,7 +1216,7 @@ export default function DashboardPage() {
                                   </span>
                                 ) : null}
                                 {item.receipt.rejection_reason ? (
-                                  <span className="mt-1 block max-w-[180px] text-xs text-ink">
+                                  <span className="mt-1 block max-w-[180px] break-words text-xs text-ink">
                                     {item.receipt.rejection_reason}
                                   </span>
                                 ) : null}
@@ -1238,7 +1237,7 @@ export default function DashboardPage() {
                   {disbursements.data.map((item) => (
                     <article key={item.id} className="rounded-md border border-line p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <div>
+                        <div className="min-w-0 break-words">
                           {item.campaign ? (
                             <Link href={`/campaigns/${item.campaign.slug}`} className="font-semibold text-ink hover:underline">
                               {item.campaign.title}
@@ -1371,7 +1370,7 @@ export default function DashboardPage() {
                 {donations.data.map((donation) => (
                   <article key={donation.id} className="rounded-md border border-line p-4">
                     <div className="flex items-start justify-between gap-3">
-                      <div>
+                      <div className="min-w-0 break-words">
                         {donation.campaign ? (
                           <Link href={`/campaigns/${donation.campaign.slug}`} className="font-semibold text-ink hover:underline">
                             {donation.campaign.title}
