@@ -10,7 +10,7 @@
 |---|---|
 | Terakhir diperbarui | 2026-11-04 |
 | Fase selesai | Fase 0, 1, 2, 3, 4 |
-| Fase berjalan | Fase 8 — DevOps (T-13 retensi + CI selesai; T-12/T-14 pending) |
+| Fase berjalan | Fase 8 — DevOps (T-12 compose pending; T-09 full target butuh runtime staging) |
 | Status gate | 29/29 story ✅; Fase 5–8 belum ditutup |
 | Referensi | `docs/prd.md`, `docs/backlog.md`, `DECISIONS.md` |
 
@@ -25,7 +25,7 @@
 | 5 — Frontend | halaman Next.js | 🟡 MVP + P5 mobile core implemented; screenshot evidence pending |
 | 6 — Security | hardening + ASVS checklist | ✅ T-04…T-07 selesai; subset ASVS dan sinkronisasi kontrak tersedia |
 | 7 — Test Suite | k6, konkurensi, E2E | 🟡 T-08/T-10 selesai; T-09 full target pending |
-| 8 — DevOps | compose, CI, observability, runbook | 🟡 T-13 retensi + workflow CI; T-12/T-14 pending |
+| 8 — DevOps | compose, CI, observability, runbook | 🟡 T-13 (retensi + CI) dan T-14 (runbook + axe) selesai; T-12 compose pending |
 
 ## Status Story
 
@@ -170,6 +170,8 @@
 | 2026-11-04 | `php artisan test --compact` (T-13, setelah ReceiptPolicy scoped) | **198 passed, 811 assertions** |
 | 2026-11-04 | `ocr-service\.venv\Scripts\python.exe -m pytest -q` | **8 passed** |
 | 2026-11-04 | validasi YAML `.github/workflows/ci.yml` dengan PyYAML | `yaml ok` (eksekusi workflow menunggu push ke GitHub) |
+| 2026-11-04 | `npx playwright test tests/e2e/a11y.spec.ts` (T-14, `@axe-core/playwright` 4.14.0) | **4 passed**; `/`, `/login`, `/register`, `/dashboard` → **0 violations** WCAG 2.1 A/AA |
+| 2026-11-04 | drill backup/restore MySQL (T-14) | dump 93.956 byte; restore exit 0; baris `users/campaigns/transactions/ledger_entries/audit_logs` = 8/1/52/104/50 (identik); `ledger:verify` exit 0; delete ledger ditolak trigger (ERROR 1644) |
 | 2026-11-03 | `npm run lint` + `npm run build` (P2 type specimen) | lint bersih; build sukses, 15 route termasuk `ƒ /design/type`; CSS memuat 2 `@font-face` Geist |
 | 2026-11-03 | Chrome headless `/design/type` (P2) | tangkapan 512 dan 1440; `innerWidth=512` saat diminta 390 (batas tool dicatat di `P2-type-specimen.md` §5) |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
@@ -195,9 +197,9 @@ Kesenjangan yang harus ditutup (ID dipakai di rencana kerja):
 | G-05 | Tidak ada penjadwal `expired` / auto-close + refund window | **ditutup T-05** — `amanah:campaign-cycle` menandai `active/funded → expired`, auto-refund setelah 7 hari, dan mencatat audit | — | ✅ T-05 |
 | G-06 | Tidak ada `/healthz` dan `/readyz`; hanya `/up` bawaan Laravel | **ditutup T-06** — liveness `/healthz`; readiness `/readyz` memeriksa database, queue, dan OCR dengan HTTP `503` saat dependency gagal | — | ✅ T-06 |
 | G-07 | NFR-08 retensi (log 90 jam, nota 24 jam, audit 5 tahun) belum diimplementasikan | **ditutup T-13** — `amanah:retention` (jadwal harian 02:15, `--dry-run`) menghapus log >90 jam, audit >5 tahun, dan gambar nota terminal >24 jam; `RetentionTest` 4 passed | — | ✅ T-13 |
-| G-08 | NFR-06 (WCAG 2.1 AA) belum diuji; tidak ada axe-core | belum ada `docs/a11y.md` | klaim aksesibilitas tak terbukti | T-14 |
+| G-08 | NFR-06 (WCAG 2.1 AA) belum diuji; tidak ada axe-core | **ditutup T-14** — `@axe-core/playwright` 4.14.0 memindai `/`, `/login`, `/register`, `/dashboard`; 4 test lulus dengan **0 violations**; batas bukti di `docs/a11y.md` | — | ✅ T-14 |
 | G-09 | NFR-01 (p95 < 500 ms @200 rps) belum terukur pada full workload | **ditutup sebagian T-09** — k6 script + query-count instrumentation + reproducible runbook tersedia; full 200 rps × 2 menit masih pending | target performa belum terbukti | T-09 |
-| G-10 | Artefak yang dirujuk PRD belum lengkap: `docs/runbook.md`, `docs/a11y.md`, `docs/perf/scan-p95.md`, `IdempotencyTest.php`, `RetentionTest.php`, `tests/Concurrency/` | **ditutup sebagian** — `docs/erd.md`, `docs/perf/scan-p95.md`, `tests/Feature/RetentionTest.php` tersedia; `docs/runbook.md`, `docs/a11y.md`, `IdempotencyTest.php`, `tests/Concurrency/` masih menjadi T-14 | traceability NFR masih putus di artefak operasional | T-14 |
+| G-10 | Artefak yang dirujuk PRD belum lengkap: `docs/runbook.md`, `docs/a11y.md`, `docs/perf/scan-p95.md`, `IdempotencyTest.php`, `RetentionTest.php`, `tests/Concurrency/` | **ditutup sebagian** — `docs/erd.md`, `docs/a11y.md`, `docs/runbook.md`, `docs/perf/scan-p95.md`, `RetentionTest.php` tersedia; `IdempotencyTest.php` dan `tests/Concurrency/` masih menunggu (bukti idempotensi/konkurensi sudah ada di test lain) | traceability NFR tinggal dua nama artefak | T-13/T-14 |
 | G-11 | Q-01…Q-04 di PRD masih "terbuka" padahal sudah diputuskan di `DECISIONS.md` | **ditutup T-11** — pertanyaan diberi keputusan eksplisit dan dirujuk D-025 | — | ✅ T-11 |
 | G-12 | FR-08 menyebut VA **dan QRIS**; `PaymentInstruction` hanya VA | **ditutup T-11** — PRD/README menyatakan fake saat ini VA; QRIS nyata menunggu adapter | — | ✅ T-11 |
 | G-13 | Token Sanctum disimpan di `localStorage`; CSP nonce sudah aktif tetapi risiko XSS residual tetap ada | **ditutup T-07** — token browser kini in-memory; reload meminta login ulang, API bearer tetap kompatibel | — | ✅ T-07 |
@@ -300,7 +302,7 @@ selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
 |---|---|---|---|
 | T-12 | `docker-compose.yml`: mysql, api, queue, scheduler, ocr, web + healthcheck + volume | 5h | `docker compose up` (butuh Docker di mesin lain/CI) |
 | T-13 | CI GitHub Actions: php test + pint + `composer audit`, es lint/build/audit, pytest, (opsional) k6 smoke; retensi sesuai NFR-08 | 4h | 🟡 **retensi + workflow selesai 2026-11-04** — `.github/workflows/ci.yml` (backend MySQL 8.4, frontend Node 24, OCR pytest) dan `amanah:retention` + `RetentionTest` (4 passed); status hijau menunggu run di GitHub |
-| T-14 | Observability + `docs/runbook.md` + drill backup/restore + axe-core (G-08, G-10) | 6h | runbook + hasil drill + laporan a11y |
+| T-14 | Observability + `docs/runbook.md` + drill backup/restore + axe-core (G-08, G-10) | 6h | ✅ **selesai 2026-11-04** — `docs/runbook.md` (health, 3 alert, retensi, RTO/RPO) + drill restore MySQL (52 transaksi, `ledger:verify` exit 0, trigger immutability terbukti); `@axe-core/playwright` 4.14.0 + 4 test WCAG 2.1 AA (0 violations) di `docs/a11y.md` |
 
 **Total sisa ± 51 jam** (≈13 sesi 4 jam), belum termasuk perbaikan yang muncul
 saat E2E/security review.

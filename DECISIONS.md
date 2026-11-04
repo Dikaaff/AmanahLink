@@ -239,6 +239,24 @@
   mengunci perilaku; scheduler memanggil command setiap hari. G-07 dan artefak
   `RetentionTest.php` di G-10 tertutup.
 
+### D-027 — axe-core Playwright sebagai bukti otomatis NFR-06
+
+- **Keputusan:** Menambah dev dependency `@axe-core/playwright` **4.14.0** dan
+  test `frontend/tests/e2e/a11y.spec.ts` yang memindai `/`, `/login`,
+  `/register`, dan `/dashboard` dengan tag WCAG 2.1 A/AA, lalu meng-assert
+  `violations === []`. Tidak ada dependency runtime baru; bundle produksi tidak
+  berubah.
+- **Alasan:** NFR-06 mensyaratkan WCAG 2.1 AA dan artefak `docs/a11y.md`.
+  axe-core adalah standar de-facto, sudah kompatibel dengan Playwright yang
+  dipakai T-08, dan memberikan bukti yang bisa dijalankan ulang alih-alih klaim
+  manual.
+- **Alternatif yang ditolak:** (a) Audit manual saja — tidak reproducible.
+  (b) Lighthouse CLI — lebih berat dan kurang presisi untuk komponen React.
+- **Konsekuensi:** `npm run e2e` ikut menjalankan 4 test a11y; hasil dan batas
+  bukti (halaman admin/form belum dipindai, keyboard manual tetap wajib) dicatat
+  di `docs/a11y.md`. CI belum menjalankan Playwright; job browser bisa
+  ditambahkan saat diperlukan.
+
 ---
 
 ## 2. Register Asumsi (default yang saya pakai sampai dikoreksi)
@@ -288,3 +306,4 @@
 | 1.11 | 2026-11-03 | D-024 limit disbursement admin-only (baca untuk pemilik); audit PRD/backlog + rencana T-01…T-14 |
 | 1.12 | 2026-11-03 | D-025 kontrak publik mengikuti route/test; T-11 menyelaraskan PRD, backlog, README, dan ERD |
 | 1.13 | 2026-11-04 | D-026 retensi NFR-08 + command `amanah:retention`; CI GitHub Actions + test retensi |
+| 1.14 | 2026-11-04 | D-027 axe-core Playwright + `docs/a11y.md`; `docs/runbook.md` + drill restore lokal |
