@@ -10,8 +10,8 @@
 |---|---|
 | Terakhir diperbarui | 2026-11-04 |
 | Fase selesai | Fase 0, 1, 2, 3, 4, 6, 7, 8 (7/8 dengan catatan D-028) |
-| Fase berjalan | Fase 5 — bukti screenshot mobile; bukti tertunda: T-09 performa & T-12 Docker (butuh staging/Docker) |
-| Status gate | 29/29 story ✅; GATE 7/8 disetujui 2026-11-04 dengan catatan; Fase 5 belum ditutup |
+| Fase berjalan | Fase 5 — implementasi + bukti screenshot selesai; menunggu persetujuan GATE 5. Bukti tertunda: T-09 performa & T-12 Docker (butuh staging/Docker) |
+| Status gate | 29/29 story ✅; GATE 7/8 disetujui 2026-11-04 dengan catatan; **GATE 5 menunggu persetujuan** |
 | Referensi | `docs/prd.md`, `docs/backlog.md`, `DECISIONS.md` |
 
 ## Ringkasan Fase
@@ -22,7 +22,7 @@
 | 2 — Arsitektur & Data | migration, enum, model, factory, seeder, invariant test | ✅ selesai |
 | 3 — API & Ledger | US-01…US-21 (auth, kampanye, donasi, webhook, disbursement, refund) | ✅ selesai |
 | 4 — OCR Service | US-22…US-24 (Flask `/extract`, upload nota, auto-match, review) | ✅ selesai |
-| 5 — Frontend | halaman Next.js | 🟡 MVP + P5 mobile core implemented; screenshot evidence pending |
+| 5 — Frontend | halaman Next.js | 🟡 MVP + P5 mobile core + bukti screenshot 390/1440 tersedia; **menunggu GATE 5** |
 | 6 — Security | hardening + ASVS checklist | ✅ T-04…T-07 selesai; subset ASVS dan sinkronisasi kontrak tersedia |
 | 7 — Test Suite | k6, konkurensi, E2E | ✅ GATE disetujui 2026-11-04 — T-08/T-10 lulus; T-09 instrumen siap, target 200 rps tertunda (D-028) |
 | 8 — DevOps | compose, CI, observability, runbook | ✅ GATE disetujui 2026-11-04 — T-13/T-14 lulus, CI hijau; eksekusi T-12 tertunda (D-028) |
@@ -150,7 +150,8 @@
 | 2026-11-03 | `php artisan test --compact` (setelah T-02a) | **171 passed, 670 assertions** |
 | 2026-11-03 | smoke API + `npm run lint`/`build` (T-02b) | campaigner `GET /merchants` → 2 merchant tanpa `mid`; admin → `mid` ada; lint/build bersih |
 | 2026-11-03 | `npm run lint` + `npx tsc --noEmit` + `npm run build` (P4 components) | lint/typecheck/build bersih; `/design/components`, `/design/type`, `/design/tokens` ter-build; 17 route dan Proxy terdeteksi |
-| 2026-11-03 | `npm run lint` + `npx tsc --noEmit` + `npm run build` (P5 mobile core) | lint/typecheck/build bersih; mobile bottom nav, sticky CTA detail, dan mobile card lists ter-build; screenshot viewport pending |
+| 2026-11-03 | `npm run lint` + `npx tsc --noEmit` + `npm run build` (P5 mobile core) | lint/typecheck/build bersih; mobile bottom nav, sticky CTA detail, dan mobile card lists ter-build |
+| 2026-11-04 | `npx playwright test tests/e2e/screenshots.spec.ts` (bukti Fase 5) | **3 passed**; 5 PNG di `docs/e2e/screenshots/` — `feed` 1440×940 & 390×1157, `login` 390×1152, `dashboard` 1440×3677 & 390×5973; `npm run lint` bersih |
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/AuthApiTest.php` + `CampaignApiTest.php` (T-04) | **27 passed, 105+ assertions**; registration sends verification, resend/verify works, unverified campaign creation returns `EMAIL_UNVERIFIED`, verified campaigner can create draft |
 | 2026-11-03 | `php artisan test --compact tests/Feature/CampaignCycleTest.php` (T-05) | **4 passed, 14 assertions**; expiry + audit, refund after 7-day window, no early refund, request-metrics retention |
 | 2026-11-03 | `php artisan test --compact tests/Feature/HealthCheckTest.php` (T-06) | **4 passed, 26 assertions**; liveness, readiness sehat, OCR gagal, dan queue gagal |
@@ -388,7 +389,7 @@ limit) dan beberapa state/UX.
 2. **Bukti tertunda T-09 (performa):** jalankan `k6 run scripts/perf/authorize.js`
    dengan `RATE=200`, `DURATION=2m` pada PHP-FPM/Apache Linux atau staging
    (bukan `artisan serve`), lalu isi bagian Result di `docs/perf/scan-p95.md`.
-3. **Fase 5:** lengkapi bukti screenshot viewport mobile, lalu tutup fase dengan
-   GATE.
+3. **Fase 5:** bukti screenshot 390/1440 sudah ada di `docs/e2e/screenshots/`
+   (spec `screenshots.spec.ts`); menunggu persetujuan GATE 5.
 4. **GATE 7/8 sudah disetujui (D-028)** dengan catatan; jangan klaim NFR-01,
    NFR-03, atau NFR-10 sebelum bukti staging tersedia.
