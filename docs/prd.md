@@ -96,12 +96,12 @@ Setiap NFR punya **cara verifikasi** dan **artefak bukti**. Klaim tanpa artefak 
 | ID | Requirement | Target | Cara verifikasi | Artefak |
 |---|---|---|---|---|
 | NFR-01 | Latensi authorize disbursement | p95 < 500 ms @ 200 rps | k6 2 menit + hitung query per request | `docs/perf/scan-p95.md` |
-| NFR-02 | Integritas saldo | 0 selisih | 200 VU × 50 iterasi (10.000 operasi) + invariant SQL | `tests/Concurrency/` |
+| NFR-02 | Integritas saldo | 0 selisih | uji konkurensi multi-proses + invariant SQL (target 200 VU × 50 iterasi masih menunggu staging) | `tests/Feature/DisbursementConcurrencyTest.php` |
 | NFR-03 | Ketersediaan | 99.5% / bulan | probe `/healthz` & `/readyz` 60 dtk | dashboard staging |
 | NFR-04 | Keamanan | 0 critical/high | OWASP ASVS L2 subset + `composer audit` + `npm audit` | `docs/security/asvs.md` |
 | NFR-05 | Auditabilitas | 100% mutasi berjejak | query invariant audit coverage | `docs/erd.md` §invariant |
 | NFR-06 | Aksesibilitas | WCAG 2.1 AA | axe-core di CI + uji keyboard manual | `docs/a11y.md` |
-| NFR-07 | Idempotensi | 100% POST mutasi uang | replay test: kirim 2× payload identik | `tests/Feature/IdempotencyTest.php` |
+| NFR-07 | Idempotensi | 100% POST mutasi uang | replay test: kirim 2× payload identik | `tests/Feature/Api/DonationApiTest.php`, `tests/Feature/Api/DisbursementApiTest.php` |
 | NFR-08 | Retensi data | log 90h, audit 5 thn, nota 24 jam | scheduled command + test | `tests/Feature/RetentionTest.php` |
 | NFR-09 | Observability | 3 alert aktif | uji picu alert di staging | `docs/runbook.md` |
 | NFR-10 | Backup | RTO 1 jam, RPO 15 menit | drill restore terdokumentasi | `docs/runbook.md` |

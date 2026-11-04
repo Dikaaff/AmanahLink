@@ -200,7 +200,7 @@ Kesenjangan yang harus ditutup (ID dipakai di rencana kerja):
 | G-07 | NFR-08 retensi (log 90 jam, nota 24 jam, audit 5 tahun) belum diimplementasikan | **ditutup T-13** — `amanah:retention` (jadwal harian 02:15, `--dry-run`) menghapus log >90 jam, audit >5 tahun, dan gambar nota terminal >24 jam; `RetentionTest` 4 passed | — | ✅ T-13 |
 | G-08 | NFR-06 (WCAG 2.1 AA) belum diuji; tidak ada axe-core | **ditutup T-14** — `@axe-core/playwright` 4.14.0 memindai `/`, `/login`, `/register`, `/dashboard`; 4 test lulus dengan **0 violations**; batas bukti di `docs/a11y.md` | — | ✅ T-14 |
 | G-09 | NFR-01 (p95 < 500 ms @200 rps) belum terukur pada full workload | **ditutup sebagian T-09** — k6 script + query-count instrumentation + reproducible runbook tersedia; full 200 rps × 2 menit masih pending | target performa belum terbukti | T-09 |
-| G-10 | Artefak yang dirujuk PRD belum lengkap: `docs/runbook.md`, `docs/a11y.md`, `docs/perf/scan-p95.md`, `IdempotencyTest.php`, `RetentionTest.php`, `tests/Concurrency/` | **ditutup sebagian** — `docs/erd.md`, `docs/a11y.md`, `docs/runbook.md`, `docs/perf/scan-p95.md`, `RetentionTest.php` tersedia; `IdempotencyTest.php` dan `tests/Concurrency/` masih menunggu (bukti idempotensi/konkurensi sudah ada di test lain) | traceability NFR tinggal dua nama artefak | T-13/T-14 |
+| G-10 | Artefak yang dirujuk PRD belum lengkap: `docs/runbook.md`, `docs/a11y.md`, `docs/perf/scan-p95.md`, `IdempotencyTest.php`, `RetentionTest.php`, `tests/Concurrency/` | **ditutup** — semua artefak ada; referensi NFR-02/NFR-07 di PRD diselaraskan ke `DisbursementConcurrencyTest.php` dan test replay di `DonationApiTest`/`DisbursementApiTest` | — | ✅ T-14 |
 | G-11 | Q-01…Q-04 di PRD masih "terbuka" padahal sudah diputuskan di `DECISIONS.md` | **ditutup T-11** — pertanyaan diberi keputusan eksplisit dan dirujuk D-025 | — | ✅ T-11 |
 | G-12 | FR-08 menyebut VA **dan QRIS**; `PaymentInstruction` hanya VA | **ditutup T-11** — PRD/README menyatakan fake saat ini VA; QRIS nyata menunggu adapter | — | ✅ T-11 |
 | G-13 | Token Sanctum disimpan di `localStorage`; CSP nonce sudah aktif tetapi risiko XSS residual tetap ada | **ditutup T-07** — token browser kini in-memory; reload meminta login ulang, API bearer tetap kompatibel | — | ✅ T-07 |
@@ -384,9 +384,6 @@ limit) dan beberapa state/UX.
 2. **T-09 full target:** jalankan `k6 run scripts/perf/authorize.js` dengan
    `RATE=200`, `DURATION=2m` pada PHP-FPM/Apache atau staging (bukan
    `artisan serve`), lalu isi bagian Result di `docs/perf/scan-p95.md`.
-3. **G-10 sisa nama artefak:** tambahkan `tests/Feature/IdempotencyTest.php`
-   dan `tests/Concurrency/` (atau ubah referensi PRD ke test yang sudah ada:
-   replay di `DisbursementApiTest`/`DonationApiTest`, konkurensi di
-   `DisbursementConcurrencyTest`).
+3. **G-10 sudah tertutup:** referensi artefak PRD diselaraskan ke test nyata.
 4. **GATE 7/8:** setelah T-09 dan T-12 terbukti, tulis ringkasan gate dan minta
    persetujuan manusia sebelum polish lanjutan.

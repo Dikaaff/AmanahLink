@@ -307,3 +307,4 @@
 | 1.12 | 2026-11-03 | D-025 kontrak publik mengikuti route/test; T-11 menyelaraskan PRD, backlog, README, dan ERD |
 | 1.13 | 2026-11-04 | D-026 retensi NFR-08 + command `amanah:retention`; CI GitHub Actions + test retensi |
 | 1.14 | 2026-11-04 | D-027 axe-core Playwright + `docs/a11y.md`; `docs/runbook.md` + drill restore lokal |
+| 1.15 | 2026-11-04 | T-12 compose + Dockerfile; referensi artefak NFR-02/NFR-07 di PRD diselaraskan ke test nyata |
