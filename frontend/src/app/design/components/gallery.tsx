@@ -8,12 +8,26 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Empty } from "@/components/ui/empty";
 import { Field, fieldNoteId } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Skeleton, SkeletonCard, SkeletonRow, SkeletonText } from "@/components/ui/skeleton";
+import {
+  Skeleton,
+  SkeletonCampaignCard,
+  SkeletonCard,
+  SkeletonDetail,
+  SkeletonRow,
+  SkeletonStat,
+  SkeletonTable,
+  SkeletonText,
+} from "@/components/ui/skeleton";
 import { TBody, TD, TH, THead, TR, Table } from "@/components/ui/table";
 
 /**
@@ -76,6 +90,7 @@ function ComponentSection({
 
 export function Gallery() {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <div className="space-y-12">
@@ -330,6 +345,12 @@ export function Gallery() {
             <SkeletonText lines={3} />
           </div>
           <SkeletonCard />
+          <SkeletonCampaignCard />
+          <SkeletonStat />
+          <SkeletonTable rows={3} />
+          <div className="sm:col-span-2">
+            <SkeletonDetail />
+          </div>
         </div>
       </ComponentSection>
 
@@ -383,11 +404,71 @@ export function Gallery() {
             onConfirm={() => toast("Kampanye dibekukan")}
           />
 
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="secondary">Buka dialog nominal</Button>
+            </DialogTrigger>
+            <DialogContent
+              title="Input nominal donasi"
+              description="Form singkat di desktop; daftar di belakang tetap terlihat."
+              footer={
+                <>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setDialogOpen(false)}
+                  >
+                    Batal
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setDialogOpen(false);
+                      toast.success("Berhasil", {
+                        description: "Nominal donasi tersimpan.",
+                      });
+                    }}
+                  >
+                    Simpan nominal
+                  </Button>
+                </>
+              }
+            >
+              <Field
+                htmlFor="dialog-amount"
+                label="Nominal"
+                hint="Minimal Rp10.000."
+              >
+                <Input
+                  id="dialog-amount"
+                  inputMode="numeric"
+                  defaultValue="100000"
+                  className="text-right font-mono tabular-nums"
+                />
+              </Field>
+            </DialogContent>
+          </Dialog>
+
           <Button
             variant="secondary"
-            onClick={() => toast("Nota masuk ke antrean review")}
+            onClick={() =>
+              toast.success("Berhasil", {
+                description: "Nota masuk ke antrean review.",
+              })
+            }
           >
-            Tampilkan toast
+            Toast sukses
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() =>
+              toast.error("Gagal", {
+                description: "Koneksi terputus. Dana belum terpotong.",
+                duration: 6000,
+                action: { label: "Coba lagi", onClick: () => undefined },
+              })
+            }
+          >
+            Toast gagal
           </Button>
         </div>
       </ComponentSection>

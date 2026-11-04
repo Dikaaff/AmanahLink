@@ -261,3 +261,33 @@
     animation-duration: 2s;
   }
 }
+
+/* Skeleton uses the same neutral surface as the final block, plus a slow
+   monochrome sheen. It never animates when the user asks for reduced motion. */
+.skeleton-shimmer {
+  background-color: var(--sunken);
+  background-image: linear-gradient(
+    90deg,
+    var(--sunken) 0%,
+    var(--line) 50%,
+    var(--sunken) 100%
+  );
+  background-size: 200% 100%;
+  animation: amanah-shimmer 1.4s linear infinite;
+}
+
+@keyframes amanah-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    background-image: none;
+    animation: none;
+  }
+}
