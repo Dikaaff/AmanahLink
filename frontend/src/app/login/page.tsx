@@ -49,8 +49,15 @@ export default function LoginPage() {
         </p>
         <div className="mt-6 rounded-md border border-stone-200 bg-white/70 p-4 text-sm text-stone-600">
           <p className="font-semibold text-stone-800">Akun demo seeder</p>
-          <p className="mt-1 font-mono text-xs">budi@amanahlink.test / password</p>
-          <p className="font-mono text-xs">admin@amanahlink.test / password</p>
+          <p className="mt-1 font-mono text-xs">
+            Donatur &middot; siti@amanahlink.test / password
+          </p>
+          <p className="font-mono text-xs">
+            Penggalang &middot; budi@amanahlink.test / password
+          </p>
+          <p className="font-mono text-xs">
+            Admin &middot; admin@amanahlink.test / password
+          </p>
         </div>
       </div>
 
