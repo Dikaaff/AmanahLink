@@ -108,3 +108,31 @@ transaksi. Ukur ulang pada volume produksi.
 2. `php artisan migrate --force` sebelum menyalakan versi baru.
 3. Rollback kode satu versi + restore DB hanya bila migrasi tidak kompatibel.
 4. Setelah deploy: `/healthz`, `/readyz`, `ledger:verify`, dan smoke login.
+
+## 8. Docker Compose (demo/lokal)
+
+```powershell
+Copy-Item .env.docker.example .env   # isi APP_KEY + MYSQL_ROOT_PASSWORD
+cd backend; php artisan key:generate --show   # tempel hasilnya ke APP_KEY
+docker compose up --build
+```
+
+| Service | Port | Keterangan |
+|---|---|---|
+| `mysql` | 3306 | volume `mysql-data`, healthcheck `mysqladmin ping` |
+| `api` | 8000 | migrate otomatis lalu `artisan serve`; healthcheck `/healthz` |
+| `queue` | - | `queue:work --tries=3` untuk OCR + notifikasi |
+| `scheduler` | - | `schedule:work` (webhook retry, campaign cycle, retensi) |
+| `ocr` | 5001 | `OCR_PROVIDER=fake`; ganti ke `openai` bila key tersedia |
+| `web` | 3000 | Next.js production build + healthcheck `/login` |
+
+Catatan:
+
+- Compose ini **belum dijalankan** di mesin ini (Docker Desktop tidak tersedia);
+  validasi yang dilakukan hanya parsing YAML. Jalankan `docker compose up
+  --build` di mesin/CI ber-Docker sebelum mengklaim T-12 selesai penuh.
+- `api` memakai `artisan serve` di dalam container (satu proses). Untuk beban
+  produksi ganti dengan PHP-FPM + web server dan ulangi benchmark NFR-01.
+- `NEXT_PUBLIC_API_URL` di-bake saat build frontend; ubah lalu rebuild `web`
+  bila URL API berubah.
+

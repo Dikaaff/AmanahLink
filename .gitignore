@@ -6,6 +6,9 @@
 /backend/public/storage
 
 # Environment & secrets
+/.env
+/.env.*
+!/.env.docker.example
 /backend/.env
 /backend/.env.*
 !/backend/.env.example

@@ -1,0 +1,131 @@
+name: amanahlink
+
+x-backend-env: &backend-env
+  APP_NAME: AmanahLink
+  APP_ENV: local
+  APP_DEBUG: "false"
+  APP_KEY: ${APP_KEY:?Set APP_KEY in .env (php artisan key:generate --show)}
+  APP_URL: http://localhost:8000
+  LOG_CHANNEL: stack
+  DB_CONNECTION: mysql
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_DATABASE: amanahlink
+  DB_USERNAME: root
+  DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-secret}
+  CACHE_STORE: file
+  QUEUE_CONNECTION: database
+  SESSION_DRIVER: file
+  MAIL_MAILER: log
+  AMANAH_PAYMENT_DRIVER: fake
+  AMANAH_OCR_DRIVER: http
+  AMANAH_OCR_SERVICE_URL: http://ocr:5001
+  CORS_ALLOWED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+
+x-backend-image: &backend-image
+  build:
+    context: ./backend
+  volumes:
+    - backend-storage:/var/www/html/storage/app
+  depends_on:
+    mysql:
+      condition: service_healthy
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-secret}
+      MYSQL_DATABASE: amanahlink
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  api:
+    <<: *backend-image
+    environment: *backend-env
+    command:
+      [
+        "sh",
+        "-c",
+        "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000",
+      ]
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "php -r \"exit(@file_get_contents('http://127.0.0.1:8000/healthz') === false ? 1 : 0);\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  queue:
+    <<: *backend-image
+    environment: *backend-env
+    command: ["php", "artisan", "queue:work", "--tries=3", "--sleep=1"]
+    restart: unless-stopped
+
+  scheduler:
+    <<: *backend-image
+    environment: *backend-env
+    command: ["php", "artisan", "schedule:work"]
+    restart: unless-stopped
+
+  ocr:
+    build:
+      context: ./ocr-service
+    environment:
+      OCR_PROVIDER: fake
+    ports:
+      - "5001:5001"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/healthz', timeout=3)\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3000/login').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+volumes:
+  mysql-data:
+  backend-storage:

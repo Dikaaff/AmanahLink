@@ -25,7 +25,7 @@
 | 5 — Frontend | halaman Next.js | 🟡 MVP + P5 mobile core implemented; screenshot evidence pending |
 | 6 — Security | hardening + ASVS checklist | ✅ T-04…T-07 selesai; subset ASVS dan sinkronisasi kontrak tersedia |
 | 7 — Test Suite | k6, konkurensi, E2E | 🟡 T-08/T-10 selesai; T-09 full target pending |
-| 8 — DevOps | compose, CI, observability, runbook | 🟡 T-13 (retensi + CI) dan T-14 (runbook + axe) selesai; T-12 compose pending |
+| 8 — DevOps | compose, CI, observability, runbook | 🟡 T-13, T-14 selesai; T-12 compose ditulis, eksekusi menunggu Docker |
 
 ## Status Story
 
@@ -172,6 +172,7 @@
 | 2026-11-04 | validasi YAML `.github/workflows/ci.yml` dengan PyYAML | `yaml ok` (eksekusi workflow menunggu push ke GitHub) |
 | 2026-11-04 | `npx playwright test tests/e2e/a11y.spec.ts` (T-14, `@axe-core/playwright` 4.14.0) | **4 passed**; `/`, `/login`, `/register`, `/dashboard` → **0 violations** WCAG 2.1 A/AA |
 | 2026-11-04 | drill backup/restore MySQL (T-14) | dump 93.956 byte; restore exit 0; baris `users/campaigns/transactions/ledger_entries/audit_logs` = 8/1/52/104/50 (identik); `ledger:verify` exit 0; delete ledger ditolak trigger (ERROR 1644) |
+| 2026-11-04 | validasi YAML `docker-compose.yml` (T-12) dengan PyYAML | `compose yaml ok`; service `api/mysql/ocr/queue/scheduler/web`; volume `mysql-data`/`backend-storage`; eksekusi compose belum dilakukan |
 | 2026-11-03 | `npm run lint` + `npm run build` (P2 type specimen) | lint bersih; build sukses, 15 route termasuk `ƒ /design/type`; CSS memuat 2 `@font-face` Geist |
 | 2026-11-03 | Chrome headless `/design/type` (P2) | tangkapan 512 dan 1440; `innerWidth=512` saat diminta 390 (batas tool dicatat di `P2-type-specimen.md` §5) |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
@@ -300,7 +301,7 @@ selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
 
 | ID | Task | Estimasi | Bukti/DoD |
 |---|---|---|---|
-| T-12 | `docker-compose.yml`: mysql, api, queue, scheduler, ocr, web + healthcheck + volume | 5h | `docker compose up` (butuh Docker di mesin lain/CI) |
+| T-12 | `docker-compose.yml`: mysql, api, queue, scheduler, ocr, web + healthcheck + volume | 5h | 🟡 **ditulis 2026-11-04** — compose 6 service + `backend/Dockerfile`, `frontend/Dockerfile`, `.env.docker.example`, healthcheck, volume `mysql-data`/`backend-storage`; YAML valid. `docker compose up --build` belum dijalankan (Docker tidak ada di mesin ini) |
 | T-13 | CI GitHub Actions: php test + pint + `composer audit`, es lint/build/audit, pytest, (opsional) k6 smoke; retensi sesuai NFR-08 | 4h | 🟡 **retensi + workflow selesai 2026-11-04** — `.github/workflows/ci.yml` (backend MySQL 8.4, frontend Node 24, OCR pytest) dan `amanah:retention` + `RetentionTest` (4 passed); status hijau menunggu run di GitHub |
 | T-14 | Observability + `docs/runbook.md` + drill backup/restore + axe-core (G-08, G-10) | 6h | ✅ **selesai 2026-11-04** — `docs/runbook.md` (health, 3 alert, retensi, RTO/RPO) + drill restore MySQL (52 transaksi, `ledger:verify` exit 0, trigger immutability terbukti); `@axe-core/playwright` 4.14.0 + 4 test WCAG 2.1 AA (0 violations) di `docs/a11y.md` |
 
@@ -378,13 +379,14 @@ limit) dan beberapa state/UX.
 
 ## Langkah berikutnya (ringkas)
 
-1. **GATE 5** — T-02a…T-02e dan T-03 selesai; klik manual UI tinggal dijalankan manusia.
-2. **Redesign PAPER & INK:** P1 ✅ (dossier), P2 ✅ (type specimen), P3 ✅
-   (token, status, jarak, radius, mode gelap), P4 ✅ (primitive + state matrix)
-   — lihat
-   `docs/design/P1-research-dossier.md`, `docs/design/P2-type-specimen.md`,
-   `docs/design/P3-tokens.md`, `docs/design/DESIGN_DECISIONS.md`, bukti di
-   `docs/design/screens/`. P4 dibuktikan lewat `/design/components`, gallery
-   interaktif, dan screenshot `p4-components-*.png`.
-2. **T-08** Playwright critical path.
-3. **T-09/T-10** performance dan concurrency.
+1. **Verifikasi T-12 di mesin ber-Docker:** `docker compose up --build`, cek 6
+   service sehat, login demo, lalu tandai T-12 selesai penuh.
+2. **T-09 full target:** jalankan `k6 run scripts/perf/authorize.js` dengan
+   `RATE=200`, `DURATION=2m` pada PHP-FPM/Apache atau staging (bukan
+   `artisan serve`), lalu isi bagian Result di `docs/perf/scan-p95.md`.
+3. **G-10 sisa nama artefak:** tambahkan `tests/Feature/IdempotencyTest.php`
+   dan `tests/Concurrency/` (atau ubah referensi PRD ke test yang sudah ada:
+   replay di `DisbursementApiTest`/`DonationApiTest`, konkurensi di
+   `DisbursementConcurrencyTest`).
+4. **GATE 7/8:** setelah T-09 dan T-12 terbukti, tulis ringkasan gate dan minta
+   persetujuan manusia sebelum polish lanjutan.
