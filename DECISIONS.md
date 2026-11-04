@@ -280,6 +280,24 @@
   terverifikasi sampai staging/Docker. Agent berikutnya wajib menjalankan kedua
   bukti itu sebelum mengklaim kesiapan produksi.
 
+### D-029 - Simulasi pembayaran demo dibatasi driver `fake` dan lingkungan lokal
+
+- **Keputusan:** Tambahkan `POST /api/v1/donations/{donation}/simulate-payment`
+  yang hanya aktif bila `PAYMENT_DRIVER=fake` **dan** environment `local`/`testing`.
+  Route berada di belakang `auth:sanctum` + `email.verified`, dan hanya donatur
+  pemilik donasi yang boleh memicunya. Di luar kondisi itu route mengembalikan 404.
+  Notifikasi `donation_settled` dikirim ke donatur dan penggalang lewat kanal
+  `database` di dalam transaksi settlement.
+- **Alasan:** Demo offline tidak punya webhook provider, sehingga donasi berhenti
+  di `initiated`, saldo kampanye tidak berubah, dan tidak ada notifikasi. Pengguna
+  perlu menyelesaikan alur donasi secara jujur tanpa memalsukan ledger.
+- **Alternatif yang ditolak:** (a) Auto-settle saat donasi dibuat - menyembunyikan
+  siklus pembayaran dan membuat test webhook tidak realistis. (b) Hanya mengubah
+  state di frontend - saldo dan notifikasi tetap tidak konsisten.
+- **Konsekuensi:** Tombol demo hanya muncul saat `payment.provider === "fake"`;
+  alur provider nyata tetap lewat webhook bertanda tangan. Notifikasi ditulis
+  sinkron (tanpa worker) agar demo tidak butuh queue.
+
 ---
 
 ## 2. Register Asumsi (default yang saya pakai sampai dikoreksi)
@@ -332,3 +350,4 @@
 | 1.14 | 2026-11-04 | D-027 axe-core Playwright + `docs/a11y.md`; `docs/runbook.md` + drill restore lokal |
 | 1.15 | 2026-11-04 | T-12 compose + Dockerfile; referensi artefak NFR-02/NFR-07 di PRD diselaraskan ke test nyata |
 | 1.16 | 2026-11-04 | D-028 GATE 7/8 disetujui dengan catatan; CI hijau (run #5/#6); bug `.env.example` + `pythonpath` OCR diperbaiki |
+| 1.17 | 2026-11-04 | D-029 simulasi pembayaran demo (`fake` + local/testing), notifikasi `donation_settled`, loading state UI |

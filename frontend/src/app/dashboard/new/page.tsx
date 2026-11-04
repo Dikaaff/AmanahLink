@@ -242,6 +242,7 @@ export default function NewCampaignPage() {
             type="submit"
             className="btn-primary"
             disabled={submitting || mcc.length === 0}
+            aria-busy={submitting || undefined}
           >
             {submitting ? "Menyimpan…" : "Simpan draf"}
           </button>

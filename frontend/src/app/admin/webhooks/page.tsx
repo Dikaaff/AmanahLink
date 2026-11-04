@@ -235,6 +235,7 @@ export default function WebhookEventsPage() {
                             type="button"
                             className="btn-secondary !px-3 !py-1.5"
                             disabled={replaying === event.id}
+                            aria-busy={replaying === event.id || undefined}
                             onClick={() => handleReplay(event)}
                           >
                             {replaying === event.id ? "Memproses…" : "Replay"}

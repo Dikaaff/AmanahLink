@@ -5,10 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { Alert, ErrorState, Loading, Progress, StatusBadge } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 import {
   api,
   errorMessage,
   type Campaign,
+  type Donation,
   type PaymentInstruction,
 } from "@/lib/api";
 import { dateOnly, daysLeft, rupiah } from "@/lib/format";
@@ -19,7 +21,7 @@ const PRESETS = [50_000, 100_000, 250_000, 500_000];
 export default function CampaignDetailPage() {
   const params = useParams<{ slug: string }>();
   const router = useRouter();
-  const { user, ready } = useAuth();
+  const { user, ready, refreshUnreadNotifications } = useAuth();
 
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,9 @@ export default function CampaignDetailPage() {
   const [donating, setDonating] = useState(false);
   const [donationError, setDonationError] = useState<string | null>(null);
   const [payment, setPayment] = useState<PaymentInstruction | null>(null);
+  const [donationId, setDonationId] = useState<number | null>(null);
+  const [paying, setPaying] = useState(false);
+  const [paidDonation, setPaidDonation] = useState<Donation | null>(null);
 
   const load = useCallback(() => api.campaign(params.slug), [params.slug]);
 
@@ -72,14 +77,36 @@ export default function CampaignDetailPage() {
     if (!campaign) return;
 
     setDonating(true);
+    setPaidDonation(null);
 
     try {
       const response = await api.createDonation(campaign.id, amount);
       setPayment(response.data.payment);
+      setDonationId(response.data.donation.id);
     } catch (caught) {
       setDonationError(errorMessage(caught));
     } finally {
       setDonating(false);
+    }
+  }
+
+  async function handleSimulatePayment() {
+    if (!donationId) return;
+
+    setPaying(true);
+    setDonationError(null);
+
+    try {
+      const response = await api.simulateDonationPayment(donationId);
+      setCampaign(response.data.campaign);
+      setPaidDonation(response.data.donation);
+      setPayment(null);
+      setDonationId(null);
+      await refreshUnreadNotifications();
+    } catch (caught) {
+      setDonationError(errorMessage(caught));
+    } finally {
+      setPaying(false);
     }
   }
 
@@ -269,15 +296,45 @@ export default function CampaignDetailPage() {
                       </dl>
                       <p className="mt-2 text-xs">
                         Pembayaran diperiksa lewat webhook provider. Status donasi
-                        berubah menjadi “Berhasil” setelah konfirmasi diterima.
+                        berubah menjadi &ldquo;Berhasil&rdquo; setelah konfirmasi diterima.
                       </p>
+                      {payment.provider === "fake" ? (
+                        <Button
+                          type="button"
+                          size="cta"
+                          className="mt-3"
+                          loading={paying}
+                          onClick={handleSimulatePayment}
+                        >
+                          {paying
+                            ? "Memproses pembayaran"
+                            : "Simulasikan pembayaran (demo)"}
+                        </Button>
+                      ) : null}
+                    </Alert>
+                  ) : null}
+
+                  {paidDonation ? (
+                    <Alert tone="success">
+                      <p className="font-semibold">Pembayaran berhasil.</p>
+                      <p className="mt-1 text-xs">
+                        Dana masuk ke saldo terkunci kampanye. Saldo sekarang{" "}
+                        {rupiah(campaign.current_amount)}.
+                      </p>
+                      <Link
+                        href="/notifications"
+                        className="mt-2 inline-block text-xs font-semibold underline"
+                      >
+                        Lihat notifikasi
+                      </Link>
                     </Alert>
                   ) : null}
 
                   <button
                     type="submit"
                     className="btn-primary w-full"
-                    disabled={donating}
+                    disabled={donating || paying}
+                    aria-busy={donating || undefined}
                   >
                     {!user
                       ? "Masuk untuk berdonasi"

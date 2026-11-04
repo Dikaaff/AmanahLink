@@ -112,7 +112,12 @@ export default function LoginPage() {
           ) : null}
         </div>
 
-        <button type="submit" className="btn-primary w-full" disabled={submitting}>
+        <button
+          type="submit"
+          className="btn-primary w-full"
+          disabled={submitting}
+          aria-busy={submitting || undefined}
+        >
           {submitting ? "Memeriksa…" : "Masuk"}
         </button>
       </form>

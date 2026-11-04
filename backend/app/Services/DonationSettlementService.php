@@ -14,8 +14,10 @@ use App\Exceptions\InvalidStateTransitionException;
 use App\Models\Campaign;
 use App\Models\Donation;
 use App\Models\Transaction;
+use App\Notifications\DonationSettled;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 final class DonationSettlementService
 {
@@ -87,6 +89,14 @@ final class DonationSettlementService
                 'net_amount' => $net->toDecimalString(),
                 'campaign_current_amount' => $campaign->current_amount,
             ]);
+
+            $donation->loadMissing('campaign.campaigner');
+
+            $recipients = collect([$donation->donor, $donation->campaign?->campaigner])
+                ->filter()
+                ->unique('id');
+
+            Notification::send($recipients, new DonationSettled($donation));
 
             return $donation->fresh();
         });

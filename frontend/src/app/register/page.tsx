@@ -144,7 +144,12 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <button type="submit" className="btn-primary w-full" disabled={submitting}>
+        <button
+          type="submit"
+          className="btn-primary w-full"
+          disabled={submitting}
+          aria-busy={submitting || undefined}
+        >
           {submitting ? "Mendaftarkan…" : "Daftar"}
         </button>
       </form>

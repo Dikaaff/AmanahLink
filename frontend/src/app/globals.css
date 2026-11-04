@@ -227,3 +227,37 @@
     @apply bg-sunken text-left text-label font-medium uppercase text-ink-secondary;
   }
 }
+
+/* Legacy `.btn-*` buttons opt into the spinner by setting aria-busy. */
+.btn-primary[aria-busy="true"],
+.btn-secondary[aria-busy="true"],
+.btn-ghost[aria-busy="true"] {
+  cursor: progress;
+}
+
+.btn-primary[aria-busy="true"]::before,
+.btn-secondary[aria-busy="true"]::before,
+.btn-ghost[aria-busy="true"]::before {
+  content: "";
+  width: 0.875rem;
+  height: 0.875rem;
+  flex: none;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: amanah-spin 0.65s linear infinite;
+}
+
+@keyframes amanah-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary[aria-busy="true"]::before,
+  .btn-secondary[aria-busy="true"]::before,
+  .btn-ghost[aria-busy="true"]::before {
+    animation-duration: 2s;
+  }
+}

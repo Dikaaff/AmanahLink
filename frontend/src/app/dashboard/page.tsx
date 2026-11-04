@@ -426,6 +426,7 @@ export default function DashboardPage() {
               type="button"
               className="btn-secondary"
               disabled={resendingVerification}
+              aria-busy={resendingVerification || undefined}
               onClick={handleResendVerification}
             >
               {resendingVerification ? "Mengirim…" : "Kirim ulang tautan"}
@@ -579,6 +580,7 @@ export default function DashboardPage() {
                             type="button"
                             className="btn-primary"
                             disabled={submittingId === campaign.id}
+                            aria-busy={submittingId === campaign.id || undefined}
                             onClick={() => handleSubmitCampaign(campaign)}
                           >
                             {submittingId === campaign.id ? "Mengajukan…" : "Ajukan review"}
@@ -699,7 +701,12 @@ export default function DashboardPage() {
                 <div className="md:col-span-4">
                   {limitError ? <Alert>{limitError}</Alert> : null}
                   {limitNotice ? <Alert tone="success">{limitNotice}</Alert> : null}
-                  <button type="submit" className="btn-primary mt-3" disabled={savingLimit}>
+                  <button
+                    type="submit"
+                    className="btn-primary mt-3"
+                    disabled={savingLimit}
+                    aria-busy={savingLimit || undefined}
+                  >
                     {savingLimit ? "Menyimpan…" : "Simpan limit"}
                   </button>
                 </div>
@@ -904,7 +911,12 @@ export default function DashboardPage() {
                     </div>
                   ) : null}
 
-                  <button type="submit" className="btn-primary" disabled={disbursing}>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={disbursing}
+                    aria-busy={disbursing || undefined}
+                  >
                     {disbursing ? "Memproses…" : "Cairkan dana"}
                   </button>
                 </div>
@@ -950,7 +962,12 @@ export default function DashboardPage() {
                     />
                     <p className="mt-1 text-xs text-stone-500">JPEG atau PNG.</p>
                   </div>
-                  <button type="submit" className="btn-primary" disabled={uploadingReceipt}>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={uploadingReceipt}
+                    aria-busy={uploadingReceipt || undefined}
+                  >
                     {uploadingReceipt ? "Mengunggah…" : "Upload nota"}
                   </button>
                 </form>
@@ -977,6 +994,7 @@ export default function DashboardPage() {
                   type="button"
                   className="btn-secondary"
                   disabled={receiptsLoading}
+                  aria-busy={receiptsLoading || undefined}
                   onClick={() => void loadReceipts()}
                 >
                   {receiptsLoading ? "Memuat…" : "Muat ulang"}

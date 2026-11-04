@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Requests\StoreDonationRequest;
+use App\Http\Resources\CampaignResource;
 use App\Http\Resources\DonationResource;
 use App\Models\Campaign;
+use App\Models\Donation;
 use App\Services\DonationService;
+use App\Services\DonationSettlementService;
 use App\Support\Money;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -60,5 +63,33 @@ final class DonationController
                 'replayed' => $result['replayed'],
             ],
         ], $result['replayed'] ? 200 : 201);
+    }
+
+    /**
+     * Demo-only shortcut for the offline payment driver. Real providers settle
+     * through the signed webhook; this route never exists when the configured
+     * driver is not `fake`.
+     */
+    public function simulatePayment(
+        Request $request,
+        Donation $donation,
+        DonationSettlementService $settlements,
+    ): JsonResponse {
+        abort_unless(
+            config('amanahlink.payment_driver') === 'fake'
+                && app()->environment(['local', 'testing']),
+            404,
+        );
+
+        abort_unless($donation->donor_id === $request->user()->getKey(), 403);
+
+        $donation = $settlements->settle($donation->payment_ref);
+
+        return response()->json([
+            'data' => [
+                'donation' => new DonationResource($donation->load('campaign')),
+                'campaign' => new CampaignResource($donation->campaign),
+            ],
+        ]);
     }
 }

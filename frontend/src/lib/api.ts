@@ -390,6 +390,12 @@ export const api = {
       { ...json({ campaign_id: campaignId, amount }), headers: { "Idempotency-Key": crypto.randomUUID() } },
     ),
 
+  simulateDonationPayment: (donationId: number) =>
+    request<{ data: { donation: Donation; campaign: Campaign } }>(
+      `/donations/${donationId}/simulate-payment`,
+      { method: "POST" },
+    ),
+
   disburse: (body: { campaign_id: number; merchant_id: number; amount: string }) =>
     request<{ data: Disbursement }>("/disbursements", {
       ...json(body),

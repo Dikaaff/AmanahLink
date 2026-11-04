@@ -146,6 +146,7 @@ export default function NotificationsPage() {
           type="button"
           className="btn-secondary"
           disabled={unreadNotifications === 0 || workingId !== null}
+          aria-busy={workingId === "all" || undefined}
           onClick={handleMarkAllRead}
         >
           {workingId === "all" ? "Memproses…" : "Tandai semua dibaca"}
@@ -205,7 +206,9 @@ export default function NotificationsPage() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-semibold uppercase tracking-wide text-brand-700">
-                        Perubahan kampanye
+                        {textValue(notification.data.type) === "donation_settled"
+                          ? "Donasi"
+                          : "Perubahan kampanye"}
                       </span>
                       {!notification.read_at ? (
                         <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-semibold text-white">
@@ -237,6 +240,7 @@ export default function NotificationsPage() {
                       type="button"
                       className="btn-ghost shrink-0 self-start"
                       disabled={workingId !== null}
+                      aria-busy={workingId === notification.id || undefined}
                       onClick={() => handleRead(notification)}
                     >
                       {workingId === notification.id
