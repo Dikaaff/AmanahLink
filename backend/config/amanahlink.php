@@ -37,6 +37,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Data Retention (NFR-08)
+    |--------------------------------------------------------------------------
+    |
+    | Application log files and request metrics are kept for 90 hours, audit
+    | trails for 5 years, and receipt images for 24 hours after the receipt
+    | reaches a terminal state. Receipt rows and OCR payloads stay in the
+    | database so the audit trail remains queryable.
+    |
+    */
+    'app_log_retention_hours' => (int) env('AMANAH_APP_LOG_RETENTION_HOURS', 90),
+    'audit_log_retention_years' => (int) env('AMANAH_AUDIT_RETENTION_YEARS', 5),
+    'receipt_file_retention_hours' => (int) env('AMANAH_RECEIPT_RETENTION_HOURS', 24),
+
+    /*
+    |--------------------------------------------------------------------------
     | Webhook Signature
     |--------------------------------------------------------------------------
     |

@@ -10,7 +10,7 @@
 |---|---|
 | Terakhir diperbarui | 2026-11-04 |
 | Fase selesai | Fase 0, 1, 2, 3, 4 |
-| Fase berjalan | Fase 7 — test suite (T-04…T-07 dan T-11 selesai) |
+| Fase berjalan | Fase 8 — DevOps (T-13 retensi + CI selesai; T-12/T-14 pending) |
 | Status gate | 29/29 story ✅; Fase 5–8 belum ditutup |
 | Referensi | `docs/prd.md`, `docs/backlog.md`, `DECISIONS.md` |
 
@@ -25,7 +25,7 @@
 | 5 — Frontend | halaman Next.js | 🟡 MVP + P5 mobile core implemented; screenshot evidence pending |
 | 6 — Security | hardening + ASVS checklist | ✅ T-04…T-07 selesai; subset ASVS dan sinkronisasi kontrak tersedia |
 | 7 — Test Suite | k6, konkurensi, E2E | 🟡 T-08/T-10 selesai; T-09 full target pending |
-| 8 — DevOps | compose, CI, observability, runbook | ⬜ belum |
+| 8 — DevOps | compose, CI, observability, runbook | 🟡 T-13 retensi + workflow CI; T-12/T-14 pending |
 
 ## Status Story
 
@@ -144,7 +144,8 @@
 | 2026-11-02 | `.venv/Scripts/python -m pytest -q` (ocr-service) | **8 passed** |
 | 2026-11-03 | `npm run lint` + `npm run build` (frontend) | bersih; 14 route, semuanya `ƒ (Dynamic)` |
 | 2026-11-03 | `curl -D -` ke `npm run start` (frontend) | `Content-Security-Policy` ada, `X-Powered-By` hilang, `X-Frame-Options: DENY`; HTML produksi **11/11** `<script>` ber-`nonce` |
-| 2026-11-03 | `composer audit` (backend) | **0 advisory** || 2026-11-03 | `npm audit --omit=dev` / `npm audit` (frontend) | produksi **0 kerentanan**; 16 moderate hanya di toolchain lint (`minimatch` via `eslint-config-next`) tanpa fix non-breaking |
+| 2026-11-03 | `composer audit` (backend) | **0 advisory** |
+| 2026-11-03 | `npm audit --omit=dev` / `npm audit` (frontend) | produksi **0 kerentanan**; 16 moderate hanya di toolchain lint (`minimatch` via `eslint-config-next`) tanpa fix non-breaking |
 | 2026-11-03 | `php artisan test --compact tests/Feature/Api/MerchantApiTest.php` | **10 passed, 43 assertions** (registry merchant T-02a) |
 | 2026-11-03 | `php artisan test --compact` (setelah T-02a) | **171 passed, 670 assertions** |
 | 2026-11-03 | smoke API + `npm run lint`/`build` (T-02b) | campaigner `GET /merchants` → 2 merchant tanpa `mid`; admin → `mid` ada; lint/build bersih |
@@ -165,6 +166,10 @@
 | 2026-11-03 | `npm run lint` + `npm run build` (panel status nota) | lint bersih; build 14 route `ƒ (Dynamic)` |
 | 2026-11-03 | `npm run lint` + `npm run build` (T-02e, state kosong/error) | lint bersih; build sukses, 14 route `ƒ (Dynamic)` |
 | 2026-11-03 | `bash scripts/e2e-manual.sh` (T-03, backend `QUEUE_CONNECTION=sync`, OCR fake) | **43 PASS, 0 FAIL** — register→approve→donasi→webhook→disburse→nota→review→refund; rincian `docs/e2e/gate5-run-2026-11-03.md` |
+| 2026-11-04 | `php artisan test --compact tests/Feature/RetentionTest.php` (T-13) | **4 passed, 15 assertions** — log >90 jam, audit >5 tahun, gambar nota terminal >24 jam, dan `--dry-run` |
+| 2026-11-04 | `php artisan test --compact` (T-13, setelah ReceiptPolicy scoped) | **198 passed, 811 assertions** |
+| 2026-11-04 | `ocr-service\.venv\Scripts\python.exe -m pytest -q` | **8 passed** |
+| 2026-11-04 | validasi YAML `.github/workflows/ci.yml` dengan PyYAML | `yaml ok` (eksekusi workflow menunggu push ke GitHub) |
 | 2026-11-03 | `npm run lint` + `npm run build` (P2 type specimen) | lint bersih; build sukses, 15 route termasuk `ƒ /design/type`; CSS memuat 2 `@font-face` Geist |
 | 2026-11-03 | Chrome headless `/design/type` (P2) | tangkapan 512 dan 1440; `innerWidth=512` saat diminta 390 (batas tool dicatat di `P2-type-specimen.md` §5) |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
@@ -189,10 +194,10 @@ Kesenjangan yang harus ditutup (ID dipakai di rencana kerja):
 | G-04 | Kode webhook memakai `INVALID_SIGNATURE`; PRD §9 menulis `UNAUTHENTICATED` | **ditutup T-11** — katalog PRD/backlog mengikuti `INVALID_SIGNATURE` aktual | — | ✅ T-11 |
 | G-05 | Tidak ada penjadwal `expired` / auto-close + refund window | **ditutup T-05** — `amanah:campaign-cycle` menandai `active/funded → expired`, auto-refund setelah 7 hari, dan mencatat audit | — | ✅ T-05 |
 | G-06 | Tidak ada `/healthz` dan `/readyz`; hanya `/up` bawaan Laravel | **ditutup T-06** — liveness `/healthz`; readiness `/readyz` memeriksa database, queue, dan OCR dengan HTTP `503` saat dependency gagal | — | ✅ T-06 |
-| G-07 | NFR-08 retensi (log 90 jam, nota 24 jam, audit 5 tahun) belum diimplementasikan | tidak ada command/test retensi | klaim kepatuhan palsu | T-13 |
+| G-07 | NFR-08 retensi (log 90 jam, nota 24 jam, audit 5 tahun) belum diimplementasikan | **ditutup T-13** — `amanah:retention` (jadwal harian 02:15, `--dry-run`) menghapus log >90 jam, audit >5 tahun, dan gambar nota terminal >24 jam; `RetentionTest` 4 passed | — | ✅ T-13 |
 | G-08 | NFR-06 (WCAG 2.1 AA) belum diuji; tidak ada axe-core | belum ada `docs/a11y.md` | klaim aksesibilitas tak terbukti | T-14 |
 | G-09 | NFR-01 (p95 < 500 ms @200 rps) belum terukur pada full workload | **ditutup sebagian T-09** — k6 script + query-count instrumentation + reproducible runbook tersedia; full 200 rps × 2 menit masih pending | target performa belum terbukti | T-09 |
-| G-10 | Artefak yang dirujuk PRD belum lengkap: `docs/runbook.md`, `docs/a11y.md`, `docs/perf/scan-p95.md`, `IdempotencyTest.php`, `RetentionTest.php`, `tests/Concurrency/` | **ditutup sebagian T-11** — `docs/erd.md` tersedia; artefak test/operasional lain tetap menjadi T-08…T-14 | traceability NFR masih putus di artefak lain | T-13, T-14 |
+| G-10 | Artefak yang dirujuk PRD belum lengkap: `docs/runbook.md`, `docs/a11y.md`, `docs/perf/scan-p95.md`, `IdempotencyTest.php`, `RetentionTest.php`, `tests/Concurrency/` | **ditutup sebagian** — `docs/erd.md`, `docs/perf/scan-p95.md`, `tests/Feature/RetentionTest.php` tersedia; `docs/runbook.md`, `docs/a11y.md`, `IdempotencyTest.php`, `tests/Concurrency/` masih menjadi T-14 | traceability NFR masih putus di artefak operasional | T-14 |
 | G-11 | Q-01…Q-04 di PRD masih "terbuka" padahal sudah diputuskan di `DECISIONS.md` | **ditutup T-11** — pertanyaan diberi keputusan eksplisit dan dirujuk D-025 | — | ✅ T-11 |
 | G-12 | FR-08 menyebut VA **dan QRIS**; `PaymentInstruction` hanya VA | **ditutup T-11** — PRD/README menyatakan fake saat ini VA; QRIS nyata menunggu adapter | — | ✅ T-11 |
 | G-13 | Token Sanctum disimpan di `localStorage`; CSP nonce sudah aktif tetapi risiko XSS residual tetap ada | **ditutup T-07** — token browser kini in-memory; reload meminta login ulang, API bearer tetap kompatibel | — | ✅ T-07 |
@@ -294,7 +299,7 @@ selesai + bukti dicatat. Estimasi dalam jam kerja manusia, bukan janji.
 | ID | Task | Estimasi | Bukti/DoD |
 |---|---|---|---|
 | T-12 | `docker-compose.yml`: mysql, api, queue, scheduler, ocr, web + healthcheck + volume | 5h | `docker compose up` (butuh Docker di mesin lain/CI) |
-| T-13 | CI GitHub Actions: php test + pint + `composer audit`, es lint/build/audit, pytest, (opsional) k6 smoke; retensi sesuai NFR-08 | 4h | workflow hijau di PR |
+| T-13 | CI GitHub Actions: php test + pint + `composer audit`, es lint/build/audit, pytest, (opsional) k6 smoke; retensi sesuai NFR-08 | 4h | 🟡 **retensi + workflow selesai 2026-11-04** — `.github/workflows/ci.yml` (backend MySQL 8.4, frontend Node 24, OCR pytest) dan `amanah:retention` + `RetentionTest` (4 passed); status hijau menunggu run di GitHub |
 | T-14 | Observability + `docs/runbook.md` + drill backup/restore + axe-core (G-08, G-10) | 6h | runbook + hasil drill + laporan a11y |
 
 **Total sisa ± 51 jam** (≈13 sesi 4 jam), belum termasuk perbaikan yang muncul

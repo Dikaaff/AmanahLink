@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('webhooks:retry')->everyMinute()->withoutOverlapping();
 Schedule::command('amanah:campaign-cycle')->hourly()->withoutOverlapping();
+Schedule::command('amanah:retention')->dailyAt('02:15')->withoutOverlapping();

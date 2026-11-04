@@ -215,6 +215,30 @@
   idempotensi, dan policy.
 - **Status:** diterapkan 2026-11-03 (T-11); Q-01…Q-04 ditutup di PRD.
 
+### D-026 — Retensi NFR-08: gambar nota 24 jam, audit 5 tahun, log 90 jam
+
+- **Keputusan:** Command `amanah:retention` (terjadwal harian 02:15) menghapus
+  (a) file `storage/logs/*.log` yang lebih tua dari **90 jam**, (b) baris
+  `audit_logs` yang lebih tua dari **5 tahun**, dan (c) **file gambar** nota
+  yang sudah mencapai status terminal (`verified`/`approved`/`rejected`) dan
+  berumur lebih dari **24 jam**. Baris `receipts`, `ocr_payload`, confidence,
+  dan jejak audit tetap disimpan; setiap penghapusan gambar dicatat sebagai
+  `receipt.file_pruned`. Tersedia `--dry-run`.
+- **Alasan:** NFR-08 menyebut retensi nota 24 jam, tetapi menghapus baris nota
+  akan memutus audit trail. Menghapus hanya berkas mentah menurunkan risiko PII
+  tanpa kehilangan bukti transaksi. Audit 5 tahun adalah batas retensi, bukan
+  izin menghapus lebih awal; `AuditLog` tetap append-only untuk operasi normal
+  dan penghapusan retensi dilakukan lewat query builder (mass delete) sebagai
+  pengecualian eksplisit.
+- **Alternatif yang ditolak:** (a) Menghapus seluruh baris `receipts` setelah
+  24 jam — menghilangkan bukti untuk sengketa dan audit. (b) Membiarkan gambar
+  selamanya — melanggar NFR-08 dan memperbesar paparan PII. (c) Menghapus audit
+  melalui model Eloquent — diblokir oleh guard append-only.
+- **Konsekuensi:** `config/amanahlink.php` mendapat tiga kunci retensi;
+  `.env.example` mendokumentasikannya; `tests/Feature/RetentionTest.php`
+  mengunci perilaku; scheduler memanggil command setiap hari. G-07 dan artefak
+  `RetentionTest.php` di G-10 tertutup.
+
 ---
 
 ## 2. Register Asumsi (default yang saya pakai sampai dikoreksi)
@@ -263,3 +287,4 @@
 | 1.10 | 2026-11-02 | D-023 CSP nonce + render dinamis; security headers frontend terverifikasi |
 | 1.11 | 2026-11-03 | D-024 limit disbursement admin-only (baca untuk pemilik); audit PRD/backlog + rencana T-01…T-14 |
 | 1.12 | 2026-11-03 | D-025 kontrak publik mengikuti route/test; T-11 menyelaraskan PRD, backlog, README, dan ERD |
+| 1.13 | 2026-11-04 | D-026 retensi NFR-08 + command `amanah:retention`; CI GitHub Actions + test retensi |
