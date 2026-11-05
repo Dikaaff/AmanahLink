@@ -22,8 +22,8 @@ export function SiteChrome({ children }: { children: ReactNode }) {
     <>
       <Nav />
       <main className="flex-1 pb-20 md:pb-0">{children}</main>
-      <footer className="mt-16 border-t border-stone-200/70 bg-white/60">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-xs text-stone-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <footer className="mt-16 border-t border-line bg-sunken">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>
             AmanahLink membatasi pencairan ke merchant terverifikasi dengan
             kategori transaksi (MCC) yang diizinkan kampanye.
