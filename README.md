@@ -65,13 +65,14 @@ Proyek berada pada tahap **MVP backend + frontend**. Sumber kebenaran status ada
 | 2 — Arsitektur & Data | migration, enum, model, factory, seeder, invariant test | ✅ selesai |
 | 3 — API & Ledger | auth/RBAC, kampanye, donasi, webhook, disbursement, refund | ✅ selesai |
 | 4 — OCR Service | Flask `/extract`, upload nota, auto-match, review manual | ✅ selesai |
-| 5 — Frontend | halaman Next.js | 🟡 MVP implemented; E2E pending |
-| 6 — Security | hardening + checklist ASVS | 🟡 hardening berjalan; checklist penuh pending |
-| 7 — Test Suite | k6, konkurensi, E2E | ⬜ belum |
-| 8 — DevOps | compose, CI, observability, runbook | ⬜ belum |
+| 5 — Frontend | halaman Next.js, responsive UX, E2E screenshot | 🟡 MVP selesai; menunggu persetujuan GATE 5 |
+| 6 — Security | hardening + checklist ASVS | ✅ selesai; subset ASVS terverifikasi |
+| 7 — Test Suite | k6, konkurensi, E2E | ✅ selesai dengan catatan T-09 |
+| 8 — DevOps | compose, CI, observability, runbook | ✅ selesai dengan catatan T-12 |
 
 **Story yang sudah selesai:** US-01 … US-29 (seluruh backlog MVP).
-**Berikutnya:** tuntaskan verifikasi security Fase 6, lalu test suite E2E/k6 dan DevOps.
+**Berikutnya:** tutup GATE 5 dan lengkapi bukti T-09/T-12 di lingkungan yang mendukung
+PHP-FPM/staging dan Docker.
 
 ---
 
@@ -682,14 +683,14 @@ vendor/bin/pint --format agent <file-yang-diubah>
 
 ## Batasan yang Diketahui
 
-- **Frontend belum ada.** API siap, tetapi belum ada aplikasi Next.js (Fase 5).
+- **GATE 5 frontend belum disetujui.** Aplikasi Next.js, alur MVP, dan bukti screenshot sudah tersedia; persetujuan gate tetap menunggu keputusan manusia.
 - **Email notifikasi memerlukan queue worker** (`php artisan queue:work`) dan retry webhook memerlukan scheduler (`php artisan schedule:work`). Tanpa keduanya, baris in-app tetap dibuat tetapi email tertunda dan retry tidak berjalan.
-- **Alert DLQ > 1000 baru berupa log `critical`** dari `webhooks:retry`; pengiriman alert nyata menunggu observability Fase 8.
-- **p95 dashboard mengukur waktu proses aplikasi**, bukan latency jaringan end-to-end; pemangkasan `request_metrics` belum ada (Fase 8).
+- **Alert DLQ > 1000 baru berupa log `critical`** dari `webhooks:retry`; integrasi alerting eksternal belum tersedia.
+- **p95 dashboard mengukur waktu proses aplikasi**, bukan latency jaringan end-to-end; target NFR-01 tetap menunggu benchmark staging.
 - **Adapter Midtrans belum diisi.** Hanya driver `fake` yang aktif; interface dan alur webhook sudah siap.
 - **Adapter OpenAI OCR belum diuji dengan API key nyata.** Jalur `fake` yang diuji otomatis.
-- **Docker belum diverifikasi.** `ocr-service/Dockerfile` ada, tetapi belum pernah di-build karena Docker Desktop belum tersedia di mesin pengembangan; belum ada `docker-compose.yml` (Fase 8).
-- **CI/CD belum ada.** Semua verifikasi saat ini dijalankan lokal.
+- **Docker belum diverifikasi.** `docker-compose.yml` dan Dockerfile sudah tersedia, tetapi `docker compose up --build` belum pernah dijalankan karena Docker Desktop belum tersedia di mesin pengembangan.
+- **CI sudah tersedia dan hijau** untuk backend, frontend, dan OCR; deployment/CD production belum dikonfigurasi.
 - **NFR availability & backup (NFR-03, NFR-10) belum terverifikasi** sampai ada staging.
 - **Single-tenant, IDR saja, tanpa donasi berulang.** Multi-tenant/multi-currency di luar lingkup v1.0.
 - **Klaim MCC harus jujur:** mode MVP adalah allowlist registry, bukan kontrol MCC di level jaringan.

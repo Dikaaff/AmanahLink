@@ -8,7 +8,7 @@
 
 | Field | Nilai |
 |---|---|
-| Terakhir diperbarui | 2026-11-04 |
+| Terakhir diperbarui | 2026-11-05 |
 | Fase selesai | Fase 0, 1, 2, 3, 4, 6, 7, 8 (7/8 dengan catatan D-028) |
 | Fase berjalan | Fase 5 — implementasi + bukti screenshot selesai; menunggu persetujuan GATE 5. Bukti tertunda: T-09 performa & T-12 Docker (butuh staging/Docker) |
 | Status gate | 29/29 story ✅; GATE 7/8 disetujui 2026-11-04 dengan catatan; **GATE 5 menunggu persetujuan** |
@@ -186,6 +186,8 @@
 | 2026-11-03 | `npm run lint` + `npm run build` (P2 type specimen) | lint bersih; build sukses, 15 route termasuk `ƒ /design/type`; CSS memuat 2 `@font-face` Geist |
 | 2026-11-03 | Chrome headless `/design/type` (P2) | tangkapan 512 dan 1440; `innerWidth=512` saat diminta 390 (batas tool dicatat di `P2-type-specimen.md` §5) |
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
+| 2026-11-05 | verifikasi batch UX ketahanan (error boundary, `/offline`+`/maintenance`, komponen bersama) | `php artisan test --compact` **206 passed, 846 assertions**; `ledger:verify` (MySQL `amanahlink`) exit 0 — 62 transaksi, 4 saldo kampanye; frontend lint/tsc/build bersih (19 route termasuk `/offline` & `/maintenance`); pytest OCR **8 passed**; satu type error `ordered-table.tsx` (prop `align` dikirim ke `TdNumeric` yang bertipe `HTMLAttributes`) diperbaiki dengan `className` |
+| 2026-11-05 | pembersihan artefak backend | 4 migration stub kosong `2026_11_04_*` (duplikat migration `0001_01_01_*` / `2026_11_01_*` yang sudah ada) serta `create_databases.php` + `test_db.php` (syntax rusak `\$pdo`, kredensial hardcoded) dihapus; `start_backend.bat` dipertahankan sebagai helper dev |
 
 ## Kesiapan dokumen (PRD, backlog, kontrak API) — audit 2026-11-03
 
