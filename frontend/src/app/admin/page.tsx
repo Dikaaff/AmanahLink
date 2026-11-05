@@ -81,13 +81,13 @@ export default function AdminDashboardPage() {
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
             Admin
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-stone-900">
+          <h1 className="mt-2 text-3xl font-semibold text-ink">
             Kesehatan platform
           </h1>
-          <p className="mt-1 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-ink-muted">
             Snapshot {data?.window_hours ?? 24} jam terakhir. Saldo dihitung dari
             ledger, bukan dari cache.
           </p>
@@ -178,23 +178,23 @@ export default function AdminDashboardPage() {
           </section>
 
           <section className="card p-6">
-            <h2 className="text-lg font-semibold text-stone-900">
+            <h2 className="text-lg font-semibold text-ink">
               Cara membaca angka ini
             </h2>
-            <ul className="mt-3 space-y-2 text-sm leading-relaxed text-stone-600">
+            <ul className="mt-3 space-y-2 text-sm leading-relaxed text-ink-secondary">
               <li>
-                <strong className="text-stone-800">Saldo ledger</strong> dijumlah
+                <strong className="text-ink">Saldo ledger</strong> dijumlah
                 dari entri akun dana terkunci kampanye (2200); ini yang dipakai
                 saat authorize pencairan.
               </li>
               <li>
-                <strong className="text-stone-800">Saldo cache</strong> adalah
-                kolom <code className="rounded bg-stone-100 px-1">current_amount</code>{" "}
+                <strong className="text-ink">Saldo cache</strong> adalah
+                kolom <code className="rounded bg-sunken px-1">current_amount</code>{" "}
                 yang dipakai halaman publik. Selisih berarti bug atau tulisan di
                 luar service.
               </li>
               <li>
-                <strong className="text-stone-800">p95 authorize</strong> diukur di
+                <strong className="text-ink">p95 authorize</strong> diukur di
                 middleware aplikasi, bukan end-to-end jaringan.
               </li>
             </ul>

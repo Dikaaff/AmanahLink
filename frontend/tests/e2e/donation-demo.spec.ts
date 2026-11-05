@@ -15,6 +15,10 @@ test("donor settles a demo payment and sees the updated campaign balance", async
     page.getByRole("heading", { name: "Bantu Biaya Operasi Ibu Sari" }),
   ).toBeVisible();
 
+  await page.getByRole("button", { name: "Buka formulir donasi" }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Donasi sekarang" }),
+  ).toBeVisible();
   await page.getByLabel("Nominal (Rp)").fill("100000");
   await page.getByRole("button", { name: /^Donasi Rp/ }).click();
   await expect(page.getByText("Instruksi pembayaran dibuat.")).toBeVisible();
@@ -22,4 +26,5 @@ test("donor settles a demo payment and sees the updated campaign balance", async
   await page.getByRole("button", { name: "Simulasikan pembayaran (demo)" }).click();
   await expect(page.getByText("Pembayaran berhasil.")).toBeVisible();
   await expect(page.getByText(/Saldo sekarang/)).toBeVisible();
+  await page.getByRole("button", { name: "Selesai" }).click();
 });

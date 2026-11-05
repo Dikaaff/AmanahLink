@@ -44,13 +44,13 @@ export default function RegisterPage() {
   return (
     <div className="mx-auto grid max-w-5xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
           Daftar
         </p>
-        <h1 className="mt-3 text-3xl font-semibold text-stone-900 sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-semibold text-ink sm:text-4xl">
           Mulai berdonasi dengan jejak yang jelas.
         </h1>
-        <p className="mt-4 max-w-md text-sm leading-relaxed text-stone-600">
+        <p className="mt-4 max-w-md text-sm leading-relaxed text-ink-secondary">
           Akun baru terdaftar sebagai donatur. Anda dapat melihat riwayat donasi
           dan status penyelesaiannya. Akun penggalang dana disediakan oleh
           pengelola platform pada MVP ini.
@@ -59,10 +59,10 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit} className="card space-y-4 p-6 sm:p-8">
         <div>
-          <h2 className="text-xl font-semibold text-stone-900">Buat akun donatur</h2>
-          <p className="mt-1 text-sm text-stone-500">
+          <h2 className="text-xl font-semibold text-ink">Buat akun donatur</h2>
+          <p className="mt-1 text-sm text-ink-muted">
             Sudah punya akun?{" "}
-            <Link href="/login" className="font-semibold text-brand-700">
+            <Link href="/login" className="font-semibold text-ink">
               Masuk
             </Link>
           </p>

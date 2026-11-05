@@ -23,7 +23,7 @@ export function DonationHistorySkeleton({ rows = 2 }: { rows?: number }) {
   return (
     <section role="status" aria-label="Memuat riwayat donasi">
       <span className="sr-only">Memuat riwayat donasi.</span>
-      <h2 className="text-xl font-semibold text-stone-900">Riwayat donasi</h2>
+      <h2 className="text-xl font-semibold text-ink">Riwayat donasi</h2>
       <div className="card mt-4 overflow-hidden">
         <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
@@ -35,7 +35,7 @@ export function DonationHistorySkeleton({ rows = 2 }: { rows?: number }) {
                 <th className="px-4 py-3">Dibuat</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100">
+            <tbody className="divide-y divide-line">
               {Array.from({ length: rows }, (_, index) => (
                 <tr key={index} aria-hidden="true">
                   <td className="px-4 py-3">
@@ -87,16 +87,16 @@ export function DisbursementHistorySkeleton({ rows = 2 }: { rows?: number }) {
       className="card overflow-hidden"
     >
       <span className="sr-only">Memuat riwayat pencairan.</span>
-      <div className="border-b border-stone-100 px-6 py-5">
+      <div className="border-b border-line px-6 py-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink">
               Jejak penggunaan dana
             </p>
-            <h2 className="mt-1 text-xl font-semibold text-stone-900">
+            <h2 className="mt-1 text-xl font-semibold text-ink">
               Riwayat pencairan
             </h2>
-            <p className="mt-1 text-sm text-stone-500">
+            <p className="mt-1 text-sm text-ink-muted">
               Pantau status transaksi dan proses nota tanpa kehilangan jejak
               audit.
             </p>
@@ -116,7 +116,7 @@ export function DisbursementHistorySkeleton({ rows = 2 }: { rows?: number }) {
               <th className="px-6 py-3">Waktu</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-stone-100">
+          <tbody className="divide-y divide-line">
             {Array.from({ length: rows }, (_, index) => (
               <tr key={index} aria-hidden="true" className="align-top">
                 <td className="px-6 py-4">
@@ -187,18 +187,18 @@ export function DashboardSkeleton({
 
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
             Dasbor
           </p>
           {user ? (
-            <h1 className="mt-2 text-3xl font-semibold text-stone-900">
+            <h1 className="mt-2 text-3xl font-semibold text-ink">
               Halo, {user.name}
             </h1>
           ) : (
             <Skeleton className="mt-2 h-9 w-56" />
           )}
           {user ? (
-            <p className="mt-1 text-sm text-stone-500">
+            <p className="mt-1 text-sm text-ink-muted">
               {user.role_label} &middot; {user.email}
             </p>
           ) : (
@@ -256,7 +256,7 @@ export function DashboardSkeleton({
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-stone-900">
+            <h2 className="text-xl font-semibold text-ink">
               Kampanye saya
             </h2>
             <div className="card mt-4 overflow-hidden">
@@ -314,10 +314,10 @@ export function DashboardSkeleton({
           </section>
 
           <section className="card p-6">
-            <h2 className="text-xl font-semibold text-stone-900">
+            <h2 className="text-xl font-semibold text-ink">
               {admin ? "Atur limit pencairan" : "Limit pencairan"}
             </h2>
-            <p className="mt-1 max-w-2xl text-sm text-stone-600">
+            <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
               Limit membatasi pencairan baru per kampanye. Saldo tetap
               diverifikasi dari ledger dan limit yang kedaluwarsa akan ditolak
               oleh backend.
@@ -334,10 +334,10 @@ export function DashboardSkeleton({
           </section>
 
           <section className="card p-6">
-            <h2 className="text-xl font-semibold text-stone-900">
+            <h2 className="text-xl font-semibold text-ink">
               Cairkan dana ke merchant
             </h2>
-            <p className="mt-1 max-w-2xl text-sm text-stone-600">
+            <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
               Pencairan hanya berhasil ke merchant terverifikasi dengan kategori
               transaksi yang diizinkan kampanye, selama limit harian/bulanan dan
               saldo ledger mencukupi.
@@ -354,14 +354,14 @@ export function DashboardSkeleton({
           </section>
 
           <section className="card overflow-hidden">
-            <div className="border-b border-stone-100 px-6 py-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+            <div className="border-b border-line px-6 py-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink">
                 Rekonsiliasi nota
               </p>
-              <h2 className="mt-1 text-xl font-semibold text-stone-900">
+              <h2 className="mt-1 text-xl font-semibold text-ink">
                 Status nota
               </h2>
-              <p className="mt-1 max-w-2xl text-sm text-stone-500">
+              <p className="mt-1 max-w-2xl text-sm text-ink-muted">
                 Nota yang masih menunggu review atau ditolak akan tampil di sini
                 beserta alasannya.
               </p>

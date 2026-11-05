@@ -33,19 +33,6 @@
   --color-inverse-muted: var(--inverse-muted);
   --color-inverse-line: var(--inverse-line);
   --color-overlay: var(--overlay);
-
-  /* Legacy aliases — deleted at P5 when the old screens are rebuilt. They map
-     onto neutral tokens so no green or sand survives the palette lock. */
-  --color-brand-50: var(--sunken);
-  --color-brand-100: var(--line);
-  --color-brand-200: var(--line-strong);
-  --color-brand-500: var(--ink-secondary);
-  --color-brand-600: var(--ink);
-  --color-brand-700: var(--ink);
-  --color-brand-900: var(--ink);
-  --color-sand-50: var(--canvas);
-  --color-sand-100: var(--sunken);
-  --color-sand-200: var(--line);
 }
 
 @theme {

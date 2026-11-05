@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { Alert, EmptyState, ErrorState, Loading, Progress, StatusBadge } from "@/components/ui";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormOverlay } from "@/components/ui/form-overlay";
 import { api, errorMessage, type Campaign, type Paginated } from "@/lib/api";
 import { dateOnly, rupiah } from "@/lib/format";
 import { mccTitle } from "@/lib/mcc";
@@ -41,6 +43,10 @@ export default function CampaignOperationsPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [actionForm, setActionForm] = useState<ActionForm | null>(null);
+  const reasonCampaign =
+    (actionForm &&
+      result?.data.find((campaign) => campaign.id === actionForm.campaignId)) ||
+    null;
 
   const isStaff = user?.role === "verifier" || user?.role === "admin";
 
@@ -173,14 +179,6 @@ export default function CampaignOperationsPage() {
   }
 
   async function handleClose(campaign: Campaign): Promise<void> {
-    if (
-      !window.confirm(
-        `Tutup kampanye “${campaign.title}” dan kembalikan sisa dana secara proporsional?`,
-      )
-    ) {
-      return;
-    }
-
     setBusyId(campaign.id);
     setError(null);
     setNotice(null);
@@ -230,13 +228,13 @@ export default function CampaignOperationsPage() {
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-10 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
             Kepatuhan
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-stone-900">
+          <h1 className="mt-2 text-3xl font-semibold text-ink">
             Operasi kampanye
           </h1>
-          <p className="mt-1 max-w-2xl text-sm text-stone-500">
+          <p className="mt-1 max-w-2xl text-sm text-ink-muted">
             Setiap keputusan mengikuti state machine kampanye dan dicatat ke audit
             log. Kampanye frozen harus di-unfreeze sebelum ditutup.
           </p>
@@ -291,7 +289,6 @@ export default function CampaignOperationsPage() {
         <>
           <div className="space-y-4">
             {result.data.map((campaign) => {
-              const reasonAction = actionForm?.campaignId === campaign.id ? actionForm : null;
               const canClose = ["active", "funded", "expired"].includes(campaign.status);
 
               return (
@@ -301,21 +298,21 @@ export default function CampaignOperationsPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
                           href={`/campaigns/${campaign.slug}`}
-                          className="text-lg font-semibold text-stone-900 hover:underline"
+                          className="text-lg font-semibold text-ink hover:underline"
                         >
                           {campaign.title}
                         </Link>
                         <StatusBadge status={campaign.status} label={campaign.status_label} />
                       </div>
-                      <p className="mt-1 text-sm text-stone-500">
+                      <p className="mt-1 text-sm text-ink-muted">
                         Penggalang: {campaign.campaigner?.name ?? "—"} · Tenggat: {dateOnly(campaign.deadline_at)}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-stone-900">
+                      <p className="text-sm font-semibold text-ink">
                         {rupiah(campaign.current_amount)}
                       </p>
-                      <p className="text-xs text-stone-500">
+                      <p className="text-xs text-ink-muted">
                         dari {rupiah(campaign.target_amount)}
                       </p>
                     </div>
@@ -329,7 +326,7 @@ export default function CampaignOperationsPage() {
                     {campaign.allowed_mcc.map((code) => (
                       <span
                         key={code}
-                        className="rounded-full bg-brand-50 px-2.5 py-1 text-xs text-brand-700"
+                        className="rounded-full bg-sunken px-2.5 py-1 text-xs text-ink"
                       >
                         {mccTitle(code)} · {code}
                       </span>
@@ -347,7 +344,7 @@ export default function CampaignOperationsPage() {
                     </div>
                   ) : null}
 
-                  <div className="mt-5 flex flex-wrap gap-2 border-t border-stone-100 pt-4">
+                  <div className="mt-5 flex flex-wrap gap-2 border-t border-line pt-4">
                     {campaign.status === "pending_review" ? (
                       <>
                         <button
@@ -392,64 +389,98 @@ export default function CampaignOperationsPage() {
                     ) : null}
 
                     {canClose ? (
-                      <button
-                        type="button"
-                        className="btn-secondary"
-                        disabled={busyId !== null}
-                        onClick={() => handleClose(campaign)}
-                      >
-                        Tutup & refund
-                      </button>
+                      <ConfirmDialog
+                        trigger={
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            disabled={busyId !== null}
+                          >
+                            Tutup & refund
+                          </button>
+                        }
+                        title="Tutup kampanye dan refund?"
+                        description={`Sisa dana kampanye "${campaign.title}" akan dikembalikan secara proporsional ke donatur. Tindakan ini tidak dapat dibatalkan.`}
+                        confirmLabel="Tutup & refund"
+                        onConfirm={() => handleClose(campaign)}
+                      />
                     ) : null}
                   </div>
 
-                  {reasonAction ? (
-                    <div className="mt-4 rounded-md border border-stone-200 bg-stone-50 p-4">
-                      <label htmlFor={`campaign-reason-${campaign.id}`} className="field-label">
-                        {reasonAction.action === "reject"
-                          ? "Alasan penolakan"
-                          : "Alasan pembekuan"}
-                      </label>
-                      <textarea
-                        id={`campaign-reason-${campaign.id}`}
-                        required
-                        maxLength={500}
-                        rows={3}
-                        className="input"
-                        value={reasonAction.reason}
-                        onChange={(event) =>
-                          setActionForm((current) =>
-                            current
-                              ? { ...current, reason: event.target.value }
-                              : current,
-                          )
-                        }
-                        placeholder="Tulis alasan yang dapat diaudit…"
-                      />
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          className="btn-primary"
-                          disabled={busyId !== null}
-                          onClick={() => handleReasonAction(campaign)}
-                        >
-                          {busyId === campaign.id ? "Memproses…" : "Konfirmasi"}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          disabled={busyId !== null}
-                          onClick={() => setActionForm(null)}
-                        >
-                          Batal
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
+
                 </article>
               );
             })}
           </div>
+
+          <FormOverlay
+            open={Boolean(actionForm && reasonCampaign)}
+            onOpenChange={(open) => {
+              if (!open) setActionForm(null);
+            }}
+            title={
+              actionForm?.action === "freeze"
+                ? "Bekukan kampanye"
+                : "Tolak kampanye"
+            }
+            description={
+              reasonCampaign
+                ? `Tindakan untuk "${reasonCampaign.title}" akan tercatat di audit log.`
+                : "Tindakan ini akan tercatat di audit log."
+            }
+            dirty={Boolean(actionForm?.reason.trim())}
+            onDiscard={() => setActionForm(null)}
+            closeLabel="Batal"
+            footer={
+              <>
+
+                <button
+                  type="submit"
+                  form="campaign-reason-form"
+                  className="btn-primary"
+                  disabled={busyId !== null}
+                  aria-busy={busyId !== null || undefined}
+                >
+                  {busyId !== null ? "Memproses..." : "Konfirmasi"}
+                </button>
+              </>
+            }
+          >
+            <form
+              id="campaign-reason-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (reasonCampaign) void handleReasonAction(reasonCampaign);
+              }}
+              className="grid gap-4"
+            >
+              <div>
+                <label htmlFor="campaign-reason" className="field-label">
+                  {actionForm?.action === "freeze"
+                    ? "Alasan pembekuan"
+                    : "Alasan penolakan"}
+                </label>
+                <textarea
+                  id="campaign-reason"
+                  required
+                  autoFocus
+                  maxLength={500}
+                  rows={4}
+                  className="input"
+                  value={actionForm?.reason ?? ""}
+                  onChange={(event) =>
+                    setActionForm((current) =>
+                      current
+                        ? { ...current, reason: event.target.value }
+                        : current,
+                    )
+                  }
+                  placeholder="Tulis alasan yang dapat diaudit..."
+                />
+              </div>
+              {error ? <Alert>{error}</Alert> : null}
+            </form>
+          </FormOverlay>
 
           {lastPage > 1 ? (
             <div className="flex items-center justify-center gap-3">
@@ -464,7 +495,7 @@ export default function CampaignOperationsPage() {
               >
                 Sebelumnya
               </button>
-              <span className="text-sm text-stone-500">
+              <span className="text-sm text-ink-muted">
                 Halaman {currentPage} dari {lastPage}
               </span>
               <button

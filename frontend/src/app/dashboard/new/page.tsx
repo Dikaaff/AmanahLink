@@ -97,18 +97,18 @@ export default function NewCampaignPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-      <Link href="/dashboard" className="text-sm font-medium text-stone-500 hover:text-stone-800">
+      <Link href="/dashboard" className="text-sm font-medium text-ink-muted hover:text-ink">
         ← Dasbor
       </Link>
 
       <header className="mt-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
           Kampanye baru
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-stone-900">
+        <h1 className="mt-2 text-3xl font-semibold text-ink">
           Jelaskan tujuan dana, lalu ajukan review.
         </h1>
-        <p className="mt-2 max-w-2xl text-sm text-stone-600">
+        <p className="mt-2 max-w-2xl text-sm text-ink-secondary">
           Draf dapat disunting sampai donasi pertama diterima. Setelah diajukan,
           verifikator akan meninjau batas kategori transaksi dan kejelasan tujuan.
         </p>
@@ -151,7 +151,7 @@ export default function NewCampaignPage() {
             value={form.description}
             onChange={(event) => update("description", event.target.value)}
           />
-          <p className="mt-1 text-xs text-stone-500">
+          <p className="mt-1 text-xs text-ink-muted">
             Minimal 50 karakter ({form.description.length}/5000).
           </p>
           {fields.description ? (
@@ -199,7 +199,7 @@ export default function NewCampaignPage() {
 
         <fieldset>
           <legend className="field-label">Kategori transaksi yang diizinkan</legend>
-          <p className="mb-3 text-xs text-stone-500">
+          <p className="mb-3 text-xs text-ink-muted">
             Pilih minimal satu. Pencairan hanya dapat dilakukan ke merchant
             terverifikasi dengan kategori ini.
           </p>
@@ -209,21 +209,21 @@ export default function NewCampaignPage() {
                 key={option.code}
                 className={`flex cursor-pointer items-start gap-3 rounded-md border px-4 py-3 text-sm transition ${
                   mcc.includes(option.code)
-                    ? "border-brand-500 bg-brand-50"
-                    : "border-stone-200 hover:border-stone-300"
+                    ? "border-ink bg-sunken"
+                    : "border-line hover:border-line-strong"
                 }`}
               >
                 <input
                   type="checkbox"
-                  className="mt-0.5 h-4 w-4 accent-brand-700"
+                  className="mt-0.5 h-4 w-4 accent-ink"
                   checked={mcc.includes(option.code)}
                   onChange={() => toggleMcc(option.code)}
                 />
                 <span>
-                  <span className="block font-medium text-stone-900">
+                  <span className="block font-medium text-ink">
                     {option.title}
                   </span>
-                  <span className="text-xs text-stone-500">
+                  <span className="text-xs text-ink-muted">
                     {option.category} · MCC {option.code}
                   </span>
                 </span>
@@ -237,7 +237,7 @@ export default function NewCampaignPage() {
           ) : null}
         </fieldset>
 
-        <div className="flex flex-wrap gap-3 border-t border-stone-100 pt-5">
+        <div className="flex flex-wrap gap-3 border-t border-line pt-5">
           <button
             type="submit"
             className="btn-primary"

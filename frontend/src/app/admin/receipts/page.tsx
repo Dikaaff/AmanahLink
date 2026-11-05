@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { Alert, EmptyState, ErrorState, Loading, StatusBadge } from "@/components/ui";
+import { FormOverlay } from "@/components/ui/form-overlay";
 import { api, errorMessage, type Paginated, type Receipt } from "@/lib/api";
 import { dateTime } from "@/lib/format";
 
@@ -26,6 +27,10 @@ export default function ReceiptReviewPage() {
   const [reviewingId, setReviewingId] = useState<number | null>(null);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const rejectingReceipt =
+    (rejectingId !== null &&
+      result?.data.find((receipt) => receipt.id === rejectingId)) ||
+    null;
 
   const isStaff = user?.role === "verifier" || user?.role === "admin";
 
@@ -141,13 +146,13 @@ export default function ReceiptReviewPage() {
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-10 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
             Verifikasi
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-stone-900">
+          <h1 className="mt-2 text-3xl font-semibold text-ink">
             Antrean nota
           </h1>
-          <p className="mt-1 max-w-2xl text-sm text-stone-500">
+          <p className="mt-1 max-w-2xl text-sm text-ink-muted">
             Cocokkan hasil OCR dengan transaksi sebelum dana dianggap
             terekonsiliasi. Nota dengan confidence rendah masuk ke review manual.
           </p>
@@ -217,33 +222,33 @@ export default function ReceiptReviewPage() {
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-stone-900">
+                        <span className="font-semibold text-ink">
                           Nota #{receipt.id}
                         </span>
                         <StatusBadge status={receipt.status} label={receipt.status_label} />
                       </div>
-                      <p className="mt-1 text-xs text-stone-500">
+                      <p className="mt-1 text-xs text-ink-muted">
                         Transaksi #{receipt.transaction_id} · {dateTime(receipt.created_at)}
                       </p>
                     </div>
                     <div className="text-right text-sm">
-                      <span className="block text-xs text-stone-500">Confidence OCR</span>
-                      <span className="font-semibold text-stone-900">{confidence}</span>
+                      <span className="block text-xs text-ink-muted">Confidence OCR</span>
+                      <span className="font-semibold text-ink">{confidence}</span>
                     </div>
                   </div>
 
-                  <dl className="mt-5 grid gap-3 rounded-md bg-stone-50 p-4 text-sm sm:grid-cols-3">
+                  <dl className="mt-5 grid gap-3 rounded-md bg-canvas p-4 text-sm sm:grid-cols-3">
                     <div>
-                      <dt className="text-xs text-stone-500">Merchant terdeteksi</dt>
-                      <dd className="mt-1 font-medium text-stone-800">{merchantName ?? "—"}</dd>
+                      <dt className="text-xs text-ink-muted">Merchant terdeteksi</dt>
+                      <dd className="mt-1 font-medium text-ink">{merchantName ?? "—"}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-stone-500">Nominal terdeteksi</dt>
-                      <dd className="mt-1 font-medium text-stone-800">{extractedAmount ?? "—"}</dd>
+                      <dt className="text-xs text-ink-muted">Nominal terdeteksi</dt>
+                      <dd className="mt-1 font-medium text-ink">{extractedAmount ?? "—"}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-stone-500">Tanggal terdeteksi</dt>
-                      <dd className="mt-1 font-medium text-stone-800">{extractedDate ?? "—"}</dd>
+                      <dt className="text-xs text-ink-muted">Tanggal terdeteksi</dt>
+                      <dd className="mt-1 font-medium text-ink">{extractedDate ?? "—"}</dd>
                     </div>
                   </dl>
 
@@ -252,76 +257,101 @@ export default function ReceiptReviewPage() {
                   ) : null}
 
                   {receipt.status === "needs_review" ? (
-                    <div className="mt-5 border-t border-stone-100 pt-4">
-                      {rejectingId === receipt.id ? (
-                        <div className="space-y-3">
-                          <div>
-                            <label htmlFor={`reason-${receipt.id}`} className="field-label">
-                              Alasan penolakan
-                            </label>
-                            <textarea
-                              id={`reason-${receipt.id}`}
-                              required
-                              maxLength={500}
-                              rows={3}
-                              className="input"
-                              value={rejectionReason}
-                              onChange={(event) => setRejectionReason(event.target.value)}
-                              placeholder="Jelaskan ketidaksesuaian nota…"
-                            />
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              className="btn-primary"
-                              disabled={reviewingId === receipt.id}
-                              onClick={() => handleReview(receipt, "reject")}
-                            >
-                              {reviewingId === receipt.id ? "Memproses…" : "Konfirmasi tolak"}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-secondary"
-                              disabled={reviewingId === receipt.id}
-                              onClick={() => {
-                                setRejectingId(null);
-                                setRejectionReason("");
-                              }}
-                            >
-                              Batal
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            disabled={reviewingId !== null}
-                            onClick={() => handleReview(receipt, "approve")}
-                          >
-                            {reviewingId === receipt.id ? "Memproses…" : "Setujui nota"}
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-secondary"
-                            disabled={reviewingId !== null}
-                            onClick={() => {
-                              setRejectingId(receipt.id);
-                              setRejectionReason("");
-                              setError(null);
-                            }}
-                          >
-                            Tolak
-                          </button>
-                        </div>
-                      )}
+                    <div className="mt-5 border-t border-line pt-4">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          disabled={reviewingId !== null}
+                          onClick={() => handleReview(receipt, "approve")}
+                        >
+                          {reviewingId === receipt.id ? "Memproses..." : "Setujui nota"}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          disabled={reviewingId !== null}
+                          onClick={() => {
+                            setRejectingId(receipt.id);
+                            setRejectionReason("");
+                            setError(null);
+                          }}
+                        >
+                          Tolak
+                        </button>
+                      </div>
                     </div>
                   ) : null}
                 </article>
               );
             })}
           </div>
+
+          <FormOverlay
+            open={Boolean(rejectingReceipt)}
+            onOpenChange={(open) => {
+              if (!open) {
+                setRejectingId(null);
+                setRejectionReason("");
+              }
+            }}
+            title="Tolak nota"
+            description={
+              rejectingReceipt
+                ? `Nota #${rejectingReceipt.id} akan ditandai ditolak dan alasannya terlihat oleh penggalang dana.`
+                : "Tindakan ini akan tercatat di audit log."
+            }
+            dirty={rejectionReason.trim() !== ""}
+            onDiscard={() => {
+              setRejectingId(null);
+              setRejectionReason("");
+              setError(null);
+            }}
+            closeLabel="Batal"
+            footer={
+              <>
+
+                <button
+                  type="submit"
+                  form="reject-receipt-form"
+                  className="btn-primary"
+                  disabled={reviewingId !== null}
+                  aria-busy={reviewingId !== null || undefined}
+                >
+                  {reviewingId !== null ? "Memproses..." : "Konfirmasi tolak"}
+                </button>
+              </>
+            }
+          >
+            <form
+              id="reject-receipt-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (rejectingReceipt) {
+                  void handleReview(rejectingReceipt, "reject");
+                }
+              }}
+              className="grid gap-4"
+            >
+              <div>
+                <label htmlFor="receipt-rejection-reason" className="field-label">
+                  Alasan penolakan
+                </label>
+                <textarea
+                  id="receipt-rejection-reason"
+                  required
+                  autoFocus
+                  maxLength={500}
+                  rows={4}
+                  className="input"
+                  value={rejectionReason}
+                  onChange={(event) => setRejectionReason(event.target.value)}
+                  placeholder="Jelaskan ketidaksesuaian nota..."
+                />
+              </div>
+              {error ? <Alert>{error}</Alert> : null}
+            </form>
+          </FormOverlay>
 
           {lastPage > 1 ? (
             <div className="flex items-center justify-center gap-3">
@@ -336,7 +366,7 @@ export default function ReceiptReviewPage() {
               >
                 Sebelumnya
               </button>
-              <span className="text-sm text-stone-500">
+              <span className="text-sm text-ink-muted">
                 Halaman {currentPage} dari {lastPage}
               </span>
               <button

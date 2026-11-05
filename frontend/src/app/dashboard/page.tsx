@@ -14,6 +14,7 @@ import {
   StatusBadge,
 } from "@/components/ui";
 import { DashboardSkeleton } from "@/components/loading-skeletons";
+import { FormOverlay } from "@/components/ui/form-overlay";
 import {
   api,
   errorMessage,
@@ -61,6 +62,7 @@ export default function DashboardPage() {
   const [savingLimit, setSavingLimit] = useState(false);
   const [limitError, setLimitError] = useState<string | null>(null);
   const [limitNotice, setLimitNotice] = useState<string | null>(null);
+  const [limitOpen, setLimitOpen] = useState(false);
 
   const isAdmin = user?.role === "admin";
   const [limitViewCampaignId, setLimitViewCampaignId] = useState("");
@@ -81,6 +83,7 @@ export default function DashboardPage() {
   const [disbursing, setDisbursing] = useState(false);
   const [disbursementError, setDisbursementError] = useState<string | null>(null);
   const [disbursementResult, setDisbursementResult] = useState<string | null>(null);
+  const [disburseOpen, setDisburseOpen] = useState(false);
   const [lastDisbursement, setLastDisbursement] = useState<Disbursement | null>(null);
   const [receipts, setReceipts] = useState<Paginated<Receipt> | null>(null);
   const [receiptPage, setReceiptPage] = useState(1);
@@ -91,6 +94,7 @@ export default function DashboardPage() {
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [receiptUploadError, setReceiptUploadError] = useState<string | null>(null);
   const [receiptUploadNotice, setReceiptUploadNotice] = useState<string | null>(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
 
   const isFundraiser = user?.role === "campaigner" || user?.role === "admin";
 
@@ -294,6 +298,7 @@ export default function DashboardPage() {
       setLimitNotice(
         `Limit tersimpan: ${rupiah(response.data.daily_limit)} per hari dan ${rupiah(response.data.monthly_limit)} per bulan hingga ${dateTime(response.data.expires_at)}.`,
       );
+      setLimitForm((current) => ({ ...current, campaignId: "" }));
     } catch (caught) {
       setLimitError(errorMessage(caught));
     } finally {
@@ -351,6 +356,8 @@ export default function DashboardPage() {
       setReceiptUploadNotice(
         `Nota berhasil diunggah dengan status ${response.data.status_label.toLowerCase()}. OCR akan diproses oleh antrean.`,
       );
+      setReceiptFile(null);
+      setReceiptOpen(false);
       await Promise.all([loadDisbursements(), loadReceipts()]);
     } catch (caught) {
       setReceiptUploadError(errorMessage(caught));
@@ -392,13 +399,13 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
             Dasbor
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-stone-900">
+          <h1 className="mt-2 text-3xl font-semibold text-ink">
             Halo, {user.name}
           </h1>
-          <p className="mt-1 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-ink-muted">
             {user.role_label} · {user.email}
           </p>
         </div>
@@ -448,7 +455,7 @@ export default function DashboardPage() {
 
           <section>
             <div className="flex items-end justify-between gap-3">
-              <h2 className="text-xl font-semibold text-stone-900">Kampanye saya</h2>
+              <h2 className="text-xl font-semibold text-ink">Kampanye saya</h2>
             </div>
 
             {campaigns.length === 0 ? (
@@ -476,13 +483,13 @@ export default function DashboardPage() {
                         <th className="px-4 py-3 text-right">Aksi</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-stone-100">
+                    <tbody className="divide-y divide-line">
                       {campaigns.map((campaign) => (
                         <tr key={campaign.id} className="align-middle">
                           <td className="px-4 py-3">
                         <Link
                           href={`/campaigns/${campaign.slug}`}
-                          className="break-words font-semibold text-stone-900 hover:underline"
+                          className="break-words font-semibold text-ink hover:underline"
                         >
                               {campaign.title}
                             </Link>
@@ -500,11 +507,11 @@ export default function DashboardPage() {
                             <span className="font-medium">
                               {rupiah(campaign.current_amount)}
                             </span>
-                            <span className="block text-xs text-stone-500">
+                            <span className="block text-xs text-ink-muted">
                               dari {rupiah(campaign.target_amount)}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-stone-600">
+                          <td className="px-4 py-3 text-ink-secondary">
                             {dateOnly(campaign.deadline_at)}
                           </td>
                           <td className="px-4 py-3 text-right">
@@ -595,10 +602,10 @@ export default function DashboardPage() {
           </section>
 
           <section className="card p-6">
-            <h2 className="text-xl font-semibold text-stone-900">
+            <h2 className="text-xl font-semibold text-ink">
               {isAdmin ? "Atur limit pencairan" : "Limit pencairan"}
             </h2>
-            <p className="mt-1 max-w-2xl text-sm text-stone-600">
+            <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
               Limit membatasi pencairan baru per kampanye. Saldo tetap diverifikasi
               dari ledger dan limit yang kedaluwarsa akan ditolak oleh backend.
               {isAdmin
@@ -611,102 +618,136 @@ export default function DashboardPage() {
                 <Alert tone="info">Belum ada kampanye aktif atau funded.</Alert>
               </div>
             ) : isAdmin ? (
-              <form onSubmit={handleLimitSubmit} className="mt-5 grid gap-4 md:grid-cols-4">
-                <div>
-                  <label htmlFor="limit-campaign" className="field-label">
-                    Kampanye
-                  </label>
-                  <select
-                    id="limit-campaign"
-                    required
-                    className="input"
-                    value={limitForm.campaignId}
-                    onChange={(event) =>
-                      setLimitForm((current) => ({
-                        ...current,
-                        campaignId: event.target.value,
-                      }))
-                    }
-                  >
-                    <option value="">Pilih kampanye</option>
-                    {disbursable.map((campaign) => (
-                      <option key={campaign.id} value={campaign.id}>
-                        {campaign.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <>
+                <button
+                  type="button"
+                  className="btn-primary mt-4"
+                  onClick={() => setLimitOpen(true)}
+                >
+                  Atur limit
+                </button>
+                <FormOverlay
+                  open={limitOpen}
+                  onOpenChange={setLimitOpen}
+                  title="Atur limit pencairan"
+                  description="Limit membatasi pencairan baru per kampanye. Saldo tetap diverifikasi dari ledger dan limit yang kedaluwarsa akan ditolak oleh backend."
+                  dirty={Boolean(limitForm.campaignId)}
+                  onDiscard={() => {
+                    setLimitForm({
+                      campaignId: "",
+                      dailyLimit: "100000",
+                      monthlyLimit: "1000000",
+                      expiresAt: defaultLimitExpiry(),
+                    });
+                    setLimitError(null);
+                    setLimitNotice(null);
+                  }}
+                  footer={
+                    <>
 
-                <div>
-                  <label htmlFor="daily-limit" className="field-label">
-                    Limit harian (Rp)
-                  </label>
-                  <input
-                    id="daily-limit"
-                    required
-                    inputMode="numeric"
-                    className="input"
-                    value={limitForm.dailyLimit}
-                    onChange={(event) =>
-                      setLimitForm((current) => ({
-                        ...current,
-                        dailyLimit: event.target.value.replace(/[^\d]/g, ""),
-                      }))
-                    }
-                  />
-                </div>
+                      <button
+                        type="submit"
+                        form="limit-form"
+                        className="btn-primary"
+                        disabled={savingLimit}
+                        aria-busy={savingLimit || undefined}
+                      >
+                        {savingLimit ? "Menyimpan..." : "Simpan limit"}
+                      </button>
+                    </>
+                  }
+                >
+                  <form id="limit-form" onSubmit={handleLimitSubmit} className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label htmlFor="limit-campaign" className="field-label">
+                        Kampanye
+                      </label>
+                      <select
+                        id="limit-campaign"
+                        required
+                        autoFocus
+                        className="input"
+                        value={limitForm.campaignId}
+                        onChange={(event) =>
+                          setLimitForm((current) => ({
+                            ...current,
+                            campaignId: event.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Pilih kampanye</option>
+                        {disbursable.map((campaign) => (
+                          <option key={campaign.id} value={campaign.id}>
+                            {campaign.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                <div>
-                  <label htmlFor="monthly-limit" className="field-label">
-                    Limit bulanan (Rp)
-                  </label>
-                  <input
-                    id="monthly-limit"
-                    required
-                    inputMode="numeric"
-                    className="input"
-                    value={limitForm.monthlyLimit}
-                    onChange={(event) =>
-                      setLimitForm((current) => ({
-                        ...current,
-                        monthlyLimit: event.target.value.replace(/[^\d]/g, ""),
-                      }))
-                    }
-                  />
-                </div>
+                    <div>
+                      <label htmlFor="limit-expiry" className="field-label">
+                        Berlaku sampai
+                      </label>
+                      <input
+                        id="limit-expiry"
+                        type="datetime-local"
+                        required
+                        className="input"
+                        value={limitForm.expiresAt}
+                        onChange={(event) =>
+                          setLimitForm((current) => ({
+                            ...current,
+                            expiresAt: event.target.value,
+                          }))
+                        }
+                      />
+                    </div>
 
-                <div>
-                  <label htmlFor="limit-expiry" className="field-label">
-                    Berlaku sampai
-                  </label>
-                  <input
-                    id="limit-expiry"
-                    type="datetime-local"
-                    required
-                    className="input"
-                    value={limitForm.expiresAt}
-                    onChange={(event) =>
-                      setLimitForm((current) => ({
-                        ...current,
-                        expiresAt: event.target.value,
-                      }))
-                    }
-                  />
-                </div>
+                    <div>
+                      <label htmlFor="daily-limit" className="field-label">
+                        Limit harian (Rp)
+                      </label>
+                      <input
+                        id="daily-limit"
+                        required
+                        inputMode="numeric"
+                        className="input"
+                        value={limitForm.dailyLimit}
+                        onChange={(event) =>
+                          setLimitForm((current) => ({
+                            ...current,
+                            dailyLimit: event.target.value.replace(/[^\d]/g, ""),
+                          }))
+                        }
+                      />
+                    </div>
 
-                <div className="md:col-span-4">
-                  {limitError ? <Alert>{limitError}</Alert> : null}
-                  {limitNotice ? <Alert tone="success">{limitNotice}</Alert> : null}
-                  <button
-                    type="submit"
-                    className="btn-primary mt-3"
-                    disabled={savingLimit}
-                    aria-busy={savingLimit || undefined}
-                  >
-                    {savingLimit ? "Menyimpan…" : "Simpan limit"}
-                  </button>
-                </div>
-              </form>
+                    <div>
+                      <label htmlFor="monthly-limit" className="field-label">
+                        Limit bulanan (Rp)
+                      </label>
+                      <input
+                        id="monthly-limit"
+                        required
+                        inputMode="numeric"
+                        className="input"
+                        value={limitForm.monthlyLimit}
+                        onChange={(event) =>
+                          setLimitForm((current) => ({
+                            ...current,
+                            monthlyLimit: event.target.value.replace(/[^\d]/g, ""),
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      {limitError ? <Alert>{limitError}</Alert> : null}
+                      {limitNotice ? <Alert tone="success">{limitNotice}</Alert> : null}
+                    </div>
+                  </form>
+                </FormOverlay>
+              </>
               ) : (
                 <div className="mt-5 space-y-4">
                   <div className="max-w-sm">
@@ -743,7 +784,7 @@ export default function DashboardPage() {
 
                   {limitInfoError ? <Alert>{limitInfoError}</Alert> : null}
                   {loadingLimitInfo ? (
-                    <p className="text-sm text-stone-500">Memuat limit…</p>
+                    <p className="text-sm text-ink-muted">Memuat limit…</p>
                   ) : null}
 
                   {!loadingLimitInfo &&
@@ -760,25 +801,25 @@ export default function DashboardPage() {
                     <dl className="grid gap-4 text-sm md:grid-cols-3">
                       <div>
                         <dt className="field-label">Limit harian</dt>
-                        <dd className="text-stone-900">
+                        <dd className="text-ink">
                           {rupiah(limitInfo.daily_limit)}
                         </dd>
-                        <dd className="text-xs text-stone-500">
+                        <dd className="text-xs text-ink-muted">
                           Terpakai hari ini: {rupiah(limitInfo.used_today)}
                         </dd>
                       </div>
                       <div>
                         <dt className="field-label">Limit bulanan</dt>
-                        <dd className="text-stone-900">
+                        <dd className="text-ink">
                           {rupiah(limitInfo.monthly_limit)}
                         </dd>
-                        <dd className="text-xs text-stone-500">
+                        <dd className="text-xs text-ink-muted">
                           Terpakai bulan ini: {rupiah(limitInfo.used_this_month)}
                         </dd>
                       </div>
                       <div>
                         <dt className="field-label">Berlaku sampai</dt>
-                        <dd className="text-stone-900">
+                        <dd className="text-ink">
                           {limitInfo.expires_at
                             ? dateTime(limitInfo.expires_at)
                             : "Tanpa batas waktu"}
@@ -792,14 +833,14 @@ export default function DashboardPage() {
 
           <section className="card p-6">
             <div className="flex flex-wrap items-end justify-between gap-3">
-              <h2 className="text-xl font-semibold text-stone-900">
+              <h2 className="text-xl font-semibold text-ink">
                 Cairkan dana ke merchant
               </h2>
               <Link href="/dashboard/simulasi" className="btn-secondary">
                 Simulasi pindai
               </Link>
             </div>
-            <p className="mt-1 max-w-2xl text-sm text-stone-600">
+            <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
               Pencairan hanya berhasil ke merchant terverifikasi dengan kategori
               transaksi yang diizinkan kampanye, selama limit harian/bulanan dan
               saldo ledger mencukupi.
@@ -813,134 +854,151 @@ export default function DashboardPage() {
                 </Alert>
               </div>
             ) : (
-              <form onSubmit={handleDisburse} className="mt-5 grid gap-4 md:grid-cols-3">
-                <div>
-                  <label htmlFor="campaign" className="field-label">
-                    Kampanye
-                  </label>
-                  <select
-                    id="campaign"
-                    required
-                    className="input"
-                    value={disbursement.campaignId}
-                    onChange={(event) =>
-                      setDisbursement((current) => ({
-                        ...current,
-                        campaignId: event.target.value,
-                        merchantId: "",
-                      }))
-                    }
-                  >
-                    <option value="">Pilih kampanye</option>
-                    {disbursable.map((campaign) => (
-                      <option key={campaign.id} value={campaign.id}>
-                        {campaign.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <>
+                <button
+                  type="button"
+                  className="btn-primary mt-4"
+                  onClick={() => setDisburseOpen(true)}
+                >
+                  Cairkan dana
+                </button>
+                <FormOverlay
+                  open={disburseOpen}
+                  onOpenChange={setDisburseOpen}
+                  title="Cairkan dana ke merchant"
+                  description="Pencairan hanya berhasil ke merchant terverifikasi dengan kategori transaksi yang diizinkan kampanye, selama limit dan saldo ledger mencukupi."
+                  dirty={Boolean(
+                    disbursement.campaignId ||
+                      disbursement.merchantId ||
+                      disbursement.amount,
+                  )}
+                  onDiscard={() => {
+                    setDisbursement({ campaignId: "", merchantId: "", amount: "" });
+                    setDisbursementError(null);
+                    setDisbursementResult(null);
+                  }}
+                  footer={
+                    <>
 
-                <div>
-                  <label htmlFor="merchant" className="field-label">
-                    Merchant terverifikasi
-                  </label>
-                  <select
-                    id="merchant"
-                    required
-                    className="input"
-                    value={disbursement.merchantId}
-                    onChange={(event) =>
-                      setDisbursement((current) => ({
-                        ...current,
-                        merchantId: event.target.value,
-                      }))
-                    }
-                  >
-                    <option value="">Pilih merchant</option>
-                    {merchantOptions.map((merchant) => (
-                      <option key={merchant.id} value={merchant.id}>
-                        {merchant.name} · {merchant.mcc_title ?? merchant.mcc}
-                        {merchant.city ? ` · ${merchant.city}` : ""}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedCampaign && merchantOptions.length === 0 ? (
-                    <p className="mt-2 text-xs text-stone-500">
-                      Belum ada merchant terverifikasi untuk kategori kampanye
-                      ini ({selectedCampaign.allowed_mcc.join(", ") || "tanpa MCC"}).
-                    </p>
-                  ) : null}
-                </div>
-
-                <div>
-                  <label htmlFor="disbursement-amount" className="field-label">
-                    Nominal (Rp)
-                  </label>
-                  <input
-                    id="disbursement-amount"
-                    required
-                    inputMode="numeric"
-                    className="input"
-                    placeholder="50000"
-                    value={disbursement.amount}
-                    onChange={(event) =>
-                      setDisbursement((current) => ({
-                        ...current,
-                        amount: event.target.value.replace(/[^\d]/g, ""),
-                      }))
-                    }
-                  />
-                </div>
-
-                {merchantsError ? (
-                  <div className="md:col-span-3">
-                    <Alert>
-                      Gagal memuat daftar merchant: {merchantsError}
-                    </Alert>
-                  </div>
-                ) : null}
-
-                <div className="md:col-span-3">
-                  {disbursementError ? (
-                    <div className="mb-3">
-                      <Alert>{disbursementError}</Alert>
+                      <button
+                        type="submit"
+                        form="disburse-form"
+                        className="btn-primary"
+                        disabled={disbursing}
+                        aria-busy={disbursing || undefined}
+                      >
+                        {disbursing ? "Memproses..." : "Cairkan dana"}
+                      </button>
+                    </>
+                  }
+                >
+                  <form id="disburse-form" onSubmit={handleDisburse} className="grid gap-4">
+                    <div>
+                      <label htmlFor="campaign" className="field-label">
+                        Kampanye
+                      </label>
+                      <select
+                        id="campaign"
+                        required
+                        autoFocus
+                        className="input"
+                        value={disbursement.campaignId}
+                        onChange={(event) =>
+                          setDisbursement((current) => ({
+                            ...current,
+                            campaignId: event.target.value,
+                            merchantId: "",
+                          }))
+                        }
+                      >
+                        <option value="">Pilih kampanye</option>
+                        {disbursable.map((campaign) => (
+                          <option key={campaign.id} value={campaign.id}>
+                            {campaign.title}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  ) : null}
-                  {disbursementResult ? (
-                    <div className="mb-3">
+
+                    <div>
+                      <label htmlFor="merchant" className="field-label">
+                        Merchant terverifikasi
+                      </label>
+                      <select
+                        id="merchant"
+                        required
+                        className="input"
+                        value={disbursement.merchantId}
+                        onChange={(event) =>
+                          setDisbursement((current) => ({
+                            ...current,
+                            merchantId: event.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Pilih merchant</option>
+                        {merchantOptions.map((merchant) => (
+                          <option key={merchant.id} value={merchant.id}>
+                            {merchant.name} - {merchant.mcc_title ?? merchant.mcc}
+                            {merchant.city ? ` - ${merchant.city}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedCampaign && merchantOptions.length === 0 ? (
+                        <p className="mt-2 text-xs text-ink-muted">
+                          Belum ada merchant terverifikasi untuk kategori kampanye
+                          ini ({selectedCampaign.allowed_mcc.join(", ") || "tanpa MCC"}).
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <div>
+                      <label htmlFor="disbursement-amount" className="field-label">
+                        Nominal (Rp)
+                      </label>
+                      <input
+                        id="disbursement-amount"
+                        required
+                        inputMode="numeric"
+                        className="input"
+                        placeholder="50000"
+                        value={disbursement.amount}
+                        onChange={(event) =>
+                          setDisbursement((current) => ({
+                            ...current,
+                            amount: event.target.value.replace(/[^\d]/g, ""),
+                          }))
+                        }
+                      />
+                    </div>
+
+                    {merchantsError ? (
+                      <Alert>
+                        Gagal memuat daftar merchant: {merchantsError}
+                      </Alert>
+                    ) : null}
+
+                    {disbursementError ? <Alert>{disbursementError}</Alert> : null}
+                    {disbursementResult ? (
                       <Alert tone="success">{disbursementResult}</Alert>
-                    </div>
-                  ) : null}
-
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                    disabled={disbursing}
-                    aria-busy={disbursing || undefined}
-                  >
-                    {disbursing ? "Memproses…" : "Cairkan dana"}
-                  </button>
-                </div>
-              </form>
+                    ) : null}
+                  </form>
+                </FormOverlay>
+              </>
             )}
           </section>
 
           {lastDisbursement ? (
             <section className="card p-6">
-              <h2 className="text-xl font-semibold text-stone-900">Upload nota</h2>
-              <p className="mt-1 max-w-2xl text-sm text-stone-600">
+              <h2 className="text-xl font-semibold text-ink">Upload nota</h2>
+              <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
                 Nota disimpan privat dan diproses OCR. Bila hasilnya tidak cukup
                 meyakinkan, verifikator akan meninjaunya secara manual.
               </p>
-              <p className="mt-3 text-xs text-stone-500">
+              <p className="mt-3 text-xs text-ink-muted">
                 Referensi transaksi: <span className="font-mono">{lastDisbursement.reference_id}</span>
               </p>
 
-              {receiptUploadError ? (
-                <div className="mt-4">
-                  <Alert>{receiptUploadError}</Alert>
-                </div>
-              ) : null}
               {receiptUploadNotice ? (
                 <div className="mt-4">
                   <Alert tone="success">{receiptUploadNotice}</Alert>
@@ -948,8 +1006,42 @@ export default function DashboardPage() {
               ) : null}
 
               {!receiptUploaded ? (
-                <form onSubmit={handleReceiptUpload} className="mt-4 flex flex-wrap items-end gap-3">
-                  <div className="min-w-[240px] flex-1">
+                <button
+                  type="button"
+                  className="btn-primary mt-4"
+                  onClick={() => setReceiptOpen(true)}
+                >
+                  Upload nota
+                </button>
+              ) : null}
+
+              <FormOverlay
+                open={receiptOpen}
+                onOpenChange={setReceiptOpen}
+                title="Upload nota transaksi"
+                description="Nota disimpan privat dan diproses OCR. Bila hasilnya tidak cukup meyakinkan, verifikator akan meninjaunya secara manual."
+                dirty={receiptFile !== null}
+                onDiscard={() => {
+                  setReceiptFile(null);
+                  setReceiptUploadError(null);
+                }}
+                footer={
+                  <>
+
+                    <button
+                      type="submit"
+                      form="receipt-form"
+                      className="btn-primary"
+                      disabled={uploadingReceipt}
+                      aria-busy={uploadingReceipt || undefined}
+                    >
+                      {uploadingReceipt ? "Mengunggah..." : "Upload nota"}
+                    </button>
+                  </>
+                }
+              >
+                <form id="receipt-form" onSubmit={handleReceiptUpload} className="grid gap-4">
+                  <div>
                     <label htmlFor="receipt-file" className="field-label">
                       Berkas nota
                     </label>
@@ -958,35 +1050,30 @@ export default function DashboardPage() {
                       type="file"
                       required
                       accept="image/jpeg,image/png"
-                      className="input file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700"
-                      onChange={(event) => setReceiptFile(event.target.files?.[0] ?? null)}
+                      className="input file:mr-3 file:rounded-lg file:border-0 file:bg-sunken file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink"
+                      onChange={(event) =>
+                        setReceiptFile(event.target.files?.[0] ?? null)
+                      }
                     />
-                    <p className="mt-1 text-xs text-stone-500">JPEG atau PNG.</p>
+                    <p className="mt-1 text-xs text-ink-muted">JPEG atau PNG.</p>
                   </div>
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                    disabled={uploadingReceipt}
-                    aria-busy={uploadingReceipt || undefined}
-                  >
-                    {uploadingReceipt ? "Mengunggah…" : "Upload nota"}
-                  </button>
+                  {receiptUploadError ? <Alert>{receiptUploadError}</Alert> : null}
                 </form>
-              ) : null}
+              </FormOverlay>
             </section>
           ) : null}
 
           <section className="card overflow-hidden">
-            <div className="border-b border-stone-100 px-6 py-5">
+            <div className="border-b border-line px-6 py-5">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink">
                     Rekonsiliasi nota
                   </p>
-                  <h2 className="mt-1 text-xl font-semibold text-stone-900">
+                  <h2 className="mt-1 text-xl font-semibold text-ink">
                     Status nota
                   </h2>
-                  <p className="mt-1 max-w-2xl text-sm text-stone-500">
+                  <p className="mt-1 max-w-2xl text-sm text-ink-muted">
                     Nota yang masih menunggu review atau ditolak akan tampil di sini
                     beserta alasannya, sehingga Anda tahu kapan harus mengunggah ulang.
                   </p>
@@ -1041,21 +1128,21 @@ export default function DashboardPage() {
                         <th className="px-6 py-3">Diunggah</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-stone-100">
+                    <tbody className="divide-y divide-line">
                       {receipts.data.map((receipt) => (
                         <tr key={receipt.id} className="align-top">
                           <td className="px-6 py-4">
-                            <span className="break-words font-semibold text-stone-900">
+                            <span className="break-words font-semibold text-ink">
                               {receipt.transaction?.campaign?.title ?? "—"}
                             </span>
-                            <span className="mt-1 block text-xs text-stone-500">
+                            <span className="mt-1 block text-xs text-ink-muted">
                               Transaksi #{receipt.transaction_id}
                               {receipt.transaction
                                 ? ` · ${receipt.transaction.status_label}`
                                 : ""}
                             </span>
                           </td>
-                          <td className="px-4 py-4 font-medium text-stone-900">
+                          <td className="px-4 py-4 font-medium text-ink">
                             {receipt.transaction
                               ? rupiah(receipt.transaction.amount)
                               : "—"}
@@ -1066,7 +1153,7 @@ export default function DashboardPage() {
                               label={receipt.status_label}
                             />
                           </td>
-                          <td className="px-4 py-4 text-stone-600">
+                          <td className="px-4 py-4 text-ink-secondary">
                             {receipt.confidence !== null
                               ? `${Math.round(Number(receipt.confidence) * 100)}%`
                               : "—"}
@@ -1077,10 +1164,10 @@ export default function DashboardPage() {
                                 {receipt.rejection_reason}
                               </span>
                             ) : (
-                              <span className="text-xs text-stone-500">—</span>
+                              <span className="text-xs text-ink-muted">—</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 text-xs text-stone-500">
+                          <td className="px-6 py-4 text-xs text-ink-muted">
                             {dateTime(receipt.created_at)}
                           </td>
                         </tr>
@@ -1114,7 +1201,7 @@ export default function DashboardPage() {
                 </div>
 
                 {(receipts.meta?.last_page ?? 1) > 1 ? (
-                  <div className="flex items-center justify-center gap-3 border-t border-stone-100 px-6 py-4">
+                  <div className="flex items-center justify-center gap-3 border-t border-line px-6 py-4">
                     <button
                       type="button"
                       className="btn-secondary"
@@ -1123,7 +1210,7 @@ export default function DashboardPage() {
                     >
                       Sebelumnya
                     </button>
-                    <span className="text-sm text-stone-500">
+                    <span className="text-sm text-ink-muted">
                       Halaman {receiptPage} dari {receipts.meta?.last_page ?? 1}
                     </span>
                     <button
@@ -1141,20 +1228,20 @@ export default function DashboardPage() {
           </section>
 
           <section className="card overflow-hidden">
-            <div className="border-b border-stone-100 px-6 py-5">
+            <div className="border-b border-line px-6 py-5">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink">
                     Jejak penggunaan dana
                   </p>
-                  <h2 className="mt-1 text-xl font-semibold text-stone-900">
+                  <h2 className="mt-1 text-xl font-semibold text-ink">
                     Riwayat pencairan
                   </h2>
-                  <p className="mt-1 text-sm text-stone-500">
+                  <p className="mt-1 text-sm text-ink-muted">
                     Pantau status transaksi dan proses nota tanpa kehilangan jejak audit.
                   </p>
                 </div>
-                <span className="rounded-full bg-sand-100 px-3 py-1.5 text-xs font-medium text-stone-600">
+                <span className="rounded-full bg-sunken px-3 py-1.5 text-xs font-medium text-ink-secondary">
                   {disbursements?.meta?.total ?? 0} transaksi
                 </span>
               </div>
@@ -1180,29 +1267,29 @@ export default function DashboardPage() {
                         <th className="px-6 py-3">Waktu</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-stone-100">
+                    <tbody className="divide-y divide-line">
                       {disbursements.data.map((item) => (
                         <tr key={item.id} className="align-top">
                           <td className="px-6 py-4">
                             {item.campaign ? (
                               <Link
                                 href={`/campaigns/${item.campaign.slug}`}
-                                className="font-semibold text-stone-900 hover:underline"
+                                className="font-semibold text-ink hover:underline"
                               >
                                 {item.campaign.title}
                               </Link>
                             ) : (
                               "—"
                             )}
-                            <span className="mt-1 block text-xs text-stone-500">
+                            <span className="mt-1 block text-xs text-ink-muted">
                               {item.merchant?.name ?? "Merchant tidak tersedia"}
                               {item.mcc_used ? ` · MCC ${item.mcc_used}` : ""}
                             </span>
-                            <span className="mt-1 block font-mono text-[11px] text-stone-400">
+                            <span className="mt-1 block font-mono text-[11px] text-ink-muted">
                               {item.reference_id}
                             </span>
                           </td>
-                          <td className="px-4 py-4 font-semibold text-stone-900">
+                          <td className="px-4 py-4 font-semibold text-ink">
                             {rupiah(item.amount)}
                           </td>
                           <td className="px-4 py-4">
@@ -1216,7 +1303,7 @@ export default function DashboardPage() {
                                   label={item.receipt.status_label}
                                 />
                                 {item.receipt.confidence !== null ? (
-                                  <span className="mt-1 block text-xs text-stone-500">
+                                  <span className="mt-1 block text-xs text-ink-muted">
                                     OCR {Math.round(Number(item.receipt.confidence) * 100)}%
                                   </span>
                                 ) : null}
@@ -1227,10 +1314,10 @@ export default function DashboardPage() {
                                 ) : null}
                               </div>
                             ) : (
-                              <span className="text-xs text-stone-500">Belum diunggah</span>
+                              <span className="text-xs text-ink-muted">Belum diunggah</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 text-xs text-stone-500">
+                          <td className="px-6 py-4 text-xs text-ink-muted">
                             {dateTime(item.created_at)}
                           </td>
                         </tr>
@@ -1273,7 +1360,7 @@ export default function DashboardPage() {
                 </div>
 
                 {lastDisbursementPage > 1 ? (
-                  <div className="flex items-center justify-center gap-3 border-t border-stone-100 px-6 py-4">
+                  <div className="flex items-center justify-center gap-3 border-t border-line px-6 py-4">
                     <button
                       type="button"
                       className="btn-secondary"
@@ -1282,7 +1369,7 @@ export default function DashboardPage() {
                     >
                       Sebelumnya
                     </button>
-                    <span className="text-sm text-stone-500">
+                    <span className="text-sm text-ink-muted">
                       Halaman {disbursementPage} dari {lastDisbursementPage}
                     </span>
                     <button
@@ -1307,7 +1394,7 @@ export default function DashboardPage() {
       )}
 
       <section>
-        <h2 className="text-xl font-semibold text-stone-900">Riwayat donasi</h2>
+        <h2 className="text-xl font-semibold text-ink">Riwayat donasi</h2>
 
         {!donations || donations.data.length === 0 ? (
           <div className="mt-4">
@@ -1334,14 +1421,14 @@ export default function DashboardPage() {
                       <th className="px-4 py-3">Dibuat</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-100">
+                  <tbody className="divide-y divide-line">
                     {donations.data.map((donation) => (
                       <tr key={donation.id}>
                         <td className="px-4 py-3">
                           {donation.campaign ? (
                             <Link
                               href={`/campaigns/${donation.campaign.slug}`}
-                              className="font-medium text-stone-900 hover:underline"
+                              className="font-medium text-ink hover:underline"
                             >
                               {donation.campaign.title}
                             </Link>
@@ -1349,7 +1436,7 @@ export default function DashboardPage() {
                             "—"
                           )}
                           {donation.payment_ref ? (
-                            <span className="block font-mono text-xs text-stone-500">
+                            <span className="block font-mono text-xs text-ink-muted">
                               {donation.payment_ref}
                             </span>
                           ) : null}
@@ -1363,7 +1450,7 @@ export default function DashboardPage() {
                             label={donation.status_label}
                           />
                         </td>
-                        <td className="px-4 py-3 text-stone-600">
+                        <td className="px-4 py-3 text-ink-secondary">
                           {dateTime(donation.created_at)}
                         </td>
                       </tr>
@@ -1403,7 +1490,7 @@ export default function DashboardPage() {
                 >
                   Sebelumnya
                 </button>
-                <span className="text-sm text-stone-500">
+                <span className="text-sm text-ink-muted">
                   Halaman {donationPage} dari {lastDonationPage}
                 </span>
                 <button

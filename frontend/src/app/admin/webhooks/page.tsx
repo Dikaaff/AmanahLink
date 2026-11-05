@@ -117,13 +117,13 @@ export default function WebhookEventsPage() {
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-10 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
             Reliabilitas
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-stone-900">
+          <h1 className="mt-2 text-3xl font-semibold text-ink">
             Webhook & dead-letter queue
           </h1>
-          <p className="mt-1 max-w-2xl text-sm text-stone-500">
+          <p className="mt-1 max-w-2xl text-sm text-ink-muted">
             Event gagal dicoba ulang otomatis dengan backoff 1m/5m/30m. Setelah
             itu event masuk DLQ dan hanya diproses ulang lewat replay admin.
           </p>
@@ -204,12 +204,12 @@ export default function WebhookEventsPage() {
                     <th className="px-4 py-3 text-right">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100">
+                <tbody className="divide-y divide-line">
                   {result.data.map((event) => (
                     <tr key={event.id}>
                       <td className="px-4 py-3">
                         <span className="font-mono text-xs">{event.external_id}</span>
-                        <span className="block text-xs text-stone-500">
+                        <span className="block text-xs text-ink-muted">
                           {event.provider} · {dateTime(event.created_at)}
                         </span>
                       </td>
@@ -217,14 +217,14 @@ export default function WebhookEventsPage() {
                         <StatusBadge status={event.status} />
                       </td>
                       <td className="px-4 py-3">{event.attempts}</td>
-                      <td className="max-w-[280px] px-4 py-3 text-xs text-stone-600">
+                      <td className="max-w-[280px] px-4 py-3 text-xs text-ink-secondary">
                         {event.last_error ? (
                           <span className="line-clamp-2">{event.last_error}</span>
                         ) : (
                           "—"
                         )}
                         {event.next_attempt_at ? (
-                          <span className="mt-1 block text-stone-500">
+                          <span className="mt-1 block text-ink-muted">
                             Berikutnya: {dateTime(event.next_attempt_at)}
                           </span>
                         ) : null}
@@ -241,7 +241,7 @@ export default function WebhookEventsPage() {
                             {replaying === event.id ? "Memproses…" : "Replay"}
                           </button>
                         ) : (
-                          <span className="text-xs text-stone-400">—</span>
+                          <span className="text-xs text-ink-muted">—</span>
                         )}
                       </td>
                     </tr>

@@ -130,13 +130,13 @@ export default function NotificationsPage() {
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-10 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
             Inbox
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-stone-900">
+          <h1 className="mt-2 text-3xl font-semibold text-ink">
             Notifikasi Anda
           </h1>
-          <p className="mt-1 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-ink-muted">
             {unreadNotifications > 0
               ? `${unreadNotifications} notifikasi belum dibaca.`
               : "Semua notifikasi sudah dibaca."}
@@ -153,10 +153,10 @@ export default function NotificationsPage() {
         </button>
       </header>
 
-      <label className="card flex cursor-pointer items-center gap-3 px-5 py-4 text-sm text-stone-700">
+      <label className="card flex cursor-pointer items-center gap-3 px-5 py-4 text-sm text-ink-secondary">
         <input
           type="checkbox"
-          className="h-4 w-4 accent-brand-700"
+          className="h-4 w-4 accent-ink"
           checked={unreadOnly}
           onChange={(event) => {
             setLoading(true);
@@ -200,37 +200,37 @@ export default function NotificationsPage() {
                 <article
                   key={notification.id}
                   className={`card flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between ${
-                    notification.read_at ? "opacity-75" : "ring-2 ring-brand-100"
+                    notification.read_at ? "opacity-75" : "ring-2 ring-line"
                   }`}
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-brand-700">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-ink">
                         {textValue(notification.data.type) === "donation_settled"
                           ? "Donasi"
                           : "Perubahan kampanye"}
                       </span>
                       {!notification.read_at ? (
-                        <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                        <span className="rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold text-white">
                           Baru
                         </span>
                       ) : null}
                       {status ? <StatusBadge status={status} /> : null}
                     </div>
-                    <p className="mt-2 font-semibold text-stone-900">
+                    <p className="mt-2 font-semibold text-ink">
                       {notificationMessage(notification)}
                     </p>
                     {campaignSlug ? (
                       <Link
                         href={`/campaigns/${campaignSlug}`}
-                        className="mt-1 inline-block text-sm text-brand-700 hover:underline"
+                        className="mt-1 inline-block text-sm text-ink hover:underline"
                       >
                         {campaignTitle} →
                       </Link>
                     ) : null}
                     <time
                       dateTime={notification.created_at ?? undefined}
-                      className="mt-2 block text-xs text-stone-500"
+                      className="mt-2 block text-xs text-ink-muted"
                     >
                       {dateTime(notification.created_at)}
                     </time>

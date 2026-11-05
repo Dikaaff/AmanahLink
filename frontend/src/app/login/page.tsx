@@ -36,19 +36,19 @@ export default function LoginPage() {
   return (
     <div className="mx-auto grid max-w-5xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
           Masuk
         </p>
-        <h1 className="mt-3 text-3xl font-semibold text-stone-900 sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-semibold text-ink sm:text-4xl">
           Lanjutkan memantau dana yang Anda percayakan.
         </h1>
-        <p className="mt-4 max-w-md text-sm leading-relaxed text-stone-600">
+        <p className="mt-4 max-w-md text-sm leading-relaxed text-ink-secondary">
           Donatur dapat melihat riwayat donasi. Penggalang dana dapat mengajukan
           kampanye dan mencairkan dana ke merchant terverifikasi. Verifikator dan
           admin memakai akun yang disediakan pengelola.
         </p>
-        <div className="mt-6 rounded-md border border-stone-200 bg-white/70 p-4 text-sm text-stone-600">
-          <p className="font-semibold text-stone-800">Akun demo seeder</p>
+        <div className="mt-6 rounded-md border border-line bg-white/70 p-4 text-sm text-ink-secondary">
+          <p className="font-semibold text-ink">Akun demo seeder</p>
           <p className="mt-1 font-mono text-xs">
             Donatur &middot; siti@amanahlink.test / password
           </p>
@@ -63,10 +63,10 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="card space-y-4 p-6 sm:p-8">
         <div>
-          <h2 className="text-xl font-semibold text-stone-900">Masuk ke akun</h2>
-          <p className="mt-1 text-sm text-stone-500">
+          <h2 className="text-xl font-semibold text-ink">Masuk ke akun</h2>
+          <p className="mt-1 text-sm text-ink-muted">
             Belum punya akun?{" "}
-            <Link href="/register" className="font-semibold text-brand-700">
+            <Link href="/register" className="font-semibold text-ink">
               Daftar sebagai donatur
             </Link>
           </p>

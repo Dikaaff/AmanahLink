@@ -188,6 +188,7 @@
 | 2026-11-02 | `vendor/bin/pint --format agent <file yang diubah>` | bersih |
 | 2026-11-05 | verifikasi batch UX ketahanan (error boundary, `/offline`+`/maintenance`, komponen bersama) | `php artisan test --compact` **206 passed, 846 assertions**; `ledger:verify` (MySQL `amanahlink`) exit 0 — 62 transaksi, 4 saldo kampanye; frontend lint/tsc/build bersih (19 route termasuk `/offline` & `/maintenance`); pytest OCR **8 passed**; satu type error `ordered-table.tsx` (prop `align` dikirim ke `TdNumeric` yang bertipe `HTMLAttributes`) diperbaiki dengan `className` |
 | 2026-11-05 | pembersihan artefak backend | 4 migration stub kosong `2026_11_04_*` (duplikat migration `0001_01_01_*` / `2026_11_01_*` yang sudah ada) serta `create_databases.php` + `test_db.php` (syntax rusak `\$pdo`, kredensial hardcoded) dihapus; `start_backend.bat` dipertahankan sebagai helper dev |
+| 2026-11-05 | P3 form/overlay v5.0 | `npx playwright test tests/e2e/forms-p3.spec.ts tests/e2e/donation-demo.spec.ts tests/e2e/p6-secondary.spec.ts tests/e2e/p7-admin.spec.ts` -> **17 passed**; `DonationSheet` terpasang di detail kampanye, form limit/pencairan/upload nota dan aksi alasan admin memakai `FormOverlay`; `FormOverlay` memiliki tombol tutup sendiri agar dirty guard tidak terlewati; `window.confirm` di admin diganti `ConfirmDialog`; `npm run lint` + `npx tsc --noEmit` + `npm run build` bersih; UX-11 dicatat |
 
 ## Kesiapan dokumen (PRD, backlog, kontrak API) — audit 2026-11-03
 

@@ -359,10 +359,11 @@ test.describe("P6 mobile secondary @390", () => {
     await mockApi(page);
     await login(page);
 
+    await page.getByRole("button", { name: "Cairkan dana", exact: true }).click();
     await page.locator("#campaign").selectOption("1");
     await page.locator("#merchant").selectOption("1");
     await page.locator("#disbursement-amount").fill("50000");
-    await page.getByRole("button", { name: "Cairkan dana" }).click();
+    await page.getByRole("button", { name: "Cairkan dana", exact: true }).click();
 
     await expect(
       page.getByText(/Pencairan Rp\s?50\.000.*tercatat sebagai captured/),
@@ -387,10 +388,11 @@ test.describe("P6 mobile secondary @390", () => {
     });
     await login(page);
 
+    await page.getByRole("button", { name: "Cairkan dana", exact: true }).click();
     await page.locator("#campaign").selectOption("1");
     await page.locator("#merchant").selectOption("1");
     await page.locator("#disbursement-amount").fill("50000");
-    await page.getByRole("button", { name: "Cairkan dana" }).click();
+    await page.getByRole("button", { name: "Cairkan dana", exact: true }).click();
 
     await expect(page.getByText(/tidak bisa diproses di toko elektronik/)).toBeVisible();
     await expect(page.locator("#disbursement-amount")).toBeVisible();

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Badge, badgeToneForStatus } from "@/components/ui/badge";
 
 export function Stat({
   label,
@@ -20,33 +21,19 @@ export function Stat({
   );
 }
 
-type BadgeTone = "pending_review" | "needs_review" | "approved" | "rejected" | "canceled" | "closed";
-
-const badgeSurfaceByTone: Record<BadgeTone, string> = {
-  pending_review: "bg-sunken border-line",
-  needs_review: "bg-amber-50 border-amber-200",
-  approved: "bg-emerald-50 border-emerald-200",
-  rejected: "bg-rose-50 border-rose-200",
-  canceled: "bg-sunken border-line",
-  closed: "bg-sunken border-line",
-};
-
+/**
+ * Status rendering is delegated to the six-tone system (DD-07/DD-17): the
+ * backend status maps to one semantic tone with its own word, and the API
+ * `status_label` is intentionally not rendered in the badge.
+ */
 export function StatusBadge({
   status,
   label,
 }: {
   status: string;
+  /** One-word override; multi-word backend labels are ignored (DD-17). */
   label?: string;
 }) {
-  const tone = status as BadgeTone;
-  const surface =
-    tone in badgeSurfaceByTone
-      ? badgeSurfaceByTone[tone]
-      : "bg-sunken border-line";
-
-  return (
-    <span className={`rounded-sm border px-2.5 py-0.5 text-label text-ink ${surface}`}>
-      {label ?? status}
-    </span>
-  );
+  const tone = badgeToneForStatus(status);
+  return <Badge tone={tone} label={label && !label.includes(" ") ? label : undefined} />;
 }

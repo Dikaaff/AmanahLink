@@ -206,3 +206,40 @@ for (const width of [768, 1440]) {
     await expectNoOverflow(page, `P7 webhooks @${width}`);
   });
 }
+
+test("P3 admin reason forms open as guarded overlays", async ({ page }) => {
+  await mockAdminApi(page);
+  await login(page);
+
+  await page.locator('nav a[href="/admin/campaigns"]').click();
+  await expect(page).toHaveURL(/\/admin\/campaigns$/);
+  await expect(
+    page.getByRole("heading", { name: "Operasi kampanye" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Tolak", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Tolak kampanye" }),
+  ).toBeVisible();
+  await page.locator("#campaign-reason").fill("Dokumen kampanye tidak lengkap.");
+  await page.getByLabel("Tutup").click();
+  await expect(
+    page.getByRole("alertdialog", { name: "Buang perubahan?" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Buang perubahan" }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Tolak kampanye" }),
+  ).not.toBeVisible();
+
+  await page.locator('nav a[href="/admin/receipts"]').click();
+  await expect(page).toHaveURL(/\/admin\/receipts$/);
+  await expect(page.getByRole("heading", { name: "Antrean nota" })).toBeVisible();
+  await page.getByRole("button", { name: "Tolak", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Tolak nota" })).toBeVisible();
+  await page.locator("#receipt-rejection-reason").fill("Nominal tidak cocok.");
+  await page.getByRole("button", { name: "Tutup", exact: true }).first().click();
+  await expect(
+    page.getByRole("alertdialog", { name: "Buang perubahan?" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Buang perubahan" }).click();
+  await expect(page.getByRole("dialog", { name: "Tolak nota" })).not.toBeVisible();
+});

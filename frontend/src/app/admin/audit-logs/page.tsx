@@ -118,13 +118,13 @@ export default function AuditLogsPage() {
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-10 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
             Audit
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-stone-900">
+          <h1 className="mt-2 text-3xl font-semibold text-ink">
             Jejak perubahan
           </h1>
-          <p className="mt-1 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-ink-muted">
             Append-only. Setiap mutasi state menulis satu baris; baris tidak dapat
             diubah atau dihapus.
           </p>
@@ -225,24 +225,24 @@ export default function AuditLogsPage() {
                     <th className="px-4 py-3">IP</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100">
+                <tbody className="divide-y divide-line">
                   {result.data.map((log) => (
                     <tr key={log.id}>
-                      <td className="whitespace-nowrap px-4 py-3 text-stone-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-ink-secondary">
                         {dateTime(log.created_at)}
                       </td>
                       <td className="px-4 py-3">{log.actor_id ?? "sistem"}</td>
                       <td className="px-4 py-3">
-                        <span className="rounded bg-stone-100 px-2 py-1 font-mono text-xs">
+                        <span className="rounded bg-sunken px-2 py-1 font-mono text-xs">
                           {log.action}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-stone-600">
+                      <td className="px-4 py-3 text-ink-secondary">
                         {log.subject_type
                           ? `${log.subject_type.split("\\").pop()} #${log.subject_id}`
                           : "—"}
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-stone-500">
+                      <td className="px-4 py-3 font-mono text-xs text-ink-muted">
                         {log.ip_address ?? "—"}
                       </td>
                     </tr>
