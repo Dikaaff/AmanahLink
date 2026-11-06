@@ -157,6 +157,12 @@ jobs:
         working-directory: backend
         run: |
           cp .env.example .env
+          sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env
+          sed -i 's/^# DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+          sed -i 's/^# DB_PORT=.*/DB_PORT=3306/' .env
+          sed -i 's/^# DB_DATABASE=.*/DB_DATABASE=amanahlink_test/' .env
+          sed -i 's/^# DB_USERNAME=.*/DB_USERNAME=root/' .env
+          sed -i 's/^# DB_PASSWORD=.*/DB_PASSWORD=root/' .env
           php artisan key:generate --no-interaction
           php artisan migrate:fresh --force
 
