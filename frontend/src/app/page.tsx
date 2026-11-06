@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api, errorMessage, type Campaign, type Paginated } from "@/lib/api";
 import { CampaignCard } from "@/components/campaign-card";
 import { CampaignGridSkeleton } from "@/components/loading-skeletons";
-import { EmptyState, ErrorState } from "@/components/ui";
+import { ClearFilterAction, EmptyState, ErrorState } from "@/components/ui";
 
 export default function HomePage() {
   const [draftQuery, setDraftQuery] = useState("");
@@ -143,11 +143,23 @@ export default function HomePage() {
             </div>
           ) : (
             <EmptyState
+              variant={query ? "search" : "default"}
               title="Belum ada kampanye"
               description={
                 query
                   ? "Tidak ada kampanye yang cocok dengan pencarian Anda. Coba kata kunci lain."
                   : "Kampanye yang sudah disetujui akan tampil di sini."
+              }
+              action={
+                query ? (
+                  <ClearFilterAction
+                    onClear={() => {
+                      setDraftQuery("");
+                      setQuery("");
+                      setPage(1);
+                    }}
+                  />
+                ) : undefined
               }
             />
           )}

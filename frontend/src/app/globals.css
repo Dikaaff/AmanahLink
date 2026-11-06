@@ -278,3 +278,33 @@
     animation: none;
   }
 }
+
+/* P4 feedback: highlight baris/kartu yang baru berubah (update di tempat).
+   Latar sunken + garis kiri ink, memudar dalam <=2s (FEEDBACK_FLASH_MS).
+   Reduced motion: tidak ada animasi, highlight hilang begitu class dilepas. */
+.feedback-flash {
+  animation: amanah-flash 2s ease-out forwards;
+}
+
+@keyframes amanah-flash {
+  0% {
+    background-color: var(--sunken);
+    box-shadow: inset 2px 0 0 var(--ink);
+  }
+  60% {
+    background-color: var(--sunken);
+    box-shadow: inset 2px 0 0 var(--ink);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedback-flash {
+    animation: none;
+    background-color: var(--sunken);
+    box-shadow: inset 2px 0 0 var(--ink);
+  }
+}

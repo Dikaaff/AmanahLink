@@ -4,7 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { Alert, EmptyState, ErrorState, Loading, StatusBadge } from "@/components/ui";
+import {
+  Alert,
+  ClearFilterAction,
+  EmptyState,
+  ErrorState,
+  Loading,
+  StatusBadge,
+} from "@/components/ui";
 import {
   api,
   errorMessage,
@@ -12,6 +19,7 @@ import {
   type WebhookEvent,
 } from "@/lib/api";
 import { dateTime } from "@/lib/format";
+import { notifyFailure, notifySuccess, useFlash } from "@/lib/feedback";
 
 export default function WebhookEventsPage() {
   const { user, ready } = useAuth();
@@ -23,8 +31,8 @@ export default function WebhookEventsPage() {
   const [result, setResult] = useState<Paginated<WebhookEvent> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [replaying, setReplaying] = useState<number | null>(null);
+  const [flashKey, flash] = useFlash();
 
   const load = useCallback(async (cursor?: string) => {
     const response = await api.webhookEvents({
@@ -77,16 +85,38 @@ export default function WebhookEventsPage() {
   async function handleReplay(event: WebhookEvent) {
     setReplaying(event.id);
     setError(null);
-    setNotice(null);
 
     try {
       const response = await api.replayWebhook(event.id);
-      setNotice(
+      setResult((current) =>
+        current
+          ? {
+              ...current,
+              data: current.data
+                .map((item) =>
+                  item.id === response.data.id ? response.data : item,
+                )
+                .filter(
+                  (item) =>
+                    !applied.status || item.status === applied.status,
+                ),
+              meta: {
+                ...current.meta,
+                total:
+                  current.meta?.total !== undefined &&
+                  response.data.status !== applied.status
+                    ? Math.max(0, current.meta.total - 1)
+                    : current.meta?.total,
+              },
+            }
+          : current,
+      );
+      flash(`webhook-${response.data.id}`);
+      notifySuccess(
         `Event ${event.external_id} di-replay dengan status ${response.data.status}. Settlement idempoten: ledger tidak digandakan.`,
       );
-      setResult(await load());
     } catch (caught) {
-      setError(errorMessage(caught));
+      notifyFailure(errorMessage(caught));
     } finally {
       setReplaying(null);
     }
@@ -181,13 +211,24 @@ export default function WebhookEventsPage() {
       {error ? (
         <ErrorState message={error} onRetry={handleReload} />
       ) : null}
-      {notice ? <Alert tone="success">{notice}</Alert> : null}
 
       {!result || result.data.length === 0 ? (
         error ? null : (
           <EmptyState
+            variant={applied.status || applied.provider ? "search" : "default"}
             title="Tidak ada event"
             description="Tidak ada webhook yang cocok dengan filter saat ini."
+            action={
+              applied.status || applied.provider ? (
+                <ClearFilterAction
+                  onClear={() => {
+                    setStatus("");
+                    setProvider("");
+                    setApplied({ status: "", provider: "" });
+                  }}
+                />
+              ) : undefined
+            }
           />
         )
       ) : (
@@ -206,7 +247,10 @@ export default function WebhookEventsPage() {
                 </thead>
                 <tbody className="divide-y divide-line">
                   {result.data.map((event) => (
-                    <tr key={event.id}>
+                    <tr
+                        key={event.id}
+                        className={flashKey === `webhook-${event.id}` ? "feedback-flash" : undefined}
+                      >
                       <td className="px-4 py-3">
                         <span className="font-mono text-xs">{event.external_id}</span>
                         <span className="block text-xs text-ink-muted">

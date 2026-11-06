@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { Alert, EmptyState, ErrorState, Loading, StatusBadge } from "@/components/ui";
+import { ClearFilterAction, EmptyState, ErrorState, Loading, StatusBadge } from "@/components/ui";
 import {
   api,
   errorMessage,
@@ -12,6 +12,14 @@ import {
   type Paginated,
 } from "@/lib/api";
 import { dateTime } from "@/lib/format";
+import { notifyFailure, notifySuccess, useFlash } from "@/lib/feedback";
+
+function withReadAt(
+  notification: AppNotification,
+  readAt: string,
+): AppNotification {
+  return { ...notification, read_at: readAt };
+}
 
 function textValue(value: unknown): string | null {
   return typeof value === "string" ? value : null;
@@ -25,7 +33,8 @@ function notificationMessage(notification: AppNotification): string {
 }
 
 export default function NotificationsPage() {
-  const { user, ready, unreadNotifications, refreshUnreadNotifications } = useAuth();
+  const { user, ready, refreshUnreadNotifications } = useAuth();
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const router = useRouter();
 
   const [unreadOnly, setUnreadOnly] = useState(false);
@@ -33,7 +42,7 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [workingId, setWorkingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [flashKey, flash] = useFlash();
 
   const load = useCallback(
     async (cursor?: string) => {
@@ -58,7 +67,10 @@ export default function NotificationsPage() {
 
     load()
       .then((response) => {
-        if (!cancelled) setResult(response);
+        if (!cancelled) {
+          setResult(response);
+          setUnreadNotifications(response.meta?.unread_count ?? 0);
+        }
       })
       .catch((caught) => {
         if (!cancelled) setError(errorMessage(caught));
@@ -86,14 +98,34 @@ export default function NotificationsPage() {
 
     setWorkingId(notification.id);
     setError(null);
-    setNotice(null);
+
+    // Satu-satunya mutasi optimistis di aplikasi: tandai dibaca tidak
+    // memindahkan uang dan mudah di-rollback bila server menolak.
+    const previous = result;
+    const previousUnreadCount = unreadNotifications;
+    const rollback = () => {
+      setResult(previous);
+      setUnreadNotifications(previousUnreadCount);
+    };
+    const readAt = new Date().toISOString();
+    setResult((current) => {
+      if (!current) return current;
+      const nextData = current.data
+        .map((item) =>
+          item.id === notification.id ? withReadAt(item, readAt) : item,
+        )
+        .filter((item) => !unreadOnly || !item.read_at);
+      return { ...current, data: nextData };
+    });
+    setUnreadNotifications((current) => Math.max(0, current - 1));
+    flash(`notification-${notification.id}`);
 
     try {
       await api.markNotificationRead(notification.id);
-      setResult(await load());
       await refreshUnreadNotifications();
     } catch (caught) {
-      setError(errorMessage(caught));
+      rollback();
+      notifyFailure(errorMessage(caught), () => void handleRead(notification));
     } finally {
       setWorkingId(null);
     }
@@ -102,15 +134,29 @@ export default function NotificationsPage() {
   async function handleMarkAllRead() {
     setWorkingId("all");
     setError(null);
-    setNotice(null);
+
+    const previous = result;
+    const previousUnreadCount = unreadNotifications;
+    setResult((current) =>
+      current
+        ? {
+            ...current,
+            data: current.data.map((item) =>
+              item.read_at ? item : withReadAt(item, new Date().toISOString()),
+            ),
+          }
+        : current,
+    );
+    setUnreadNotifications(0);
 
     try {
       const response = await api.markAllNotificationsRead();
-      setNotice(`${response.data.marked} notifikasi ditandai sudah dibaca.`);
-      setResult(await load());
-      await refreshUnreadNotifications();
+      setUnreadNotifications(response.data.unread_count);
+      notifySuccess(`${response.data.marked} notifikasi ditandai sudah dibaca.`);
     } catch (caught) {
-      setError(errorMessage(caught));
+      setResult(previous);
+      setUnreadNotifications(previousUnreadCount);
+      notifyFailure(errorMessage(caught), handleMarkAllRead);
     } finally {
       setWorkingId(null);
     }
@@ -169,7 +215,6 @@ export default function NotificationsPage() {
       {error ? (
         <ErrorState message={error} onRetry={handleReload} />
       ) : null}
-      {notice ? <Alert tone="success">{notice}</Alert> : null}
 
       {!result || result.data.length === 0 ? (
         error ? null : (
@@ -181,9 +226,18 @@ export default function NotificationsPage() {
                 : "Perubahan status kampanye akan muncul di inbox ini."
             }
             action={
-              <Link href="/dashboard" className="btn-secondary">
-                Kembali ke dasbor
-              </Link>
+              unreadOnly ? (
+                <ClearFilterAction
+                  onClear={() => {
+                    setLoading(true);
+                    setUnreadOnly(false);
+                  }}
+                />
+              ) : (
+                <Link href="/dashboard" className="btn-secondary">
+                  Kembali ke dasbor
+                </Link>
+              )
             }
           />
         )
@@ -200,6 +254,8 @@ export default function NotificationsPage() {
                 <article
                   key={notification.id}
                   className={`card flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between ${
+                    flashKey === `notification-${notification.id}` ? "feedback-flash" : ""
+                  } ${
                     notification.read_at ? "opacity-75" : "ring-2 ring-line"
                   }`}
                 >

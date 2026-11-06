@@ -4,10 +4,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { Alert, EmptyState, ErrorState, Loading, StatusBadge } from "@/components/ui";
+import {
+  Alert,
+  ClearFilterAction,
+  EmptyState,
+  ErrorState,
+  Loading,
+  StatusBadge,
+} from "@/components/ui";
 import { FormOverlay } from "@/components/ui/form-overlay";
 import { api, errorMessage, type Paginated, type Receipt } from "@/lib/api";
 import { dateTime } from "@/lib/format";
+import { notifySuccess, useFlash } from "@/lib/feedback";
+
+function replaceReceipt(items: Receipt[], next: Receipt): Receipt[] {
+  return items.map((receipt) => (receipt.id === next.id ? next : receipt));
+}
 
 function textValue(value: unknown): string | null {
   return typeof value === "string" ? value : null;
@@ -23,10 +35,10 @@ export default function ReceiptReviewPage() {
   const [result, setResult] = useState<Paginated<Receipt> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [reviewingId, setReviewingId] = useState<number | null>(null);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [flashKey, flash] = useFlash();
   const rejectingReceipt =
     (rejectingId !== null &&
       result?.data.find((receipt) => receipt.id === rejectingId)) ||
@@ -71,7 +83,6 @@ export default function ReceiptReviewPage() {
     event.preventDefault();
     setLoading(true);
     setError(null);
-    setNotice(null);
     setPage(1);
     setApplied({ status });
   }
@@ -97,7 +108,6 @@ export default function ReceiptReviewPage() {
 
     setReviewingId(receipt.id);
     setError(null);
-    setNotice(null);
 
     try {
       const response = await api.reviewReceipt(
@@ -105,13 +115,30 @@ export default function ReceiptReviewPage() {
         decision,
         decision === "reject" ? rejectionReason.trim() : undefined,
       );
-      setNotice(
-        `Nota #${receipt.id} ditandai sebagai ${response.data.status_label.toLowerCase()}.`,
-      );
       setRejectingId(null);
       setRejectionReason("");
-      setResult(await load(page));
+      // Update di tempat; keluarkan dari antrean bila statusnya keluar filter.
+      const next = response.data;
+      const matchesFilter = applied.status === "" || applied.status === next.status;
+      setResult((current) => {
+        if (!current) return current;
+        if (!matchesFilter) {
+          return {
+            ...current,
+            data: current.data.filter((item) => item.id !== next.id),
+            meta: current.meta
+              ? { ...current.meta, total: Math.max(0, (current.meta.total ?? 1) - 1) }
+              : undefined,
+          };
+        }
+        return { ...current, data: replaceReceipt(current.data, next) };
+      });
+      if (matchesFilter) flash(`receipt-${next.id}`);
+      notifySuccess(
+        `Nota #${receipt.id} ditandai sebagai ${next.status_label.toLowerCase()}.`,
+      );
     } catch (caught) {
+      // Kegagalan validasi alasan tetap di dalam overlay, bukan toast.
       setError(errorMessage(caught));
     } finally {
       setReviewingId(null);
@@ -196,13 +223,24 @@ export default function ReceiptReviewPage() {
       {error ? (
         <ErrorState message={error} onRetry={handleReload} />
       ) : null}
-      {notice ? <Alert tone="success">{notice}</Alert> : null}
 
       {!result || result.data.length === 0 ? (
         error ? null : (
           <EmptyState
+            variant={applied.status ? "search" : "default"}
             title="Antrean kosong"
             description="Tidak ada nota yang cocok dengan status pilihan saat ini."
+            action={
+              applied.status ? (
+                <ClearFilterAction
+                  onClear={() => {
+                    setStatus("");
+                    setApplied({ status: "" });
+                    setPage(1);
+                  }}
+                />
+              ) : undefined
+            }
           />
         )
       ) : (
@@ -218,7 +256,10 @@ export default function ReceiptReviewPage() {
                   : "—";
 
               return (
-                <article key={receipt.id} className="card p-5">
+                <article
+                    key={receipt.id}
+                    className={`card p-5${flashKey === `receipt-${receipt.id}` ? " feedback-flash" : ""}`}
+                  >
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">

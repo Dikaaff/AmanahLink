@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Inbox } from "lucide-react";
-import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Empty } from "@/components/ui/empty";
@@ -25,7 +24,8 @@ export function ErrorState({
 }) {
   return (
     <Card className="p-5">
-      <Alert>{message}</Alert>
+      <h3 className="text-h3 font-semibold text-ink">Data gagal dimuat</h3>
+      <p className="mt-2 text-body-sm text-ink-secondary">{message}</p>
       <Button variant="secondary" className="mt-4" onClick={onRetry}>
         {retryLabel}
       </Button>
@@ -53,10 +53,12 @@ export function EmptyState({
   title,
   description,
   action,
+  variant = "default",
 }: {
   title: string;
   description: string;
   action?: ReactNode;
+  variant?: "default" | "search" | "action";
 }) {
   return (
     <Empty
@@ -64,6 +66,19 @@ export function EmptyState({
       title={title}
       description={description}
       action={action}
+      variant={variant}
     />
+  );
+}
+
+/**
+ * Aksi siap pakai untuk empty yang muncul karena filter aktif: hapus filter
+ * lalu muat ulang daftar tanpa filter.
+ */
+export function ClearFilterAction({ onClear }: { onClear: () => void }) {
+  return (
+    <Button variant="secondary" onClick={onClear}>
+      Hapus filter
+    </Button>
   );
 }

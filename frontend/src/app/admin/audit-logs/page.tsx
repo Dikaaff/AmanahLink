@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { Alert, EmptyState, ErrorState, Loading } from "@/components/ui";
+import {
+  Alert,
+  ClearFilterAction,
+  EmptyState,
+  ErrorState,
+  Loading,
+} from "@/components/ui";
 import { api, errorMessage, type AuditLog, type Paginated } from "@/lib/api";
 import { dateTime } from "@/lib/format";
 
@@ -207,8 +213,25 @@ export default function AuditLogsPage() {
       {!result || result.data.length === 0 ? (
         error ? null : (
           <EmptyState
+            variant={
+              applied.actor_id || applied.action || applied.from || applied.to
+                ? "search"
+                : "default"
+            }
             title="Tidak ada log"
             description="Tidak ada baris audit yang cocok dengan filter saat ini."
+            action={
+              applied.actor_id || applied.action || applied.from || applied.to ? (
+                <ClearFilterAction
+                  onClear={() => {
+                    const emptyFilters = { actor_id: "", action: "", from: "", to: "" };
+                    setFilters(emptyFilters);
+                    setApplied(emptyFilters);
+                    setCursor(undefined);
+                  }}
+                />
+              ) : undefined
+            }
           />
         )
       ) : (

@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { api, clearToken, getToken, setToken, type User } from "@/lib/api";
+import { notifyFailure } from "@/lib/feedback";
 
 interface AuthContextValue {
   user: User | null;
@@ -50,6 +51,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearToken();
       setUser(null);
       setUnreadNotifications(0);
+
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        const message =
+          "Sesi Anda sudah berakhir. Silakan masuk kembali untuk melanjutkan.";
+        sessionStorage.setItem(
+          "amanahlink:pending-toast",
+          JSON.stringify({ type: "error", message }),
+        );
+        notifyFailure(message);
+                // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload clears all client caches after token loss
+        window.location.href = "/login";
+      }
     }
 
     window.addEventListener("amanahlink:unauthorized", handleUnauthorized);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Info, Loader2, TriangleAlert } from "lucide-react";
-import { Toaster as SonnerToaster } from "sonner";
+import { Toaster as SonnerToaster, toast } from "sonner";
 
 /**
  * Toasts are confirmations, never the only place a decision is explained.
@@ -19,6 +19,21 @@ export function Toaster() {
     sync();
     query.addEventListener("change", sync);
     return () => query.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    const pending = sessionStorage.getItem("amanahlink:pending-toast");
+    if (!pending) return;
+
+    sessionStorage.removeItem("amanahlink:pending-toast");
+    try {
+      const payload = JSON.parse(pending) as { type?: string; message?: string };
+      if (payload.type === "error" && payload.message) {
+        toast.error(payload.message, { duration: 6000 });
+      }
+    } catch {
+      sessionStorage.removeItem("amanahlink:pending-toast");
+    }
   }, []);
 
   return (

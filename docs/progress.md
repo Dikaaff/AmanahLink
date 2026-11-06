@@ -8,7 +8,7 @@
 
 | Field | Nilai |
 |---|---|
-| Terakhir diperbarui | 2026-11-05 |
+| Terakhir diperbarui | 2026-11-06 |
 | Fase selesai | Fase 0, 1, 2, 3, 4, 6, 7, 8 (7/8 dengan catatan D-028) |
 | Fase berjalan | Fase 5 — implementasi + bukti screenshot selesai; menunggu persetujuan GATE 5. Bukti tertunda: T-09 performa & T-12 Docker (butuh staging/Docker) |
 | Status gate | 29/29 story ✅; GATE 7/8 disetujui 2026-11-04 dengan catatan; **GATE 5 menunggu persetujuan** |
@@ -181,6 +181,7 @@
 | 2026-11-04 | P1 functional UX v5.0 | `Sheet`, `Dialog`, `AlertDialog`, `Skeleton`, Sonner, `Progress` terpasang dengan token v4.0; `UX_DECISIONS.md` UX-01…UX-06; lint/typecheck/build bersih; E2E `primitives.spec.ts` 1 passed; commit `ff7864f` |
 | 2026-11-04 | P2 loading v5.0 | skeleton L04/L09/L19 mengikuti DOM akhir; CLS L04 **0.0006**, L09/L19 **0.0001** (target <0.02); viewport 390 tanpa overflow horizontal; lint/typecheck/build bersih; L10 ditunda karena belum ada route/endpoint detail (UX-07) |
 | 2026-11-04 | P6 mobile secondary v5.0 (L11/L12/L16/L17/L19 @390) | `npx playwright test tests/e2e/p6-secondary.spec.ts` → **7 passed**; dasbor (statistik, kartu limit read-only, riwayat), form draf (simpan + error inline), form pencairan (hasil `captured` dan penolakan MCC), serta pagination riwayat pemakaian berjalan di 390 tanpa overflow; L17 kini route `/dashboard/simulasi` yang memanggil `POST /disbursements/simulate` (dry-run read-only, UX-09); 5 screenshot 390 di `docs/e2e/screenshots/`; backend `DisbursementApiTest` **24 passed, 89 assertions**; `npm run lint` + `npx tsc --noEmit` bersih |
+| 2026-11-06 | P4/P5 defect fixes + P6 audit | `npm run lint` dan `npx tsc --noEmit --pretty false` **lulus**; perbaikan sesi berakhir, rollback/filter notifikasi, replay DLQ, empty state, numeric cells, error mapping, upload timeout, dan reduced-motion dicatat di `docs/design/P6-audit.md`; targeted P4/P5 E2E belum dapat ditutup karena Docker tidak tersedia, backend lokal mengarah ke MySQL, dan SQLite snapshot tertinggal dari migration terbaru |
 | 2026-11-04 | P7 admin v5.0 (/admin, campaigns, receipts, audit-logs, webhooks @768/1440) | `npx playwright test tests/e2e/p7-admin.spec.ts` → **2 passed**; nav admin sebelumnya meluber **217px** di 768 karena semua tautan dipaksa satu baris, diperbaiki dengan `flex-wrap` + nama pengguna disembunyikan di bawah `lg` (UX-10); kedua viewport tanpa overflow |
 | 2026-11-04 | P3 ketahanan v5.0 (L04/L09/L19) | `npx playwright test tests/e2e/resilience.spec.ts` → **7 passed**; 50 baris + judul 60 karakter tanpa spasi + Rp999.999.999 tanpa overflow di 320/384/390/768 (sebelum perbaikan judul meluber 592px pada 320); semua tab stop punya ring **2px offset 2px** warna ink; wordmark nav `sr-only` di bawah 360; `npm run lint` + `npx tsc --noEmit` bersih |
 | 2026-11-03 | `npm run lint` + `npm run build` (P2 type specimen) | lint bersih; build sukses, 15 route termasuk `ƒ /design/type`; CSS memuat 2 `@font-face` Geist |

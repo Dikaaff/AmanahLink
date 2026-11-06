@@ -228,10 +228,18 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Batas waktu satu permintaan (P5). Di luar batas ini permintaan dianggap
+ * gagal dengan kode TIMEOUT, bukan menggantung tanpa feedback.
+ */
+const REQUEST_TIMEOUT_MS = 15000;
+const UPLOAD_REQUEST_TIMEOUT_MS = 120000;
+
 async function request<T>(
   path: string,
   init: RequestInit = {},
   authenticated = true,
+  timeoutMs = REQUEST_TIMEOUT_MS,
 ): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
@@ -246,11 +254,31 @@ async function request<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...init,
-    headers,
-    cache: "no-store",
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...init,
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.any(
+        [init.signal, AbortSignal.timeout(timeoutMs)].filter(
+          (signal): signal is AbortSignal => Boolean(signal),
+        ),
+      ),
+    });
+  } catch (caught) {
+    if (caught instanceof ApiError) throw caught;
+    // fetch melempar saat offline atau saat batas waktu tercapai.
+    const timedOut = caught instanceof DOMException && caught.name === "TimeoutError";
+    throw new ApiError(
+      0,
+      timedOut ? "TIMEOUT" : "NETWORK_ERROR",
+      timedOut
+        ? "Waktu tunggu habis. Periksa koneksi lalu coba lagi."
+        : "Tidak dapat menghubungi server. Periksa koneksi lalu coba lagi.",
+    );
+  }
 
   if (response.status === 204) {
     return undefined as T;
@@ -456,6 +484,8 @@ export const api = {
     return request<{ data: Receipt }>(
       `/disbursements/${transactionId}/receipts`,
       { method: "POST", body },
+      true,
+      UPLOAD_REQUEST_TIMEOUT_MS,
     );
   },
 
@@ -510,8 +540,51 @@ export const api = {
   },
 };
 
+/**
+ * Pemetaan terpusat kode error (§9 Katalog Error Code) ke pesan manusiawi.
+ * Pesan server dipakai bila tersedia dan bukan pesan generik.
+ */
+const ERROR_MESSAGES: Record<string, string> = {
+  VALIDATION_ERROR: "Periksa kembali isian yang ditandai.",
+  UNAUTHENTICATED: "Sesi Anda sudah berakhir. Silakan masuk kembali.",
+  INVALID_SIGNATURE: "Tanda tangan webhook tidak sah. Permintaan ditolak.",
+  EMAIL_UNVERIFIED:
+    "Verifikasi email Anda terlebih dahulu sebelum melakukan aksi ini.",
+  FORBIDDEN_ROLE: "Peran Anda tidak memiliki akses untuk aksi ini.",
+  MCC_NOT_ALLOWED:
+    "Kategori transaksi merchant tidak diizinkan oleh kampanye ini.",
+  INSUFFICIENT_FUNDS: "Saldo kampanye tidak mencukupi untuk pencairan ini.",
+  LIMIT_EXCEEDED: "Batas harian atau bulanan pencairan terlampaui.",
+  LIMIT_EXPIRED: "Masa berlaku limit pencairan sudah lewat.",
+  CAMPAIGN_NOT_ACTIVE: "Kampanye tidak dalam status aktif atau funded.",
+  CAMPAIGN_LOCKED: "Kampanye tidak dapat diedit setelah donasi pertama settle.",
+  CONFLICT_STATE: "Perubahan status tidak sah untuk keadaan saat ini.",
+  DUPLICATE_REQUEST:
+    "Permintaan yang sama masih diproses. Tunggu sebentar lalu coba lagi.",
+  IDEMPOTENCY_MISMATCH: "Permintaan ulang dengan isi berbeda. Muat ulang halaman.",
+  OCR_LOW_CONFIDENCE:
+    "Nota tidak dapat dibaca otomatis. Masukkan detail transaksi secara manual.",
+  RATE_LIMITED: "Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.",
+  NOT_FOUND: "Data tidak ditemukan atau sudah dihapus.",
+  UPSTREAM_TIMEOUT:
+    "Penyedia pembayaran tidak merespons. Coba lagi beberapa saat.",
+  INTERNAL_ERROR: "Terjadi kesalahan di server. Coba lagi beberapa saat.",
+  TIMEOUT: "Waktu tunggu habis. Periksa koneksi lalu coba lagi.",
+  NETWORK_ERROR: "Tidak dapat menghubungi server. Periksa koneksi lalu coba lagi.",
+};
+
+const GENERIC_SERVER_MESSAGES = new Set([
+  "Permintaan gagal diproses.",
+  "Data yang dikirim tidak valid.",
+]);
+
 export function errorMessage(error: unknown): string {
-  return error instanceof ApiError
-    ? error.message
-    : "Tidak dapat menghubungi server. Periksa koneksi lalu coba lagi.";
+  if (error instanceof ApiError) {
+    if (error.message && !GENERIC_SERVER_MESSAGES.has(error.message)) {
+      return error.message;
+    }
+    if (error.code in ERROR_MESSAGES) return ERROR_MESSAGES[error.code];
+    return error.message || "Permintaan gagal diproses.";
+  }
+  return ERROR_MESSAGES.NETWORK_ERROR;
 }

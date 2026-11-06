@@ -27,6 +27,12 @@ import {
   type Receipt,
 } from "@/lib/api";
 import { dateOnly, dateTime, rupiah } from "@/lib/format";
+import { notifyFailure, notifySuccess, useFlash } from "@/lib/feedback";
+import { TdNumeric } from "@/components/ui/table";
+
+function replaceById<T extends { id: number }>(items: T[], next: T): T[] {
+  return items.map((item) => (item.id === next.id ? next : item));
+}
 
 function defaultLimitExpiry(): string {
   const date = new Date();
@@ -48,9 +54,7 @@ export default function DashboardPage() {
   const [merchantsError, setMerchantsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [resendingVerification, setResendingVerification] = useState(false);
-  const [verificationNotice, setVerificationNotice] = useState<string | null>(null);
   const [verificationError, setVerificationError] = useState<string | null>(null);
 
   const [limitForm, setLimitForm] = useState({
@@ -61,7 +65,6 @@ export default function DashboardPage() {
   });
   const [savingLimit, setSavingLimit] = useState(false);
   const [limitError, setLimitError] = useState<string | null>(null);
-  const [limitNotice, setLimitNotice] = useState<string | null>(null);
   const [limitOpen, setLimitOpen] = useState(false);
 
   const isAdmin = user?.role === "admin";
@@ -82,7 +85,6 @@ export default function DashboardPage() {
   });
   const [disbursing, setDisbursing] = useState(false);
   const [disbursementError, setDisbursementError] = useState<string | null>(null);
-  const [disbursementResult, setDisbursementResult] = useState<string | null>(null);
   const [disburseOpen, setDisburseOpen] = useState(false);
   const [lastDisbursement, setLastDisbursement] = useState<Disbursement | null>(null);
   const [receipts, setReceipts] = useState<Paginated<Receipt> | null>(null);
@@ -93,10 +95,11 @@ export default function DashboardPage() {
   const [receiptUploaded, setReceiptUploaded] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [receiptUploadError, setReceiptUploadError] = useState<string | null>(null);
-  const [receiptUploadNotice, setReceiptUploadNotice] = useState<string | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
 
   const isFundraiser = user?.role === "campaigner" || user?.role === "admin";
+
+  const [flashKey, flash] = useFlash();
 
   const selectedCampaign = useMemo(
     () =>
@@ -131,12 +134,6 @@ export default function DashboardPage() {
     setCampaigns(response.data);
   }, [isFundraiser]);
 
-  const loadDisbursements = useCallback(async () => {
-    if (!isFundraiser) return;
-    const response = await api.disbursements(disbursementPage);
-    setDisbursements(response);
-  }, [disbursementPage, isFundraiser]);
-
   const loadReceipts = useCallback(async () => {
     if (!isFundraiser) return;
     setReceiptsLoading(true);
@@ -170,7 +167,7 @@ export default function DashboardPage() {
     ])
       .then(([mine, myDonations, myDisbursements, myReceipts]) => {
         if (cancelled) return;
-        if (mine) setCampaigns(mine.data);
+        if (mine) setCampaigns(Array.isArray(mine.data) ? mine.data : []);
         setDonations(myDonations);
         if (myDisbursements) setDisbursements(myDisbursements);
         if (myReceipts) setReceipts(myReceipts);
@@ -255,14 +252,15 @@ export default function DashboardPage() {
   async function handleSubmitCampaign(campaign: Campaign) {
     setSubmittingId(campaign.id);
     setError(null);
-    setNotice(null);
 
     try {
-      await api.submitCampaign(campaign.id);
-      await Promise.all([loadCampaigns(), loadDisbursements()]);
-      setNotice(`“${campaign.title}” diajukan untuk review.`);
+      const response = await api.submitCampaign(campaign.id);
+      // Update di tempat: status kampanye berubah tanpa reload daftar.
+      setCampaigns((current) => replaceById(current, response.data));
+      flash(`campaign-${campaign.id}`);
+      notifySuccess(`“${campaign.title}” diajukan untuk review.`);
     } catch (caught) {
-      setError(errorMessage(caught));
+      notifyFailure(errorMessage(caught));
     } finally {
       setSubmittingId(null);
     }
@@ -271,11 +269,12 @@ export default function DashboardPage() {
   async function handleResendVerification() {
     setResendingVerification(true);
     setVerificationError(null);
-    setVerificationNotice(null);
 
     try {
       const response = await api.resendVerification();
-      setVerificationNotice(response.message ?? "Tautan verifikasi email sudah dikirim ulang.");
+      notifySuccess(
+        response.message ?? "Tautan verifikasi email sudah dikirim ulang.",
+      );
     } catch (caught) {
       setVerificationError(errorMessage(caught));
     } finally {
@@ -287,7 +286,6 @@ export default function DashboardPage() {
     event.preventDefault();
     setSavingLimit(true);
     setLimitError(null);
-    setLimitNotice(null);
 
     try {
       const response = await api.upsertDisbursementLimit(Number(limitForm.campaignId), {
@@ -295,11 +293,21 @@ export default function DashboardPage() {
         monthly_limit: limitForm.monthlyLimit,
         expires_at: new Date(limitForm.expiresAt).toISOString(),
       });
-      setLimitNotice(
+      notifySuccess(
         `Limit tersimpan: ${rupiah(response.data.daily_limit)} per hari dan ${rupiah(response.data.monthly_limit)} per bulan hingga ${dateTime(response.data.expires_at)}.`,
       );
+      setLimitOpen(false);
       setLimitForm((current) => ({ ...current, campaignId: "" }));
+      if (limitViewCampaignId === limitForm.campaignId) {
+        setLimitInfoState({
+          campaignId: limitForm.campaignId,
+          data: response.data,
+          error: null,
+          loading: false,
+        });
+      }
     } catch (caught) {
+      // Kegagalan validasi limit tetap di bawah field di dalam overlay.
       setLimitError(errorMessage(caught));
     } finally {
       setSavingLimit(false);
@@ -309,7 +317,6 @@ export default function DashboardPage() {
   async function handleDisburse(event: React.FormEvent) {
     event.preventDefault();
     setDisbursementError(null);
-    setDisbursementResult(null);
     setDisbursing(true);
 
     try {
@@ -319,19 +326,37 @@ export default function DashboardPage() {
         amount: disbursement.amount,
       });
 
-      setDisbursementResult(
+      // Mutasi uang menunggu respons server — tidak ada update optimistis.
+      notifySuccess(
         `Pencairan ${rupiah(response.data.amount)} ke ${
           response.data.merchant?.name ?? "merchant"
-        } tercatat sebagai ${response.data.status} (ref ${response.data.reference_id}).`,
+        } tercatat sebagai ${response.data.status_label.toLowerCase()} (ref ${response.data.reference_id}).`,
       );
       setLastDisbursement(response.data);
       setReceiptFile(null);
       setReceiptUploaded(false);
       setReceiptUploadError(null);
-      setReceiptUploadNotice(null);
       setDisbursement({ campaignId: "", merchantId: "", amount: "" });
-      await Promise.all([loadCampaigns(), loadDisbursements()]);
+      setDisburseOpen(false);
+      // Update di tempat: sisipkan hasil di halaman 1 tanpa reload daftar.
+      setDisbursements((current) =>
+        current
+          ? current.meta?.current_page === 1
+            ? {
+                ...current,
+                data: [response.data, ...current.data],
+                meta: current.meta
+                  ? { ...current.meta, total: (current.meta.total ?? 0) + 1 }
+                  : undefined,
+              }
+            : current
+          : current,
+      );
+      flash(`disbursement-${response.data.id}`);
+      void loadCampaigns();
     } catch (caught) {
+      // Kegagalan pencairan (MCC, limit, saldo) tetap di bawah field agar
+      // pengguna tidak kehilangan konteks form; tidak ada toast di sini.
       setDisbursementError(errorMessage(caught));
     } finally {
       setDisbursing(false);
@@ -348,17 +373,49 @@ export default function DashboardPage() {
 
     setUploadingReceipt(true);
     setReceiptUploadError(null);
-    setReceiptUploadNotice(null);
 
     try {
       const response = await api.uploadReceipt(lastDisbursement.id, receiptFile);
-      setReceiptUploaded(true);
-      setReceiptUploadNotice(
-        `Nota berhasil diunggah dengan status ${response.data.status_label.toLowerCase()}. OCR akan diproses oleh antrean.`,
+      const receipt = response.data;
+      notifySuccess(
+        `Nota berhasil diunggah dengan status ${receipt.status_label.toLowerCase()}. OCR akan diproses oleh antrean.`,
       );
+      setReceiptUploaded(true);
       setReceiptFile(null);
       setReceiptOpen(false);
-      await Promise.all([loadDisbursements(), loadReceipts()]);
+      // Update di tempat: nota pada riwayat pencairan dan daftar nota.
+      setDisbursements((current) =>
+        current
+          ? {
+              ...current,
+              data: current.data.map((item) =>
+                item.id === receipt.transaction_id
+                  ? {
+                      ...item,
+                      receipt: {
+                        id: receipt.id,
+                        status: receipt.status,
+                        status_label: receipt.status_label,
+                        confidence:
+                          receipt.confidence === null
+                            ? null
+                            : String(receipt.confidence),
+                        rejection_reason: receipt.rejection_reason,
+                        reviewed_at: receipt.reviewed_at,
+                        created_at: receipt.created_at,
+                      },
+                    }
+                  : item,
+              ),
+            }
+          : current,
+      );
+      setReceipts((current) =>
+        current && current.meta?.current_page === 1
+          ? { ...current, data: [receipt, ...current.data] }
+          : current,
+      );
+      flash(`receipt-${receipt.id}`);
     } catch (caught) {
       setReceiptUploadError(errorMessage(caught));
     } finally {
@@ -377,7 +434,7 @@ export default function DashboardPage() {
       isFundraiser ? api.myReceipts(receiptPage) : Promise.resolve(null),
     ])
       .then(([mine, myDonations, myDisbursements, myReceipts]) => {
-        if (mine) setCampaigns(mine.data);
+        if (mine) setCampaigns(Array.isArray(mine.data) ? mine.data : []);
         setDonations(myDonations);
         if (myDisbursements) setDisbursements(myDisbursements);
         if (myReceipts) setReceipts(myReceipts);
@@ -417,7 +474,6 @@ export default function DashboardPage() {
       </header>
 
       {error ? <ErrorState message={error} onRetry={handleReload} /> : null}
-      {notice ? <Alert tone="success">{notice}</Alert> : null}
       {!user.email_verified_at ? (
         <Alert
           tone="warning"
@@ -435,7 +491,6 @@ export default function DashboardPage() {
             >
               {resendingVerification ? "Mengirim…" : "Kirim ulang tautan"}
             </button>
-            {verificationNotice ? <span className="text-body-sm">{verificationNotice}</span> : null}
             {verificationError ? <span className="text-body-sm">{verificationError}</span> : null}
           </div>
         </Alert>
@@ -485,7 +540,10 @@ export default function DashboardPage() {
                     </thead>
                     <tbody className="divide-y divide-line">
                       {campaigns.map((campaign) => (
-                        <tr key={campaign.id} className="align-middle">
+                        <tr
+                            key={campaign.id}
+                            className={`align-middle${flashKey === `campaign-${campaign.id}` ? " feedback-flash" : ""}`}
+                          >
                           <td className="px-4 py-3">
                         <Link
                           href={`/campaigns/${campaign.slug}`}
@@ -552,7 +610,10 @@ export default function DashboardPage() {
                 </div>
                 <div className="space-y-3 p-4 md:hidden">
                   {campaigns.map((campaign) => (
-                    <article key={campaign.id} className="rounded-md border border-line p-4">
+                    <article
+                          key={campaign.id}
+                          className={`rounded-md border border-line p-4${flashKey === `campaign-${campaign.id}` ? " feedback-flash" : ""}`}
+                        >
                       <div className="flex items-start justify-between gap-3">
                         <Link
                           href={`/campaigns/${campaign.slug}`}                              className="min-w-0 break-words font-semibold text-ink hover:underline"
@@ -640,7 +701,6 @@ export default function DashboardPage() {
                       expiresAt: defaultLimitExpiry(),
                     });
                     setLimitError(null);
-                    setLimitNotice(null);
                   }}
                   footer={
                     <>
@@ -743,7 +803,6 @@ export default function DashboardPage() {
 
                     <div className="sm:col-span-2">
                       {limitError ? <Alert>{limitError}</Alert> : null}
-                      {limitNotice ? <Alert tone="success">{limitNotice}</Alert> : null}
                     </div>
                   </form>
                 </FormOverlay>
@@ -875,7 +934,6 @@ export default function DashboardPage() {
                   onDiscard={() => {
                     setDisbursement({ campaignId: "", merchantId: "", amount: "" });
                     setDisbursementError(null);
-                    setDisbursementResult(null);
                   }}
                   footer={
                     <>
@@ -979,9 +1037,6 @@ export default function DashboardPage() {
                     ) : null}
 
                     {disbursementError ? <Alert>{disbursementError}</Alert> : null}
-                    {disbursementResult ? (
-                      <Alert tone="success">{disbursementResult}</Alert>
-                    ) : null}
                   </form>
                 </FormOverlay>
               </>
@@ -999,11 +1054,6 @@ export default function DashboardPage() {
                 Referensi transaksi: <span className="font-mono">{lastDisbursement.reference_id}</span>
               </p>
 
-              {receiptUploadNotice ? (
-                <div className="mt-4">
-                  <Alert tone="success">{receiptUploadNotice}</Alert>
-                </div>
-              ) : null}
 
               {!receiptUploaded ? (
                 <button
@@ -1063,7 +1113,7 @@ export default function DashboardPage() {
             </section>
           ) : null}
 
-          <section className="card overflow-hidden">
+          <section id="receipts" className="card overflow-hidden">
             <div className="border-b border-line px-6 py-5">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
@@ -1112,6 +1162,11 @@ export default function DashboardPage() {
                 <EmptyState
                   title="Belum ada nota"
                   description="Unggah nota setelah pencairan berhasil; status OCR dan keputusan verifikator akan muncul di sini."
+                  action={
+                    <Link href="#disbursements" className="btn-secondary">
+                      Lihat pencairan
+                    </Link>
+                  }
                 />
               </div>
             ) : (
@@ -1130,7 +1185,10 @@ export default function DashboardPage() {
                     </thead>
                     <tbody className="divide-y divide-line">
                       {receipts.data.map((receipt) => (
-                        <tr key={receipt.id} className="align-top">
+                        <tr
+                            key={receipt.id}
+                            className={`align-top${flashKey === `receipt-${receipt.id}` ? " feedback-flash" : ""}`}
+                          >
                           <td className="px-6 py-4">
                             <span className="break-words font-semibold text-ink">
                               {receipt.transaction?.campaign?.title ?? "—"}
@@ -1142,11 +1200,11 @@ export default function DashboardPage() {
                                 : ""}
                             </span>
                           </td>
-                          <td className="px-4 py-4 font-medium text-ink">
+                          <TdNumeric className="px-4 py-4 font-medium">
                             {receipt.transaction
                               ? rupiah(receipt.transaction.amount)
                               : "—"}
-                          </td>
+                          </TdNumeric>
                           <td className="px-4 py-4">
                             <StatusBadge
                               status={receipt.status}
@@ -1177,7 +1235,10 @@ export default function DashboardPage() {
                 </div>
                 <div className="space-y-3 p-4 md:hidden">
                   {receipts.data.map((receipt) => (
-                    <article key={receipt.id} className="rounded-md border border-line p-4">
+                    <article
+                            key={receipt.id}
+                            className={`rounded-md border border-line p-4${flashKey === `receipt-${receipt.id}` ? " feedback-flash" : ""}`}
+                          >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="break-words font-semibold text-ink">
@@ -1227,7 +1288,7 @@ export default function DashboardPage() {
             )}
           </section>
 
-          <section className="card overflow-hidden">
+          <section id="disbursements" className="card overflow-hidden">
             <div className="border-b border-line px-6 py-5">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
@@ -1252,6 +1313,15 @@ export default function DashboardPage() {
                 <EmptyState
                   title="Belum ada pencairan"
                   description="Pencairan yang berhasil tercatat akan muncul di sini bersama status nota dan merchant penerima."
+                  action={
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => setDisburseOpen(true)}
+                    >
+                      Cairkan dana
+                    </button>
+                  }
                 />
               </div>
             ) : (
@@ -1269,7 +1339,10 @@ export default function DashboardPage() {
                     </thead>
                     <tbody className="divide-y divide-line">
                       {disbursements.data.map((item) => (
-                        <tr key={item.id} className="align-top">
+                        <tr
+                            key={item.id}
+                            className={`align-top${flashKey === `disbursement-${item.id}` ? " feedback-flash" : ""}`}
+                          >
                           <td className="px-6 py-4">
                             {item.campaign ? (
                               <Link
@@ -1289,9 +1362,9 @@ export default function DashboardPage() {
                               {item.reference_id}
                             </span>
                           </td>
-                          <td className="px-4 py-4 font-semibold text-ink">
+                          <TdNumeric className="px-4 py-4 font-semibold">
                             {rupiah(item.amount)}
-                          </td>
+                          </TdNumeric>
                           <td className="px-4 py-4">
                             <StatusBadge status={item.status} label={item.status_label} />
                           </td>
@@ -1327,7 +1400,10 @@ export default function DashboardPage() {
                 </div>
                 <div className="space-y-3 p-4 md:hidden">
                   {disbursements.data.map((item) => (
-                    <article key={item.id} className="rounded-md border border-line p-4">
+                    <article
+                            key={item.id}
+                            className={`rounded-md border border-line p-4${flashKey === `disbursement-${item.id}` ? " feedback-flash" : ""}`}
+                          >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 break-words">
                           {item.campaign ? (
@@ -1441,9 +1517,9 @@ export default function DashboardPage() {
                             </span>
                           ) : null}
                         </td>
-                        <td className="px-4 py-3 font-medium">
+                        <TdNumeric className="px-4 py-3 font-medium">
                           {rupiah(donation.amount)}
-                        </td>
+                        </TdNumeric>
                         <td className="px-4 py-3">
                           <StatusBadge
                             status={donation.status}

@@ -4,11 +4,27 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
-import { Alert, EmptyState, ErrorState, Loading, Progress, StatusBadge } from "@/components/ui";
+import {
+  Alert,
+  ClearFilterAction,
+  EmptyState,
+  ErrorState,
+  Loading,
+  Progress,
+  StatusBadge,
+} from "@/components/ui";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FormOverlay } from "@/components/ui/form-overlay";
 import { api, errorMessage, type Campaign, type Paginated } from "@/lib/api";
 import { dateOnly, rupiah } from "@/lib/format";
+import { notifyFailure, notifySuccess, useFlash } from "@/lib/feedback";
+
+function replaceCampaign(
+  items: Campaign[],
+  next: Campaign,
+): Campaign[] {
+  return items.map((campaign) => (campaign.id === next.id ? next : campaign));
+}
 import { mccTitle } from "@/lib/mcc";
 
 type ReasonAction = "reject" | "freeze";
@@ -40,9 +56,9 @@ export default function CampaignOperationsPage() {
   const [result, setResult] = useState<Paginated<Campaign> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [actionForm, setActionForm] = useState<ActionForm | null>(null);
+  const [flashKey, flash] = useFlash();
   const reasonCampaign =
     (actionForm &&
       result?.data.find((campaign) => campaign.id === actionForm.campaignId)) ||
@@ -87,7 +103,6 @@ export default function CampaignOperationsPage() {
     event.preventDefault();
     setLoading(true);
     setError(null);
-    setNotice(null);
     setPage(1);
     setApplied({ status });
   }
@@ -105,24 +120,40 @@ export default function CampaignOperationsPage() {
       .finally(() => setLoading(false));
   }
 
-  async function refreshAfterAction(message: string): Promise<void> {
-    setNotice(message);
+  /** Update di tempat: kampanye berubah status tanpa reload antrean.
+   *  Bila status barunya keluar dari filter yang aktif, ia dikeluarkan. */
+  function applyCampaign(next: Campaign, message: string): void {
     setActionForm(null);
-    setResult(await load(page));
+    const matchesFilter = applied.status === "" || applied.status === next.status;
+    setResult((current) => {
+      if (!current) return current;
+      if (!matchesFilter) {
+        return {
+          ...current,
+          data: current.data.filter((item) => item.id !== next.id),
+          meta: current.meta
+            ? { ...current.meta, total: Math.max(0, (current.meta.total ?? 1) - 1) }
+            : undefined,
+        };
+      }
+      return { ...current, data: replaceCampaign(current.data, next) };
+    });
+    if (matchesFilter) flash(`campaign-${next.id}`);
+    notifySuccess(message);
   }
 
   async function handleApprove(campaign: Campaign): Promise<void> {
     setBusyId(campaign.id);
     setError(null);
-    setNotice(null);
 
     try {
       const response = await api.reviewCampaign(campaign.id, "approve");
-      await refreshAfterAction(
+      applyCampaign(
+        response.data,
         `“${campaign.title}” disetujui dan berstatus ${response.data.status_label.toLowerCase()}.`,
       );
     } catch (caught) {
-      setError(errorMessage(caught));
+      notifyFailure(errorMessage(caught));
     } finally {
       setBusyId(null);
     }
@@ -143,7 +174,6 @@ export default function CampaignOperationsPage() {
 
     setBusyId(campaign.id);
     setError(null);
-    setNotice(null);
 
     try {
       const response =
@@ -151,10 +181,12 @@ export default function CampaignOperationsPage() {
           ? await api.reviewCampaign(campaign.id, "reject", reason)
           : await api.freezeCampaign(campaign.id, reason);
       const actionLabel = actionForm.action === "reject" ? "ditolak" : "dibekukan";
-      await refreshAfterAction(
+      applyCampaign(
+        response.data,
         `“${campaign.title}” ${actionLabel} dengan status ${response.data.status_label.toLowerCase()}.`,
       );
     } catch (caught) {
+      // Kegagalan validasi alasan tetap di dalam overlay, bukan toast.
       setError(errorMessage(caught));
     } finally {
       setBusyId(null);
@@ -164,15 +196,15 @@ export default function CampaignOperationsPage() {
   async function handleUnfreeze(campaign: Campaign): Promise<void> {
     setBusyId(campaign.id);
     setError(null);
-    setNotice(null);
 
     try {
       const response = await api.unfreezeCampaign(campaign.id);
-      await refreshAfterAction(
+      applyCampaign(
+        response.data,
         `“${campaign.title}” dibuka kembali dengan status ${response.data.status_label.toLowerCase()}.`,
       );
     } catch (caught) {
-      setError(errorMessage(caught));
+      notifyFailure(errorMessage(caught));
     } finally {
       setBusyId(null);
     }
@@ -181,15 +213,15 @@ export default function CampaignOperationsPage() {
   async function handleClose(campaign: Campaign): Promise<void> {
     setBusyId(campaign.id);
     setError(null);
-    setNotice(null);
 
     try {
       const response = await api.closeCampaign(campaign.id);
-      await refreshAfterAction(
+      applyCampaign(
+        response.data,
         `“${campaign.title}” ditutup. Refund ${rupiah(response.refund.total)} untuk ${response.refund.donor_count} donatur.`,
       );
     } catch (caught) {
-      setError(errorMessage(caught));
+      notifyFailure(errorMessage(caught));
     } finally {
       setBusyId(null);
     }
@@ -276,13 +308,24 @@ export default function CampaignOperationsPage() {
       {error ? (
         <ErrorState message={error} onRetry={handleReload} />
       ) : null}
-      {notice ? <Alert tone="success">{notice}</Alert> : null}
 
       {!result || result.data.length === 0 ? (
         error ? null : (
           <EmptyState
+            variant={applied.status ? "search" : "default"}
             title="Tidak ada kampanye"
             description="Tidak ada kampanye yang cocok dengan status pilihan saat ini."
+            action={
+              applied.status ? (
+                <ClearFilterAction
+                  onClear={() => {
+                    setStatus("");
+                    setApplied({ status: "" });
+                    setPage(1);
+                  }}
+                />
+              ) : undefined
+            }
           />
         )
       ) : (
@@ -292,7 +335,10 @@ export default function CampaignOperationsPage() {
               const canClose = ["active", "funded", "expired"].includes(campaign.status);
 
               return (
-                <article key={campaign.id} className="card p-5">
+                <article
+                    key={campaign.id}
+                    className={`card p-5${flashKey === `campaign-${campaign.id}` ? " feedback-flash" : ""}`}
+                  >
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
