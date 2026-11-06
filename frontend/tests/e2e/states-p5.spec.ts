@@ -111,7 +111,7 @@ test.describe("P5 empty dan failure state", () => {
     await page.route(/\/api\/v1\//, async (route) => {
       const path = new URL(route.request().url()).pathname.replace("/api/v1", "");
       if (["/auth/login", "/auth/me", "/notifications"].includes(path)) {
-        return route.fetch();
+        return route.fallback();
       }
       return route.abort("connectionfailed");
     });
@@ -134,7 +134,7 @@ test.describe("P5 empty dan failure state", () => {
       const method = route.request().method();
 
       if (path === "/auth/login" || path === "/auth/me" || path === "/notifications") {
-        return route.fetch();
+        return route.fallback();
       }
       if (path === "/campaigns/mine") {
         return route.fulfill({ json: paginated([campaign(2)]) });
@@ -201,7 +201,7 @@ test.describe("P5 empty dan failure state", () => {
       const method = route.request().method();
 
       if (path === "/auth/login" || path === "/auth/me" || path === "/notifications") {
-        return route.fetch();
+        return route.fallback();
       }
       if (path === "/campaigns/mine") {
         return route.fulfill({ json: paginated([campaign(2)]) });
