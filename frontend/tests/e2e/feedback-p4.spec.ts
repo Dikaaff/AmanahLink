@@ -203,17 +203,18 @@ test.describe("P4 feedback loop", () => {
   test("highlight baris hilang dalam ≤2 detik setelah update di tempat", async ({ page }) => {
     await openDashboard(page);
 
-    const row = page.locator("tr", { hasText: "Kampanye Draf Uji" });
+    const row = page.locator("tr", { hasText: "Kampanye Draf Uji" }).first();
     await page.getByRole("button", { name: "Ajukan review" }).first().click();
 
     await expect(row).toHaveClass(/feedback-flash/);
-    await expect(page.locator(".feedback-flash")).toHaveCount(1);
+    const visibleFlash = page.locator(".feedback-flash:visible");
+    await expect(visibleFlash).toHaveCount(1);
 
     // Highlight memudar dalam ≤2s: sebelum 1,8s masih ada, sesudah 2,6s habis.
     await page.waitForTimeout(1800);
-    expect(await page.locator(".feedback-flash").count()).toBeLessThanOrEqual(1);
+    expect(await visibleFlash.count()).toBeLessThanOrEqual(1);
     await expect
-      .poll(() => page.locator(".feedback-flash").count(), { timeout: 1500 })
+      .poll(() => visibleFlash.count(), { timeout: 1500 })
       .toBe(0);
   });
 
@@ -277,7 +278,8 @@ test.describe("P4 feedback loop", () => {
     await page.getByRole("button", { name: "Masuk" }).click();
     await expect(page).toHaveURL(/\/dashboard$/);
 
-    await page.goto("/notifications");
+    await page.getByRole("link", { name: /Notifikasi/ }).click();
+    await expect(page).toHaveURL(/\/notifications$/);
     await page.getByRole("button", { name: "Tandai dibaca" }).click();
 
     const toast = page.locator("[data-sonner-toast]");
@@ -338,7 +340,8 @@ test.describe("P4 feedback loop", () => {
     await page.getByRole("button", { name: "Masuk" }).click();
     await expect(page).toHaveURL(/\/dashboard$/);
 
-    await page.goto("/notifications");
+    await page.getByRole("link", { name: /Notifikasi/ }).click();
+    await expect(page).toHaveURL(/\/notifications$/);
     await expect(page.getByText("1 notifikasi belum dibaca.")).toBeVisible();
 
     await page.getByRole("button", { name: "Tandai dibaca" }).click();
@@ -349,6 +352,65 @@ test.describe("P4 feedback loop", () => {
     await expect(
       page.getByRole("button", { name: "Tandai dibaca" }),
     ).toBeVisible();
+  });
+
+  test("tandai semua dibaca mengosongkan filter unread dan badge nav", async ({ page }) => {
+    const notification = {
+      id: "n-1",
+      type: "campaign_status",
+      data: {
+        type: "campaign_status",
+        message: "Kampanye Anda disetujui.",
+        campaign_title: "Kampanye Aktif Uji",
+        campaign_slug: "kampanye-uji-2",
+        status: "active",
+      },
+      read_at: null,
+      created_at: "2026-11-02T00:00:00.000000Z",
+    };
+    let allRead = false;
+
+    await page.route(/\/api\/v1\//, async (route) => {
+      const path = new URL(route.request().url()).pathname.replace("/api/v1", "");
+      const method = route.request().method();
+
+      if (path === "/auth/login") {
+        return route.fulfill({ json: { data: { user, token: "p4-token" } } });
+      }
+      if (path === "/auth/me") {
+        return route.fulfill({ json: { data: user } });
+      }
+      if (path === "/notifications/read-all" && method === "POST") {
+        allRead = true;
+        return route.fulfill({ json: { data: { marked: 1, unread_count: 0 } } });
+      }
+      if (path === "/notifications") {
+        return route.fulfill({
+          json: allRead
+            ? paginated([], { unread_count: 0 })
+            : paginated([notification], { unread_count: 1 }),
+        });
+      }
+      return route.fulfill({ json: { data: null } });
+    });
+
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(user.email);
+    await page.getByLabel("Password").fill("password");
+    await page.getByRole("button", { name: "Masuk" }).click();
+    await expect(page).toHaveURL(/\/dashboard$/);
+
+    const notificationsLink = page.locator('a[href="/notifications"]:visible').first();
+    await notificationsLink.click();
+    await expect(page).toHaveURL(/\/notifications$/);
+
+    await page.getByLabel("Tampilkan yang belum dibaca saja").check();
+    await expect(page.getByText("1 notifikasi belum dibaca.")).toBeVisible();
+
+    await page.getByRole("button", { name: "Tandai semua dibaca" }).click();
+
+    await expect(page.getByText("Tidak ada yang belum dibaca")).toBeVisible();
+    await expect(notificationsLink.getByText("1", { exact: true })).toHaveCount(0);
   });
 
   test("mutasi uang tidak optimistis: baris baru hanya muncul setelah respons", async ({ page }) => {

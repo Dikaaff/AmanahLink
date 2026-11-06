@@ -225,6 +225,8 @@ export default function AuditLogsPage() {
                 <ClearFilterAction
                   onClear={() => {
                     const emptyFilters = { actor_id: "", action: "", from: "", to: "" };
+                    setLoading(true);
+                    setError(null);
                     setFilters(emptyFilters);
                     setApplied(emptyFilters);
                     setCursor(undefined);

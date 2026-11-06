@@ -34,6 +34,11 @@ function replaceById<T extends { id: number }>(items: T[], next: T): T[] {
   return items.map((item) => (item.id === next.id ? next : item));
 }
 
+function withRows<T>(page: Paginated<T> | null): Paginated<T> | null {
+  if (!page) return null;
+  return { ...page, data: Array.isArray(page.data) ? page.data : [] };
+}
+
 function defaultLimitExpiry(): string {
   const date = new Date();
   date.setDate(date.getDate() + 30);
@@ -131,7 +136,7 @@ export default function DashboardPage() {
   const loadCampaigns = useCallback(async () => {
     if (!isFundraiser) return;
     const response = await api.myCampaigns();
-    setCampaigns(response.data);
+    setCampaigns(Array.isArray(response.data) ? response.data : []);
   }, [isFundraiser]);
 
   const loadReceipts = useCallback(async () => {
@@ -140,7 +145,7 @@ export default function DashboardPage() {
 
     try {
       const response = await api.myReceipts(receiptPage);
-      setReceipts(response);
+      setReceipts(withRows(response));
       setReceiptsError(null);
     } catch (caught) {
       setReceiptsError(errorMessage(caught));
@@ -168,9 +173,9 @@ export default function DashboardPage() {
       .then(([mine, myDonations, myDisbursements, myReceipts]) => {
         if (cancelled) return;
         if (mine) setCampaigns(Array.isArray(mine.data) ? mine.data : []);
-        setDonations(myDonations);
-        if (myDisbursements) setDisbursements(myDisbursements);
-        if (myReceipts) setReceipts(myReceipts);
+        setDonations(withRows(myDonations));
+        if (myDisbursements) setDisbursements(withRows(myDisbursements));
+        if (myReceipts) setReceipts(withRows(myReceipts));
       })
       .catch((caught) => {
         if (!cancelled) setError(errorMessage(caught));
@@ -184,7 +189,7 @@ export default function DashboardPage() {
         .merchants()
         .then((response) => {
           if (!cancelled) {
-            setMerchants(response.data);
+            setMerchants(Array.isArray(response.data) ? response.data : []);
             setMerchantsError(null);
           }
         })
@@ -435,9 +440,9 @@ export default function DashboardPage() {
     ])
       .then(([mine, myDonations, myDisbursements, myReceipts]) => {
         if (mine) setCampaigns(Array.isArray(mine.data) ? mine.data : []);
-        setDonations(myDonations);
-        if (myDisbursements) setDisbursements(myDisbursements);
-        if (myReceipts) setReceipts(myReceipts);
+        setDonations(withRows(myDonations));
+        if (myDisbursements) setDisbursements(withRows(myDisbursements));
+        if (myReceipts) setReceipts(withRows(myReceipts));
       })
       .catch((caught) => setError(errorMessage(caught)))
       .finally(() => setLoading(false));
@@ -533,7 +538,7 @@ export default function DashboardPage() {
                       <tr>
                         <th className="px-4 py-3">Kampanye</th>
                         <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3">Terkumpul</th>
+                        <th className="px-4 py-3 text-right">Terkumpul</th>
                         <th className="px-4 py-3">Tenggat</th>
                         <th className="px-4 py-3 text-right">Aksi</th>
                       </tr>
@@ -561,14 +566,14 @@ export default function DashboardPage() {
                               label={campaign.status_label}
                             />
                           </td>
-                          <td className="px-4 py-3">
-                            <span className="font-medium">
+                          <TdNumeric className="px-4 py-3 font-medium">
+                            <span className="block">
                               {rupiah(campaign.current_amount)}
                             </span>
-                            <span className="block text-xs text-ink-muted">
+                            <span className="block text-xs font-normal text-ink-muted">
                               dari {rupiah(campaign.target_amount)}
                             </span>
-                          </td>
+                          </TdNumeric>
                           <td className="px-4 py-3 text-ink-secondary">
                             {dateOnly(campaign.deadline_at)}
                           </td>
@@ -1113,7 +1118,7 @@ export default function DashboardPage() {
             </section>
           ) : null}
 
-          <section id="receipts" className="card overflow-hidden">
+          <section id="receipts" className="card scroll-mt-20 overflow-hidden">
             <div className="border-b border-line px-6 py-5">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
@@ -1176,7 +1181,7 @@ export default function DashboardPage() {
                     <thead className="table-head">
                       <tr>
                         <th className="px-6 py-3">Kampanye</th>
-                        <th className="px-4 py-3">Nominal</th>
+                        <th className="px-4 py-3 text-right">Nominal</th>
                         <th className="px-4 py-3">Status nota</th>
                         <th className="px-4 py-3">Keyakinan OCR</th>
                         <th className="px-4 py-3">Catatan verifikator</th>
@@ -1288,7 +1293,7 @@ export default function DashboardPage() {
             )}
           </section>
 
-          <section id="disbursements" className="card overflow-hidden">
+          <section id="disbursements" className="card scroll-mt-20 overflow-hidden">
             <div className="border-b border-line px-6 py-5">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
@@ -1331,7 +1336,7 @@ export default function DashboardPage() {
                     <thead className="table-head">
                       <tr>
                         <th className="px-6 py-3">Kampanye & merchant</th>
-                        <th className="px-4 py-3">Nominal</th>
+                        <th className="px-4 py-3 text-right">Nominal</th>
                         <th className="px-4 py-3">Transaksi</th>
                         <th className="px-4 py-3">Nota</th>
                         <th className="px-6 py-3">Waktu</th>
@@ -1492,7 +1497,7 @@ export default function DashboardPage() {
                   <thead className="table-head">
                     <tr>
                       <th className="px-4 py-3">Kampanye</th>
-                      <th className="px-4 py-3">Nominal</th>
+                      <th className="px-4 py-3 text-right">Nominal</th>
                       <th className="px-4 py-3">Status</th>
                       <th className="px-4 py-3">Dibuat</th>
                     </tr>

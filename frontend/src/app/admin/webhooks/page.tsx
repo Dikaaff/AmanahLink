@@ -104,6 +104,7 @@ export default function WebhookEventsPage() {
                 ...current.meta,
                 total:
                   current.meta?.total !== undefined &&
+                  applied.status &&
                   response.data.status !== applied.status
                     ? Math.max(0, current.meta.total - 1)
                     : current.meta?.total,
@@ -222,6 +223,8 @@ export default function WebhookEventsPage() {
               applied.status || applied.provider ? (
                 <ClearFilterAction
                   onClear={() => {
+                    setLoading(true);
+                    setError(null);
                     setStatus("");
                     setProvider("");
                     setApplied({ status: "", provider: "" });

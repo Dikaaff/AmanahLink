@@ -176,7 +176,7 @@ test.describe("P5 empty dan failure state", () => {
 
     await login(page);
 
-    await page.getByRole("button", { name: "Cairkan dana" }).click();
+    await page.getByRole("button", { name: "Cairkan dana" }).first().click();
     const overlay = page.locator("[role='dialog']");
     await overlay.getByLabel("Kampanye", { exact: true }).selectOption("2");
     await overlay.getByLabel("Merchant terverifikasi").selectOption("1");
@@ -275,7 +275,8 @@ test.describe("P5 empty dan failure state", () => {
         : route.fetch(),
     );
 
-    await page.goto("/dashboard/new");
+    await page.getByRole("link", { name: "Kampanye Baru" }).click();
+    await expect(page).toHaveURL(/\/dashboard\/new$/);
     await page.getByLabel("Judul").fill("Kampanye Anak Yatim 2026");
     await page
       .getByLabel("Deskripsi")
@@ -323,7 +324,8 @@ test.describe("P5 empty dan failure state", () => {
 
     await login(page, true);
 
-    await page.goto("/admin/webhooks");
+    await page.getByRole("link", { name: "Webhook & DLQ" }).click();
+    await expect(page).toHaveURL(/\/admin\/webhooks$/);
     await expect(page.getByRole("heading", { name: "Webhook & dead-letter queue" })).toBeVisible();
 
     // Filter default dead_letter menghasilkan antrean kosong + aksi hapus filter.

@@ -88,7 +88,10 @@ export default function NotificationsPage() {
     setLoading(true);
     setError(null);
     load()
-      .then((response) => setResult(response))
+      .then((response) => {
+        setResult(response);
+        setUnreadNotifications(response.meta?.unread_count ?? 0);
+      })
       .catch((caught) => setError(errorMessage(caught)))
       .finally(() => setLoading(false));
   }
@@ -141,9 +144,11 @@ export default function NotificationsPage() {
       current
         ? {
             ...current,
-            data: current.data.map((item) =>
-              item.read_at ? item : withReadAt(item, new Date().toISOString()),
-            ),
+            data: current.data
+              .map((item) =>
+                item.read_at ? item : withReadAt(item, new Date().toISOString()),
+              )
+              .filter((item) => !unreadOnly || !item.read_at),
           }
         : current,
     );
@@ -152,6 +157,7 @@ export default function NotificationsPage() {
     try {
       const response = await api.markAllNotificationsRead();
       setUnreadNotifications(response.data.unread_count);
+      await refreshUnreadNotifications();
       notifySuccess(`${response.data.marked} notifikasi ditandai sudah dibaca.`);
     } catch (caught) {
       setResult(previous);
