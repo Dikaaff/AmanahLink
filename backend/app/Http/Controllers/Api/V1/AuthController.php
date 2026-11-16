@@ -74,6 +74,14 @@ final class AuthController
 
         RateLimiter::clear($throttleKey);
 
+        if ($user->isSuspended()) {
+            return ApiError::response(
+                'ACCOUNT_SUSPENDED',
+                'Akun ini sedang ditangguhkan. Hubungi administrator platform.',
+                403,
+            );
+        }
+
         $token = $user->createToken('api', ['*'])->plainTextToken;
 
         return response()->json([

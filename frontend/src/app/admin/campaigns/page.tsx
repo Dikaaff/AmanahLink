@@ -21,7 +21,7 @@ import { FormOverlay } from "@/components/ui/form-overlay";
 import { api, errorMessage, type Campaign, type Paginated } from "@/lib/api";
 import { dateOnly, rupiah } from "@/lib/format";
 import { notifyFailure, notifySuccess, useFlash } from "@/lib/feedback";
-import { REVIEW_TABS } from "@/lib/sections";
+import { reviewTabs } from "@/lib/sections";
 
 function replaceCampaign(
   items: Campaign[],
@@ -269,7 +269,7 @@ export default function CampaignOperationsPage() {
         className="!items-start"
       />
 
-      <SectionTabs label="Menu review" items={REVIEW_TABS} />
+      <SectionTabs label="Menu review" items={reviewTabs(user?.role)} />
 
       <form onSubmit={handleFilter} className="card grid gap-4 p-5 sm:grid-cols-[1fr_auto]">
         <div>

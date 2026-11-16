@@ -58,6 +58,10 @@ final class CampaignFreezeApiTest extends TestCase
         $this->assertNotNull($campaign->frozen_at);
         $this->assertDatabaseHas('audit_logs', ['action' => 'campaign.frozen']);
 
+        // Admin only froze the campaign; the spending attempts below belong to
+        // the fundraiser whose money is blocked (P8 separation of duties).
+        Sanctum::actingAs($campaign->campaigner);
+
         $this->withHeader('Idempotency-Key', 'donation-after-freeze')
             ->postJson('/api/v1/donations', [
                 'campaign_id' => $campaign->id,

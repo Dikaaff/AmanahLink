@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import {
   Activity,
   Bell,
   ClipboardCheck,
   Compass,
   LayoutDashboard,
+  ListChecks,
   LogOut,
   Megaphone,
   ReceiptText,
+  Users,
   Wallet,
 } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
@@ -43,10 +45,10 @@ const DANA_PATHS = [
 const REVIEW_PATHS = [
   "/admin/campaigns",
   "/admin/receipts",
+  "/admin/pencairan",
   "/admin/audit-logs",
 ];
 
-const OPS_PATHS = ["/admin", "/admin/webhooks"];
 
 function isActive(pathname: string, item: NavItem): boolean {
   if (item.match?.length) {
@@ -123,22 +125,41 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, ready, unreadNotifications, logout } = useAuth();
   const online = useOnlineStatus();
 
-  const isFundraiser = user?.role === "campaigner" || user?.role === "admin";
+  // Admin moderates; it never owns campaigns or spends campaign money. Keeping
+  // the fundraiser surfaces out of the admin role is part of that separation.
+  const isFundraiser = user?.role === "campaigner";
   const isReviewer = user?.role === "verifier" || user?.role === "admin";
   const isAdmin = user?.role === "admin";
 
+  useEffect(() => {
+    if (!ready || !user) return;
+
+    if (!pathname.startsWith("/dashboard")) return;
+
+    if (user.role === "admin") {
+      router.replace("/admin");
+    } else if (user.role === "verifier") {
+      router.replace("/admin/campaigns");
+    }
+  }, [ready, user, pathname, router]);
+
+  const notificationsItem: NavItem = {
+    href: "/notifications",
+    label: "Notifikasi",
+    Icon: Bell,
+    badge: unreadNotifications,
+  };
+
   const groups: NavGroup[] = [
     {
-      items: [
-        { href: "/dashboard", label: "Dasbor", Icon: LayoutDashboard },
-        { href: "/dashboard/donasi", label: "Donasi saya", Icon: ReceiptText },
-        {
-          href: "/notifications",
-          label: "Notifikasi",
-          Icon: Bell,
-          badge: unreadNotifications,
-        },
-      ],
+      items:
+        isReviewer
+          ? [notificationsItem]
+          : [
+              { href: "/dashboard", label: "Dasbor", Icon: LayoutDashboard },
+              { href: "/dashboard/donasi", label: "Donasi saya", Icon: ReceiptText },
+              notificationsItem,
+            ],
     },
   ];
 
@@ -157,7 +178,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     });
   }
 
-  if (isReviewer) {
+  if (isReviewer && !isAdmin) {
     groups.push({
       label: "Verifikasi",
       items: [
@@ -175,12 +196,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     groups.push({
       label: "Admin",
       items: [
+        { href: "/admin", label: "Tugas", Icon: ListChecks },
         {
-          href: "/admin",
-          label: "Operasional",
-          Icon: Activity,
-          match: OPS_PATHS,
+          href: "/admin/campaigns",
+          label: "Review",
+          Icon: ClipboardCheck,
+          match: REVIEW_PATHS,
         },
+        { href: "/admin/users", label: "Pengguna", Icon: Users },
+        { href: "/admin/webhooks", label: "Operasional", Icon: Activity },
       ],
     });
   }
@@ -192,19 +216,18 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const mobileItems: NavItem[] = isAdmin
     ? [
-        { href: "/dashboard", label: "Dasbor", Icon: LayoutDashboard },
+        { href: "/admin", label: "Tugas", Icon: ListChecks },
         {
           href: "/admin/campaigns",
           label: "Review",
           Icon: ClipboardCheck,
           match: REVIEW_PATHS,
         },
-        { href: "/dashboard/pencairan", label: "Dana", Icon: Wallet, match: DANA_PATHS },
-        { href: "/admin", label: "Operasional", Icon: Activity, match: OPS_PATHS },
+        { href: "/admin/users", label: "Pengguna", Icon: Users },
+        { href: "/admin/webhooks", label: "Operasional", Icon: Activity },
       ]
     : isReviewer
       ? [
-          { href: "/dashboard", label: "Dasbor", Icon: LayoutDashboard },
           {
             href: "/admin/campaigns",
             label: "Review",
@@ -217,6 +240,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             Icon: Bell,
             badge: unreadNotifications,
           },
+          { href: "/", label: "Jelajahi", Icon: Compass },
         ]
       : isFundraiser
         ? [

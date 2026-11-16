@@ -57,6 +57,7 @@ export function DonationSheet({
   const [paidDonation, setPaidDonation] = useState<Donation | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
 
+  const isStaff = user?.role === "admin" || user?.role === "verifier";
   const currentAmountError = amountError(amount);
   const visibleAmountError = amountTouched ? currentAmountError : null;
   const dirty =
@@ -149,7 +150,7 @@ export function DonationSheet({
           title="Donasi sekarang"
           description={campaign.title}
           footer={
-            payment || paidDonation ? null : (
+            payment || paidDonation || isStaff ? null : (
               <button
                 type="submit"
                 form="donation-form"
@@ -171,7 +172,15 @@ export function DonationSheet({
             terkonfirmasi. Biaya platform 2% dipotong sekali saat dana diterima.
           </p>
 
-          {!ready ? (
+          {isStaff ? (
+            <div className="mt-4">
+              <Alert tone="info">
+                Akun staf tidak dapat berdonasi. Gunakan akun donatur untuk
+                mencoba alur ini; pemisahan ini menjaga penilai tetap independen
+                dari kampanye yang ia review.
+              </Alert>
+            </div>
+          ) : !ready ? (
             <p role="status" className="mt-4 text-body-sm text-ink-secondary">
               Menyiapkan formulir.
             </p>

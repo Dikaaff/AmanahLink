@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AdminDashboardController;
+use App\Http\Controllers\Api\V1\AdminUserController;
 use App\Http\Controllers\Api\V1\AuditLogController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CampaignController;
@@ -29,7 +30,7 @@ Route::prefix('v1')->group(function (): void {
 
     Route::get('campaigns', [CampaignController::class, 'index']);
 
-    Route::middleware('auth:sanctum')->group(function (): void {
+    Route::middleware(['auth:sanctum', 'account.active'])->group(function (): void {
         Route::get('auth/me', [AuthController::class, 'me']);
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::post('auth/email/resend', [EmailVerificationController::class, 'resend'])
@@ -74,6 +75,10 @@ Route::prefix('v1')->group(function (): void {
         Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead']);
 
         Route::get('admin/dashboard', AdminDashboardController::class);
+        Route::get('admin/users', [AdminUserController::class, 'index']);
+        Route::patch('admin/users/{user}/role', [AdminUserController::class, 'updateRole']);
+        Route::post('admin/users/{user}/suspend', [AdminUserController::class, 'suspend']);
+        Route::post('admin/users/{user}/reactivate', [AdminUserController::class, 'reactivate']);
         Route::get('admin/webhook-events', [WebhookEventController::class, 'index']);
         Route::post('admin/webhook-events/{webhookEvent}/replay', [WebhookEventController::class, 'replay']);
 

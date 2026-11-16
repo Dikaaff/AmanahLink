@@ -16,7 +16,7 @@ import {
 } from "@/components/ui";
 import { api, errorMessage, type AuditLog, type Paginated } from "@/lib/api";
 import { dateTime } from "@/lib/format";
-import { REVIEW_TABS } from "@/lib/sections";
+import { reviewTabs } from "@/lib/sections";
 
 export default function AuditLogsPage() {
   const { user, ready } = useAuth();
@@ -133,7 +133,7 @@ export default function AuditLogsPage() {
         className="!items-start"
       />
 
-      <SectionTabs label="Menu review" items={REVIEW_TABS} />
+      <SectionTabs label="Menu review" items={reviewTabs(user?.role)} />
 
       <form onSubmit={handleFilter} className="card grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-5">
         <div>

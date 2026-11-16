@@ -24,7 +24,13 @@ export default function LoginPage() {
 
     try {
       const user = await login(email, password);
-      router.push(user.role === "admin" ? "/admin" : "/dashboard");
+      router.push(
+        user.role === "admin"
+          ? "/admin"
+          : user.role === "verifier"
+            ? "/admin/campaigns"
+            : "/dashboard",
+      );
     } catch (caught) {
       setError(errorMessage(caught));
       if (caught instanceof ApiError) setFields(caught.fields);

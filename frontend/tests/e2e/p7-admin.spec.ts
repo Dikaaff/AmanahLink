@@ -30,6 +30,54 @@ const adminDashboard = {
   receipts_needs_review: 1,
   authorize_p95_ms: 180,
   authorize_sample_count: 42,
+  queue: {
+    campaigns_pending_review: 1,
+    receipts_needs_review: 1,
+    disbursements_awaiting_receipt: 1,
+    webhook_dead_letter: 1,
+    suspended_users: 1,
+  },
+};
+
+const donorUser = {
+  id: 5,
+  name: "Siti Aminah",
+  email: "siti@amanahlink.test",
+  role: "donor",
+  role_label: "Donatur",
+  email_verified_at: "2026-11-01T00:00:00.000000Z",
+  suspended_at: null,
+  is_suspended: false,
+  created_at: "2026-11-01T00:00:00.000000Z",
+};
+
+const suspendedUser = {
+  id: 6,
+  name: "Akun Ditahan",
+  email: "ditahan@amanahlink.test",
+  role: "campaigner",
+  role_label: "Penggalang Dana",
+  email_verified_at: "2026-11-01T00:00:00.000000Z",
+  suspended_at: "2026-11-05T00:00:00.000000Z",
+  is_suspended: true,
+  created_at: "2026-11-01T00:00:00.000000Z",
+};
+
+const disbursement = {
+  id: 4,
+  reference_id: "TRX-ADMIN-1",
+  amount: "50000.00",
+  status: "receipt_pending",
+  status_label: "Menunggu Nota",
+  mcc_used: "5912",
+  campaign: {
+    id: 7,
+    title: "Bantu Biaya Operasi Ibu Sari",
+    slug: "bantu-biaya-operasi",
+  },
+  merchant: { id: 3, name: "Apotek Sehat Sentosa" },
+  receipt: null,
+  created_at: "2026-11-03T00:00:00.000000Z",
 };
 
 const pendingCampaign = {
@@ -118,10 +166,13 @@ async function mockAdminApi(page: Page) {
         return route.fulfill({ json: { data: [], meta: { unread_count: 0 } } });
       case "/campaigns/mine":
       case "/donations":
-      case "/disbursements":
-      case "/receipts":
-        if (path === "/receipts") return route.fulfill({ json: paginated([receipt]) });
         return route.fulfill({ json: paginated([]) });
+      case "/disbursements":
+        return route.fulfill({ json: paginated([disbursement]) });
+      case "/receipts":
+        return route.fulfill({ json: paginated([receipt]) });
+      case "/admin/users":
+        return route.fulfill({ json: paginated([donorUser, suspendedUser]) });
       case "/merchants":
         return route.fulfill({ json: paginated([]) });
       case "/admin/dashboard":
@@ -164,15 +215,25 @@ for (const width of [768, 1440]) {
     await mockAdminApi(page);
     await login(page);
 
-    await page.locator('nav a[href="/admin"]').first().click();
+    await page.locator('nav a[href="/admin"]:visible').first().click();
     await expect(page).toHaveURL(/\/admin$/);
+    await expect(
+      page.getByRole("heading", { name: "Pusat tugas" }),
+    ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Kesehatan platform" }),
     ).toBeVisible();
-    await expect(page.getByText("Saldo ledger").first()).toBeVisible();
+    await expect(page.getByText("Saldo dari ledger").first()).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Antrean keputusan" }),
+    ).toBeVisible();
+    // Admin must not get the fundraiser/donor surfaces.
+    await expect(page.locator('nav a[href="/dashboard/campaigns"]')).toHaveCount(0);
+    await expect(page.locator('nav a[href="/dashboard/pencairan"]')).toHaveCount(0);
+    await expect(page.locator('nav a[href="/dashboard/donasi"]')).toHaveCount(0);
     await expectNoOverflow(page, `P7 dashboard @${width}`);
 
-    await page.locator('nav a[href="/admin/campaigns"]').click();
+    await page.locator('nav a[href="/admin/campaigns"]:visible').first().click();
     await expect(page).toHaveURL(/\/admin\/campaigns$/);
     await expect(
       page.getByRole("heading", { name: "Operasi kampanye" }),
@@ -180,7 +241,7 @@ for (const width of [768, 1440]) {
     await expect(page.getByRole("button", { name: "Setujui" })).toBeVisible();
     await expectNoOverflow(page, `P7 campaigns @${width}`);
 
-    await page.locator('nav a[href="/admin/receipts"]').click();
+    await page.getByRole("link", { name: "Nota", exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/receipts$/);
     await expect(page.getByRole("heading", { name: "Antrean nota" })).toBeVisible();
     await expect(
@@ -188,7 +249,18 @@ for (const width of [768, 1440]) {
     ).toBeVisible();
     await expectNoOverflow(page, `P7 receipts @${width}`);
 
-    await page.locator('nav a[href="/admin/audit-logs"]').click();
+    await page.getByRole("link", { name: "Pencairan", exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/pencairan$/);
+    await expect(
+      page.getByRole("heading", { name: "Pengawasan pencairan" }),
+    ).toBeVisible();
+    await expect(page.getByText("Apotek Sehat Sentosa").first()).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Cairkan" }),
+    ).toHaveCount(0);
+    await expectNoOverflow(page, `P7 disbursements @${width}`);
+
+    await page.getByRole("link", { name: "Audit log", exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/audit-logs$/);
     await expect(
       page.getByRole("heading", { name: "Jejak perubahan" }),
@@ -196,8 +268,14 @@ for (const width of [768, 1440]) {
     await expect(page.getByText("campaign.approved")).toBeVisible();
     await expectNoOverflow(page, `P7 audit @${width}`);
 
-    await page.locator('nav a[href="/admin"]').first().click();
-    await page.getByRole("link", { name: "Webhook & DLQ" }).click();
+    await page.locator('nav a[href="/admin/users"]:visible').first().click();
+    await expect(page).toHaveURL(/\/admin\/users$/);
+    await expect(page.getByRole("heading", { name: "Pengguna" })).toBeVisible();
+    await expect(page.getByText("Siti Aminah")).toBeVisible();
+    await expect(page.getByText("Akun Ditahan")).toBeVisible();
+    await expectNoOverflow(page, `P7 users @${width}`);
+
+    await page.locator('nav a[href="/admin/webhooks"]:visible').first().click();
     await expect(page).toHaveURL(/\/admin\/webhooks$/);
     await expect(
       page.getByRole("heading", { name: "Webhook & dead-letter queue" }),
@@ -211,7 +289,7 @@ test("P3 admin reason forms open as guarded overlays", async ({ page }) => {
   await mockAdminApi(page);
   await login(page);
 
-  await page.locator('nav a[href="/admin/campaigns"]').click();
+  await page.locator('nav a[href="/admin/campaigns"]:visible').first().click();
   await expect(page).toHaveURL(/\/admin\/campaigns$/);
   await expect(
     page.getByRole("heading", { name: "Operasi kampanye" }),
@@ -230,7 +308,8 @@ test("P3 admin reason forms open as guarded overlays", async ({ page }) => {
     page.getByRole("dialog", { name: "Tolak kampanye" }),
   ).not.toBeVisible();
 
-  await page.locator('nav a[href="/admin/receipts"]').click();
+  await page.locator('nav a[href="/admin/campaigns"]:visible').first().click();
+  await page.getByRole("link", { name: "Nota", exact: true }).click();
   await expect(page).toHaveURL(/\/admin\/receipts$/);
   await expect(page.getByRole("heading", { name: "Antrean nota" })).toBeVisible();
   await page.getByRole("button", { name: "Tolak", exact: true }).click();

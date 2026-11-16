@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Exceptions\AccountSuspendedException;
 use App\Exceptions\CampaignLockedException;
 use App\Exceptions\CampaignNotActiveException;
 use App\Exceptions\DuplicateRequestException;
@@ -15,6 +16,7 @@ use App\Exceptions\LimitExceededException;
 use App\Exceptions\LimitExpiredException;
 use App\Exceptions\MccNotAllowedException;
 use App\Http\Middleware\AssignRequestId;
+use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\RecordAuthorizeMetrics;
 use App\Http\Middleware\SecurityHeaders;
@@ -44,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(SecurityHeaders::class);
         $middleware->alias([
+            'account.active' => EnsureAccountIsActive::class,
             'email.verified' => EnsureEmailIsVerified::class,
         ]);
         $middleware->api(prepend: [AssignRequestId::class]);
@@ -87,6 +90,14 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return ApiError::response('EMAIL_UNVERIFIED', $e->getMessage(), 403);
+        });
+
+        $exceptions->render(function (AccountSuspendedException $e, Request $request) use ($isApi) {
+            if (! $isApi($request)) {
+                return null;
+            }
+
+            return ApiError::response('ACCOUNT_SUSPENDED', $e->getMessage(), 403);
         });
 
         $exceptions->render(function (AuthorizationException $e, Request $request) use ($isApi) {

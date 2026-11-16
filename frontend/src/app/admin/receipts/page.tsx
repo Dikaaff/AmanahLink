@@ -19,7 +19,7 @@ import { FormOverlay } from "@/components/ui/form-overlay";
 import { api, errorMessage, type Paginated, type Receipt } from "@/lib/api";
 import { dateTime } from "@/lib/format";
 import { notifySuccess, useFlash } from "@/lib/feedback";
-import { REVIEW_TABS } from "@/lib/sections";
+import { reviewTabs } from "@/lib/sections";
 
 function replaceReceipt(items: Receipt[], next: Receipt): Receipt[] {
   return items.map((receipt) => (receipt.id === next.id ? next : receipt));
@@ -182,7 +182,7 @@ export default function ReceiptReviewPage() {
         className="!items-start"
       />
 
-      <SectionTabs label="Menu review" items={REVIEW_TABS} />
+      <SectionTabs label="Menu review" items={reviewTabs(user?.role)} />
 
       <form onSubmit={handleFilter} className="card grid gap-4 p-5 sm:grid-cols-[1fr_auto]">
         <div>

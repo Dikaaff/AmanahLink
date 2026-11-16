@@ -11,10 +11,18 @@ export const DANA_TABS: SectionTabItem[] = [
 export const REVIEW_TABS: SectionTabItem[] = [
   { href: "/admin/campaigns", label: "Kampanye" },
   { href: "/admin/receipts", label: "Nota" },
+  { href: "/admin/pencairan", label: "Pencairan" },
   { href: "/admin/audit-logs", label: "Audit log" },
 ];
 
+/** Disbursement oversight is admin-only; verifiers do not get the tab. */
+export function reviewTabs(role?: string): SectionTabItem[] {
+  return role === "admin"
+    ? REVIEW_TABS
+    : REVIEW_TABS.filter((tab) => tab.href !== "/admin/pencairan");
+}
+
 export const OPS_TABS: SectionTabItem[] = [
-  { href: "/admin", label: "Kesehatan", exact: true },
+  { href: "/admin", label: "Tugas", exact: true },
   { href: "/admin/webhooks", label: "Webhook & DLQ" },
 ];

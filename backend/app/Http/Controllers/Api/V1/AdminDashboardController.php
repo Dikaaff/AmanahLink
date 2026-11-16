@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\AccountCode;
+use App\Enums\CampaignStatus;
 use App\Enums\DonationStatus;
 use App\Enums\ReceiptStatus;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
+use App\Enums\WebhookStatus;
 use App\Models\Campaign;
 use App\Models\Donation;
 use App\Models\LedgerAccount;
 use App\Models\Receipt;
 use App\Models\Transaction;
+use App\Models\User;
+use App\Models\WebhookEvent;
 use App\Support\Money;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
@@ -71,6 +75,22 @@ final class AdminDashboardController
                     ->count(),
                 'authorize_p95_ms' => $this->authorizeP95(),
                 'authorize_sample_count' => $this->authorizeSampleCount(),
+                'queue' => [
+                    'campaigns_pending_review' => Campaign::query()
+                        ->where('status', CampaignStatus::PendingReview->value)
+                        ->count(),
+                    'receipts_needs_review' => Receipt::query()
+                        ->where('status', ReceiptStatus::NeedsReview->value)
+                        ->count(),
+                    'disbursements_awaiting_receipt' => Transaction::query()
+                        ->where('type', TransactionType::Disbursement->value)
+                        ->where('status', TransactionStatus::ReceiptPending->value)
+                        ->count(),
+                    'webhook_dead_letter' => WebhookEvent::query()
+                        ->where('status', WebhookStatus::DeadLetter->value)
+                        ->count(),
+                    'suspended_users' => User::query()->whereNotNull('suspended_at')->count(),
+                ],
             ],
         ]);
     }

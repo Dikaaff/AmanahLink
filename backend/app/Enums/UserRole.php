@@ -45,4 +45,28 @@ enum UserRole: string
     {
         return $this === self::Admin;
     }
+
+    /**
+     * Admin operations never create campaigns: the fundraiser owns the content
+     * and the admin only decides whether it may go live (maker-checker).
+     */
+    public function canCreateCampaigns(): bool
+    {
+        return $this === self::Campaigner;
+    }
+
+    public function canDonate(): bool
+    {
+        return in_array($this, [self::Donor, self::Campaigner], true);
+    }
+
+    public function canInitiateDisbursement(): bool
+    {
+        return $this === self::Campaigner;
+    }
+
+    public function canManageUsers(): bool
+    {
+        return $this === self::Admin;
+    }
 }

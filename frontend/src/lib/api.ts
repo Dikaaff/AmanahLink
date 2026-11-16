@@ -12,6 +12,8 @@ export interface User {
   role: UserRole;
   role_label: string;
   email_verified_at: string | null;
+  suspended_at?: string | null;
+  is_suspended?: boolean;
   created_at: string | null;
 }
 
@@ -204,6 +206,13 @@ export interface Dashboard {
   receipts_needs_review: number;
   authorize_p95_ms: number | null;
   authorize_sample_count: number;
+  queue?: {
+    campaigns_pending_review: number;
+    receipts_needs_review: number;
+    disbursements_awaiting_receipt: number;
+    webhook_dead_letter: number;
+    suspended_users: number;
+  };
 }
 
 export interface PageMeta {
@@ -545,6 +554,26 @@ export const api = {
     }),
 
   dashboard: () => request<{ data: Dashboard }>("/admin/dashboard"),
+
+  adminUsers: (
+    filters: { q?: string; role?: string; status?: string } = {},
+    page = 1,
+  ) => {
+    const params = new URLSearchParams({ page: String(page) });
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
+    return request<Paginated<User>>(`/admin/users?${params.toString()}`);
+  },
+
+  updateUserRole: (id: number, role: "donor" | "campaigner" | "verifier") =>
+    request<{ data: User }>(`/admin/users/${id}/role`, json({ role }, "PATCH")),
+
+  suspendUser: (id: number, reason: string) =>
+    request<{ data: User }>(`/admin/users/${id}/suspend`, json({ reason })),
+
+  reactivateUser: (id: number) =>
+    request<{ data: User }>(`/admin/users/${id}/reactivate`, { method: "POST" }),
 
   webhookEvents: (filters: { status?: string; provider?: string; cursor?: string }) => {
     const params = new URLSearchParams();

@@ -30,6 +30,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'suspended_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
         ];
@@ -48,5 +49,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
     }
 }

@@ -25,6 +25,8 @@ final class UserResource extends JsonResource
             'role' => $this->role->value,
             'role_label' => $this->role->label(),
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
+            'suspended_at' => $this->suspended_at?->toIso8601String(),
+            'is_suspended' => $this->isSuspended(),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

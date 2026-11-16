@@ -21,8 +21,12 @@ final class TransactionPolicy
             || $user->getKey() === $transaction->campaign?->user_id;
     }
 
+    /**
+     * The proof of spend is uploaded by the fundraiser who spent the money. An
+     * admin who uploads it would be verifying their own evidence (S2).
+     */
     public function uploadReceipt(User $user, Transaction $transaction): bool
     {
-        return $user->getKey() === $transaction->campaign?->user_id || $user->isAdmin();
+        return $user->getKey() === $transaction->campaign?->user_id;
     }
 }
