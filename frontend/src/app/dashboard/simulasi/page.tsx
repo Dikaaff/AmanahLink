@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
+import { AppPage } from "@/components/app-shell";
+import { ScreenHeader } from "@/components/screen-header";
+import { SectionTabs } from "@/components/section-tabs";
 import { Alert, ErrorState, Loading } from "@/components/ui";
 import {
   api,
@@ -13,6 +16,7 @@ import {
   type Merchant,
 } from "@/lib/api";
 import { rupiah } from "@/lib/format";
+import { DANA_TABS } from "@/lib/sections";
 
 const DISBURSABLE = ["active", "funded"];
 
@@ -103,9 +107,9 @@ export default function SimulateScanPage() {
 
   if (!ready || (canUse && loading)) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      <AppPage narrow>
         <Loading label="Memuat data kampanye…" />
-      </div>
+      </AppPage>
     );
   }
 
@@ -113,37 +117,27 @@ export default function SimulateScanPage() {
 
   if (!canUse) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+      <AppPage narrow>
         <Alert tone="info">
           Simulasi pindai hanya untuk akun penggalang dana dan administrator.
         </Alert>
         <Link href="/dashboard" className="btn-secondary mt-5">
           Kembali ke dasbor
         </Link>
-      </div>
+      </AppPage>
     );
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-10 sm:px-6">
-      <Link
-        href="/dashboard"
-        className="text-sm font-medium text-ink-secondary hover:text-ink"
-      >
-        ← Dasbor
-      </Link>
+    <AppPage narrow>
+      <ScreenHeader
+        eyebrow="Dana"
+        title="Simulasi pindai"
+        description="Coba pencairan tanpa memindahkan dana; aturan yang dipakai sama dengan pencairan sungguhan."
+        className="!items-start"
+      />
 
-      <header>
-        <p className="text-label font-medium uppercase text-ink-secondary">
-          Pemakaian dana
-        </p>
-        <h1 className="mt-2 text-h1 font-semibold text-ink">Simulasi pindai</h1>
-        <p className="mt-2 max-w-2xl text-body-sm text-ink-secondary">
-          Periksa apakah pencairan akan diterima sebelum dana bergerak. Hasil
-          simulasi memakai aturan backend yang sama dengan pencairan
-          sesungguhnya, tetapi tidak membuat transaksi maupun entri ledger.
-        </p>
-      </header>
+      <SectionTabs label="Menu dana" items={DANA_TABS} />
 
       {error ? (
         <ErrorState message={error} onRetry={() => router.refresh()} />
@@ -269,6 +263,6 @@ export default function SimulateScanPage() {
           </Alert>
         )
       ) : null}
-    </div>
+    </AppPage>
   );
 }

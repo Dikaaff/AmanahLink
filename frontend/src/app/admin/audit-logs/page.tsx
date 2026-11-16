@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { AppPage } from "@/components/app-shell";
 import { useAuth } from "@/components/auth-provider";
+import { ScreenHeader } from "@/components/screen-header";
+import { SectionTabs } from "@/components/section-tabs";
 import {
   Alert,
   ClearFilterAction,
@@ -13,6 +16,7 @@ import {
 } from "@/components/ui";
 import { api, errorMessage, type AuditLog, type Paginated } from "@/lib/api";
 import { dateTime } from "@/lib/format";
+import { REVIEW_TABS } from "@/lib/sections";
 
 export default function AuditLogsPage() {
   const { user, ready } = useAuth();
@@ -121,24 +125,15 @@ export default function AuditLogsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-10 sm:px-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
-            Audit
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-ink">
-            Jejak perubahan
-          </h1>
-          <p className="mt-1 text-sm text-ink-muted">
-            Append-only. Setiap mutasi state menulis satu baris; baris tidak dapat
-            diubah atau dihapus.
-          </p>
-        </div>
-        <Link href="/admin" className="btn-secondary">
-          Dasbor admin
-        </Link>
-      </header>
+    <AppPage>
+      <ScreenHeader
+        eyebrow="Review"
+        title="Jejak perubahan"
+        description="Catatan tetap: setiap perubahan tercatat dan tidak dapat diubah atau dihapus."
+        className="!items-start"
+      />
+
+      <SectionTabs label="Menu review" items={REVIEW_TABS} />
 
       <form onSubmit={handleFilter} className="card grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-5">
         <div>
@@ -316,6 +311,6 @@ export default function AuditLogsPage() {
           </div>
         </>
       )}
-    </div>
+    </AppPage>
   );
 }

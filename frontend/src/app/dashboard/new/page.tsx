@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
+import { AppPage } from "@/components/app-shell";
+import { ScreenHeader } from "@/components/screen-header";
 import { Alert, Loading } from "@/components/ui";
 import { ApiError, api, errorMessage } from "@/lib/api";
 import { MCC_OPTIONS } from "@/lib/mcc";
@@ -75,15 +77,15 @@ export default function NewCampaignPage() {
 
   if (!ready) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+      <AppPage narrow>
         <Loading />
-      </div>
+      </AppPage>
     );
   }
 
   if (!canCreate) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+      <AppPage narrow>
         <Alert tone="info">
           Hanya akun penggalang dana yang dapat membuat kampanye. Akun donatur
           dapat terus berdonasi dan melihat riwayatnya.
@@ -91,28 +93,18 @@ export default function NewCampaignPage() {
         <Link href="/dashboard" className="btn-secondary mt-5">
           Kembali ke dasbor
         </Link>
-      </div>
+      </AppPage>
     );
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-      <Link href="/dashboard" className="text-sm font-medium text-ink-muted hover:text-ink">
-        ← Dasbor
-      </Link>
-
-      <header className="mt-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
-          Kampanye baru
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-ink">
-          Jelaskan tujuan dana, lalu ajukan review.
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-ink-secondary">
-          Draf dapat disunting sampai donasi pertama diterima. Setelah diajukan,
-          verifikator akan meninjau batas kategori transaksi dan kejelasan tujuan.
-        </p>
-      </header>
+    <AppPage narrow>
+      <ScreenHeader
+        eyebrow="Kampanye baru"
+        title="Jelaskan tujuan dana, lalu ajukan review."
+        description="Draf dapat disunting sampai donasi pertama diterima. Setelah diajukan, verifikator akan meninjau batas kategori transaksi dan kejelasan tujuan."
+        className="!items-start"
+      />
 
       <form onSubmit={handleSubmit} className="card mt-6 space-y-5 p-6 sm:p-8">
         {error ? <Alert>{error}</Alert> : null}
@@ -251,6 +243,6 @@ export default function NewCampaignPage() {
           </Link>
         </div>
       </form>
-    </div>
+    </AppPage>
   );
 }

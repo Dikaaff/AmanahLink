@@ -10,16 +10,21 @@ use App\Http\Requests\UpdateMerchantRequest;
 use App\Http\Resources\MerchantResource;
 use App\Models\Merchant;
 use App\Services\AuditLogger;
+use App\Support\MerchantQr;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 final class MerchantController
 {
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(
+        private readonly AuditLogger $audit,
+        private readonly MerchantQr $merchantQr,
+    ) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -145,6 +150,59 @@ final class MerchantController
         });
 
         return new MerchantResource($merchant->refresh()->load('mccCode'));
+    }
+
+    /**
+     * System-issued QR for every verified merchant, so the demo page can show
+     * the whole registry in one request instead of one call per merchant.
+     */
+    public function qrSheet(): JsonResponse
+    {
+        Gate::authorize('viewAny', Merchant::class);
+
+        $merchants = Merchant::query()
+            ->verified()
+            ->with('mccCode')
+            ->orderBy('name')
+            ->limit(50)
+            ->get();
+
+        return response()->json([
+            'data' => $merchants->map(fn (Merchant $merchant): array => [
+                'merchant' => new MerchantResource($merchant),
+                'qr' => [
+                    'payload' => $this->merchantQr->payload($merchant),
+                    'image' => $this->merchantQr->image($merchant),
+                ],
+            ])->all(),
+        ]);
+    }
+
+    /**
+     * System-issued QR for the disbursement scan flow. Only verified merchants
+     * get one; a pending or rejected merchant has nothing to scan into.
+     */
+    public function qr(Merchant $merchant): JsonResponse
+    {
+        Gate::authorize('view', $merchant);
+
+        if ($merchant->status !== MerchantStatus::Verified) {
+            throw ValidationException::withMessages([
+                'merchant' => ['Merchant belum terverifikasi sehingga belum memiliki QR pencairan.'],
+            ]);
+        }
+
+        $merchant->loadMissing('mccCode');
+
+        return response()->json([
+            'data' => [
+                'merchant' => new MerchantResource($merchant),
+                'qr' => [
+                    'payload' => $this->merchantQr->payload($merchant),
+                    'image' => $this->merchantQr->image($merchant),
+                ],
+            ],
+        ]);
     }
 
     private function applyStatus(Merchant $merchant, ?int $actorId): void

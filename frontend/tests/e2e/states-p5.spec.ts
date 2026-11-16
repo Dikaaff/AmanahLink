@@ -176,21 +176,22 @@ test.describe("P5 empty dan failure state", () => {
 
     await login(page);
 
-    await page.getByRole("button", { name: "Cairkan dana" }).first().click();
-    const overlay = page.locator("[role='dialog']");
-    await overlay.getByLabel("Kampanye", { exact: true }).selectOption("2");
-    await overlay.getByLabel("Merchant terverifikasi").selectOption("1");
-    await overlay.getByLabel("Nominal (Rp)").fill("100000");
-    await overlay
+    await page.getByRole("link", { name: "Dana", exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard\/pencairan$/);
+
+    await page.getByLabel("Kampanye", { exact: true }).selectOption("2");
+    await page.getByLabel("Merchant terverifikasi").selectOption("1");
+    await page.getByLabel("Nominal (Rp)").fill("100000");
+    await page
       .getByRole("button", { name: "Cairkan dana", exact: true })
       .click();
 
-    // Kegagalan mutasi uang tetap di bawah field, bukan toast, dan form
-    // tidak tertutup sehingga pengguna bisa memperbaiki isian.
+    // Kegagalan mutasi uang tampil di dalam form, bukan toast, dan isian
+    // tetap ada sehingga pengguna bisa memperbaikinya.
     await expect(
-      overlay.getByText("Kategori transaksi merchant tidak diizinkan kampanye ini."),
+      page.getByText("Kategori transaksi merchant tidak diizinkan kampanye ini."),
     ).toBeVisible();
-    expect(await overlay.count()).toBe(1);
+    await expect(page.getByLabel("Nominal (Rp)")).toHaveValue("100000");
   });
 
   test("sesi berakhir: toast + redirect ke halaman login", async ({ page }) => {
@@ -245,6 +246,8 @@ test.describe("P5 empty dan failure state", () => {
 
     await login(page);
 
+    await page.getByRole("link", { name: "Kampanye saya" }).click();
+    await expect(page).toHaveURL(/\/dashboard\/campaigns$/);
     await page.getByRole("button", { name: "Ajukan review" }).first().click();
 
     await expect(page).toHaveURL(/\/login$/);
@@ -275,19 +278,23 @@ test.describe("P5 empty dan failure state", () => {
         : route.fetch(),
     );
 
-    await page.getByRole("link", { name: "Kampanye Baru" }).click();
+    await page.getByRole("link", { name: "Buat kampanye" }).first().click();
     await expect(page).toHaveURL(/\/dashboard\/new$/);
-    await page.getByLabel("Judul").fill("Kampanye Anak Yatim 2026");
+    await page.getByLabel("Judul kampanye").fill("Kampanye Anak Yatim 2026");
     await page
-      .getByLabel("Deskripsi")
+      .getByLabel("Deskripsi dan rencana penggunaan dana")
       .fill("Dana untuk kebutuhan pendidikan anak yatim selama satu tahun.");
     await page.getByLabel("Target dana (Rp)").fill("1000000");
+    await page.getByLabel("Tenggat kampanye").fill("2027-01-01T00:00");
+    await page.getByRole("checkbox", { name: /Apotek dan Toko Obat/ }).check();
     await page.getByRole("button", { name: "Simpan draf" }).click();
 
     // Isian tetap ada setelah gagal validasi; galat tampil di bawah field.
-    await expect(page.getByLabel("Judul")).toHaveValue("Kampanye Anak Yatim 2026");
+    await expect(page.getByLabel("Judul kampanye")).toHaveValue(
+      "Kampanye Anak Yatim 2026",
+    );
     await expect(
-      page.getByLabel("Deskripsi"),
+      page.getByLabel("Deskripsi dan rencana penggunaan dana"),
     ).toHaveValue("Dana untuk kebutuhan pendidikan anak yatim selama satu tahun.");
     await expect(page.getByText("Periksa kembali isian yang ditandai.")).toBeVisible();
     await expect(page.getByText("Judul sudah dipakai.")).toBeVisible();

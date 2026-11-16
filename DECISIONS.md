@@ -307,6 +307,20 @@
 - **Alternatif yang ditolak:** (a) Klien menyalin aturan MCC/saldo/limit - cepat menyimpang dari service. (b) Memakai `POST /disbursements` sebagai simulasi - setiap percobaan menulis transaksi dan entri ledger nyata.
 - **Konsekuensi:** Aturan tetap satu sumber di `DisbursementService`; test feature menutup jalur sukses dan tiap kode penolakan. Karena penolakan bukan error envelope, klien wajib memeriksa `allowed`, bukan hanya status HTTP.
 
+### D-031 - QR pembayaran driver `fake` adalah simulasi lokal, bukan QRIS acquirer
+
+- **Keputusan:** `PaymentInstruction` mendapat dua field opsional, `qr_string` dan `qr_image`. Driver `fake` mengisinya dengan URL sandbox miliknya sendiri (`https://sandbox.fake.amanahlink.test/pay/{payment_ref}`) dan SVG QR yang dienkode lokal oleh `App\Support\Payment\QrCode` (byte mode, ECC M, versi 1-10, mask 0, tanpa ekstensi GD), lalu dirender UI di bawah label **"QRIS simulasi (driver fake)"**. Driver nyata nanti mengisi field yang sama dengan payload QRIS dari acquirer.
+- **Alasan:** Demo butuh artefak yang bisa dipindai. Tanpa field QR, satu-satunya output adalah VA sehingga alur "pindai QRIS" tidak punya bukti visual. Membuat encoder sendiri menghindari dependency composer baru dan tetap deterministik sehingga replay idempotensi identik byte demi byte.
+- **Alternatif yang ditolak:** (a) Menambah paket QR composer - dependency baru tanpa persetujuan, sementara kebutuhan hanya satu payload statis. (b) Memakai layanan QR eksternal - demo jadi bergantung jaringan dan payload pembayaran bocor ke pihak ketiga. (c) Mengklaim QR itu QRIS nyata - melanggar D-002 dan R-01.
+- **Konsekuensi:** QR hanya boleh dipresentasikan sebagai simulasi; label UI wajib menyebut driver `fake` dan "tidak memindahkan dana". Test menutup determinisme, pemilihan versi, penolakan payload kosong/terlalu panjang, serta kehadiran `qr_string`/`qr_image` pada respons donasi. Encoder diverifikasi dapat dipindai (decoder ZXing) pada versi 1-10.
+
+### D-032 - QR merchant terbitan sistem (HMAC) sebagai input pemindaian pencairan
+
+- **Keputusan:** `App\Support\MerchantQr` menerbitkan payload `AMANAH:MERCHANT:{id}:{mcc}:{sig}` di mana `sig` adalah 18 byte pertama HMAC-SHA256 atas `merchant-qr|{id}|{mcc}` dengan `app.key`, di-encode base64url. `resolve()` mengembalikan `null` untuk payload cacat, tanda tangan salah, MCC tidak sama dengan registry, atau merchant yang statusnya bukan `verified`. QR hanya diterbitkan untuk merchant terverifikasi lewat `GET /api/v1/merchants/{merchant}/qr` (policy `view`) dan `GET /api/v1/merchants/qr-sheet` (policy `viewAny`, hanya merchant terverifikasi, limit 50). `POST /api/v1/disbursements/scan` (`campaign_id`, `amount`, `qr`) memakai `DisbursementService::preview()` yang sama dengan simulasi dan capture; QR tak dikenal/kedaluwarsa -> `422` dengan `error.details.fields.qr`. Pemindaian bersifat read-only: kampanye baru dicairkan setelah penggalang menekan konfirmasi di dialog terpisah.
+- **Alasan:** Dana kampanye hanya boleh keluar ke merchant yang benar-benar terdaftar; tanpa tanda tangan, siapa pun bisa menempa payload berisi MCC yang diizinkan. Menutup MCC di dalam HMAC membuat QR lama otomatis mati saat MCC atau status merchant berubah, sehingga tidak ada QR "bekas" yang tetap sah. Memisahkan periksa dan cairkan mencegah uang keluar karena salah pindai.
+- **Alternatif yang ditolak:** (a) QR berisi URL bebas / id merchant saja - bisa dipalsukan dan tidak membuktikan MCC. (b) Memindai lalu langsung mencairkan - satu kesalahan pindai langsung menggerakkan ledger. (c) Memakai QR pembayaran donatur (D-031) untuk pencairan - payload itu milik alur masuk dana, bukan registry merchant. (d) Mengklaim MCC diblokir di level jaringan - melanggar D-002 dan R-01.
+- **Konsekuensi:** Registry merchant + allowlist MCC tetap satu-satunya sumber kebenaran; label UI wajib menyebut "allowlist registry + MCC", bukan pemblokiran jaringan. `qr-sheet` ada karena `php artisan serve` satu worker: satu permintaan lebih baik daripada satu panggilan per merchant. Daftar QR dimuat malas di UI agar halaman pindai hanya mengirim satu permintaan saat dibuka. Test menutup round-trip, determinisme, tanda tangan yang diubah, MCC yang ditempa, merchant belum terverifikasi, QR kedaluwarsa setelah MCC/status berubah, otorisasi per peran, dan jalur scan allowed/ditolak.
+
 ---
 
 ## 2. Register Asumsi (default yang saya pakai sampai dikoreksi)
@@ -361,3 +375,5 @@
 | 1.16 | 2026-11-04 | D-028 GATE 7/8 disetujui dengan catatan; CI hijau (run #5/#6); bug `.env.example` + `pythonpath` OCR diperbaiki |
 | 1.17 | 2026-11-04 | D-029 simulasi pembayaran demo (`fake` + local/testing), notifikasi `donation_settled`, loading state UI |
 | 1.18 | 2026-11-04 | D-030 dry-run pencairan `POST /disbursements/simulate` + route `/dashboard/simulasi`; nav 768 dibungkus |
+| 1.19 | 2026-11-15 | D-031 QR simulasi driver `fake` (`qr_string`/`qr_image`, encoder lokal ECC M) + label jujur di `DonationSheet` |
+| 1.20 | 2026-11-16 | D-032 QR merchant terbitan sistem (HMAC, `merchants/{merchant}/qr`, `merchants/qr-sheet`), `POST /disbursements/scan`, route `/dashboard/pindai` (periksa dulu, cairkan setelah konfirmasi) |

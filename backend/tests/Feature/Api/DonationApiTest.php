@@ -59,11 +59,19 @@ final class DonationApiTest extends TestCase
             ->assertJsonStructure([
                 'data' => [
                     'donation' => ['id', 'payment_ref', 'expires_at'],
-                    'payment' => ['provider', 'payment_ref', 'payment_url', 'va_number', 'expires_at'],
+                    'payment' => ['provider', 'payment_ref', 'payment_url', 'va_number', 'expires_at', 'qr_string', 'qr_image'],
                 ],
             ]);
 
         $this->assertStringStartsWith('8808', $response->json('data.payment.va_number'));
+        $this->assertSame(
+            $response->json('data.payment.payment_url'),
+            $response->json('data.payment.qr_string'),
+        );
+        $this->assertStringStartsWith(
+            'data:image/svg+xml;base64,',
+            $response->json('data.payment.qr_image'),
+        );
         $this->assertDatabaseHas('donations', [
             'campaign_id' => $campaign->id,
             'donor_id' => $donor->id,
@@ -99,6 +107,10 @@ final class DonationApiTest extends TestCase
         $this->assertSame(
             $first->json('data.payment.va_number'),
             $second->json('data.payment.va_number'),
+        );
+        $this->assertSame(
+            $first->json('data.payment.qr_image'),
+            $second->json('data.payment.qr_image'),
         );
         $this->assertSame(1, Donation::query()->count());
     }

@@ -23,6 +23,11 @@ test("donor settles a demo payment and sees the updated campaign balance", async
   await page.getByRole("button", { name: /^Donasi Rp/ }).click();
   await expect(page.getByText("Instruksi pembayaran dibuat.")).toBeVisible();
 
+  const qr = page.locator('img[alt^="Kode QR"]');
+  await expect(qr).toBeVisible();
+  await expect(page.getByText("QRIS simulasi (driver fake)")).toBeVisible();
+  expect(await qr.getAttribute("src")).toMatch(/^data:image\/svg\+xml;base64,/);
+
   await page.getByRole("button", { name: "Simulasikan pembayaran (demo)" }).click();
   await expect(page.getByText("Pembayaran berhasil.")).toBeVisible();
   await expect(page.getByText(/Saldo sekarang/)).toBeVisible();

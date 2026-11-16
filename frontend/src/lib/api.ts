@@ -55,6 +55,8 @@ export interface PaymentInstruction {
   payment_url: string;
   va_number: string;
   expires_at: string;
+  qr_string?: string | null;
+  qr_image?: string | null;
 }
 
 export interface Disbursement {
@@ -101,6 +103,28 @@ export interface DisbursementSimulation {
   allowed: boolean;
   code: string | null;
   message: string;
+  mcc?: string;
+  allowed_mcc?: string[];
+  ledger_balance?: string;
+  remaining_today?: string;
+  remaining_month?: string;
+  limit_expires_at?: string | null;
+  details?: { scope: "daily" | "monthly"; remaining: string } | null;
+}
+
+export interface MerchantQr {
+  merchant: Merchant;
+  qr: {
+    payload: string;
+    image: string;
+  };
+}
+
+export interface MerchantScanResult {
+  allowed: boolean;
+  code: string | null;
+  message: string;
+  merchant: Merchant;
   mcc?: string;
   allowed_mcc?: string[];
   ledger_balance?: string;
@@ -449,6 +473,18 @@ export const api = {
     amount: string;
   }) =>
     request<{ data: DisbursementSimulation }>("/disbursements/simulate", json(body)),
+
+  merchantQr: (merchantId: number) =>
+    request<{ data: MerchantQr }>(`/merchants/${merchantId}/qr`),
+
+  merchantQrSheet: () => request<{ data: MerchantQr[] }>("/merchants/qr-sheet"),
+
+  scanMerchant: (body: {
+    campaign_id: number;
+    amount: string;
+    qr: string;
+  }) =>
+    request<{ data: MerchantScanResult }>("/disbursements/scan", json(body)),
 
   disbursements: (page = 1, campaignId?: number) => {
     const params = new URLSearchParams({ page: String(page) });

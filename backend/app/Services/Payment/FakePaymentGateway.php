@@ -7,11 +7,15 @@ namespace App\Services\Payment;
 use App\Contracts\PaymentGateway;
 use App\Models\Donation;
 use App\Support\Payment\PaymentInstruction;
+use App\Support\Payment\QrCode;
 
 /**
  * Deterministic offline rail (D-004). The same donation always yields the same
- * virtual account and URL, which makes idempotent replays byte-identical and
- * keeps tests independent of the network.
+ * virtual account, QR payload, and URL, which makes idempotent replays
+ * byte-identical and keeps tests independent of the network.
+ *
+ * The QR is a simulation: it encodes the sandbox payment URL promised by this
+ * driver, not a real QRIS payload from an acquirer (D-031).
  */
 final class FakePaymentGateway implements PaymentGateway
 {
@@ -23,13 +27,16 @@ final class FakePaymentGateway implements PaymentGateway
     public function createPayment(Donation $donation): PaymentInstruction
     {
         $digits = substr(hash('sha256', $donation->payment_ref), 0, 12);
+        $paymentUrl = "https://sandbox.fake.amanahlink.test/pay/{$donation->payment_ref}";
 
         return new PaymentInstruction(
             provider: $this->name(),
             paymentRef: $donation->payment_ref,
-            paymentUrl: "https://sandbox.fake.amanahlink.test/pay/{$donation->payment_ref}",
+            paymentUrl: $paymentUrl,
             vaNumber: '8808'.implode('', str_split($digits, 4)),
             expiresAt: $donation->expires_at->toDateTimeImmutable(),
+            qrString: $paymentUrl,
+            qrImage: QrCode::svgDataUri($paymentUrl),
         );
     }
 }

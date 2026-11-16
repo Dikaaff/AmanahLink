@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { AppPage } from "@/components/app-shell";
 import { useAuth } from "@/components/auth-provider";
+import { ScreenHeader } from "@/components/screen-header";
+import { SectionTabs } from "@/components/section-tabs";
 import {
   Alert,
   ClearFilterAction,
@@ -18,6 +21,7 @@ import { FormOverlay } from "@/components/ui/form-overlay";
 import { api, errorMessage, type Campaign, type Paginated } from "@/lib/api";
 import { dateOnly, rupiah } from "@/lib/format";
 import { notifyFailure, notifySuccess, useFlash } from "@/lib/feedback";
+import { REVIEW_TABS } from "@/lib/sections";
 
 function replaceCampaign(
   items: Campaign[],
@@ -257,27 +261,15 @@ export default function CampaignOperationsPage() {
   const lastPage = result?.meta?.last_page ?? 1;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-10 sm:px-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
-            Kepatuhan
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-ink">
-            Operasi kampanye
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm text-ink-muted">
-            Setiap keputusan mengikuti state machine kampanye dan dicatat ke audit
-            log. Kampanye frozen harus di-unfreeze sebelum ditutup.
-          </p>
-        </div>
-        <Link
-          href={user.role === "admin" ? "/admin" : "/dashboard"}
-          className="btn-secondary"
-        >
-          Dasbor
-        </Link>
-      </header>
+    <AppPage>
+      <ScreenHeader
+        eyebrow="Review"
+        title="Operasi kampanye"
+        description="Setujui, tolak, atau bekukan kampanye. Setiap keputusan tercatat di audit log."
+        className="!items-start"
+      />
+
+      <SectionTabs label="Menu review" items={REVIEW_TABS} />
 
       <form onSubmit={handleFilter} className="card grid gap-4 p-5 sm:grid-cols-[1fr_auto]">
         <div>
@@ -559,6 +551,6 @@ export default function CampaignOperationsPage() {
           ) : null}
         </>
       )}
-    </div>
+    </AppPage>
   );
 }

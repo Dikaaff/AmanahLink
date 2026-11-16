@@ -3,10 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { AppPage } from "@/components/app-shell";
 import { useAuth } from "@/components/auth-provider";
+import { ScreenHeader } from "@/components/screen-header";
+import { SectionTabs } from "@/components/section-tabs";
 import { Alert, ErrorState, Loading, Stat } from "@/components/ui";
+import { Disclosure } from "@/components/ui/disclosure";
 import { api, errorMessage, type Dashboard } from "@/lib/api";
 import { rupiah } from "@/lib/format";
+import { OPS_TABS } from "@/lib/sections";
 
 export default function AdminDashboardPage() {
   const { user, ready } = useAuth();
@@ -58,9 +63,9 @@ export default function AdminDashboardPage() {
 
   if (!ready || (user?.role === "admin" && loading)) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <AppPage>
         <Loading label="Menghitung metrik…" />
-      </div>
+      </AppPage>
     );
   }
 
@@ -78,29 +83,15 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
-            Admin
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-ink">
-            Kesehatan platform
-          </h1>
-          <p className="mt-1 text-sm text-ink-muted">
-            Snapshot {data?.window_hours ?? 24} jam terakhir. Saldo dihitung dari
-            ledger, bukan dari cache.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/admin/audit-logs" className="btn-secondary">
-            Audit log
-          </Link>
-          <Link href="/admin/webhooks" className="btn-secondary">
-            Webhook & DLQ
-          </Link>
-        </div>
-      </header>
+    <AppPage>
+      <ScreenHeader
+        eyebrow="Admin"
+        title="Kesehatan platform"
+        description={`Snapshot ${data?.window_hours ?? 24} jam terakhir.`}
+        className="!items-start"
+      />
+
+      <SectionTabs label="Menu operasional" items={OPS_TABS} />
 
       {error ? <ErrorState message={error} onRetry={handleRetry} /> : null}
 
@@ -109,98 +100,98 @@ export default function AdminDashboardPage() {
           {data.ledger_mismatch_count > 0 ? (
             <Alert tone="error">
               <span className="font-semibold">
-                {data.ledger_mismatch_count} kampanye memiliki cache saldo yang
-                berbeda dari ledger.
+                {data.ledger_mismatch_count} kampanye memiliki saldo yang berbeda
+                dari catatan ledger.
               </span>{" "}
-              Jangan melakukan pencairan sampai selisih ini ditelusuri; ledger
-              adalah sumber kebenaran.
+              Tahan pencairan sampai selisih ini ditelusuri.
             </Alert>
           ) : (
-            <Alert tone="success">
-              Cache saldo kampanye konsisten dengan ledger.
-            </Alert>
+            <Alert tone="success">Saldo kampanye konsisten dengan ledger.</Alert>
           )}
 
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="grid gap-4 sm:grid-cols-3">
             <Stat
-              label="Donasi berhasil"
-              value={rupiah(data.donations_settled_total)}
-              hint="Total nominal settled"
+              label="Saldo dari ledger"
+              value={rupiah(data.ledger_campaign_balance)}
+              hint="Dana terkunci seluruh kampanye"
             />
             <Stat
               label="Dana dicairkan"
               value={rupiah(data.disbursements_captured_total)}
-              hint="Captured, receipt pending, verified, reconciled"
-            />
-            <Stat
-              label="Refund"
-              value={rupiah(data.refunds_total)}
-              hint="Pengembalian setelah kampanye ditutup"
-            />
-            <Stat
-              label="Saldo ledger"
-              value={rupiah(data.ledger_campaign_balance)}
-              hint="Akun 2200 seluruh kampanye"
-            />
-            <Stat
-              label="Saldo cache"
-              value={rupiah(data.campaign_cache_balance)}
-              hint={
-                data.ledger_mismatch_count === 0
-                  ? "Sama dengan ledger"
-                  : `${data.ledger_mismatch_count} kampanye menyimpang`
-              }
-            />
-            <Stat
-              label="p95 authorize"
-              value={
-                data.authorize_p95_ms === null
-                  ? "Belum ada data"
-                  : `${data.authorize_p95_ms} ms`
-              }
-              hint={`${data.authorize_sample_count} sampel / ${data.window_hours} jam`}
-            />
-            <Stat
-              label="Antrean OCR"
-              value={data.ocr_queue_depth}
-              hint="Nota uploaded + extracting"
+              hint="Total pencairan tercatat"
             />
             <Stat
               label="Perlu review nota"
               value={data.receipts_needs_review}
               hint="Menunggu keputusan verifikator"
             />
-            <Stat
-              label="Mismatch ledger"
-              value={data.ledger_mismatch_count}
-              hint="Kampanye dengan cache ≠ ledger"
-            />
           </section>
 
-          <section className="card p-6">
-            <h2 className="text-lg font-semibold text-ink">
-              Cara membaca angka ini
-            </h2>
-            <ul className="mt-3 space-y-2 text-sm leading-relaxed text-ink-secondary">
+          <Disclosure
+            summary="Semua metrik (6)"
+            className="border-t border-line"
+          >
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <Stat
+                label="Donasi berhasil"
+                value={rupiah(data.donations_settled_total)}
+                hint="Total nominal settle"
+              />
+              <Stat
+                label="Refund"
+                value={rupiah(data.refunds_total)}
+                hint="Setelah kampanye ditutup"
+              />
+              <Stat
+                label="Saldo cache"
+                value={rupiah(data.campaign_cache_balance)}
+                hint={
+                  data.ledger_mismatch_count === 0
+                    ? "Sama dengan ledger"
+                    : `${data.ledger_mismatch_count} kampanye menyimpang`
+                }
+              />
+              <Stat
+                label="p95 authorize"
+                value={
+                  data.authorize_p95_ms === null
+                    ? "Belum ada data"
+                    : `${data.authorize_p95_ms} ms`
+                }
+                hint={`${data.authorize_sample_count} sampel`}
+              />
+              <Stat
+                label="Antrean OCR"
+                value={data.ocr_queue_depth}
+                hint="Nota uploaded + extracting"
+              />
+              <Stat
+                label="Mismatch ledger"
+                value={data.ledger_mismatch_count}
+                hint="Kampanye dengan selisih saldo"
+              />
+            </div>
+          </Disclosure>
+
+          <Disclosure summary="Cara membaca angka ini" className="border-t border-line">
+            <ul className="space-y-2 text-body-sm text-ink-secondary">
               <li>
-                <strong className="text-ink">Saldo ledger</strong> dijumlah
-                dari entri akun dana terkunci kampanye (2200); ini yang dipakai
-                saat authorize pencairan.
+                <strong className="text-ink">Saldo ledger</strong> dijumlah dari
+                entri dana terkunci kampanye; ini yang dipakai saat pencairan.
               </li>
               <li>
-                <strong className="text-ink">Saldo cache</strong> adalah
-                kolom <code className="rounded bg-sunken px-1">current_amount</code>{" "}
-                yang dipakai halaman publik. Selisih berarti bug atau tulisan di
-                luar service.
+                <strong className="text-ink">Saldo cache</strong> adalah angka
+                yang dipakai halaman publik. Selisih berarti ada bug atau tulisan
+                di luar service.
               </li>
               <li>
                 <strong className="text-ink">p95 authorize</strong> diukur di
-                middleware aplikasi, bukan end-to-end jaringan.
+                aplikasi, bukan end-to-end jaringan.
               </li>
             </ul>
-          </section>
+          </Disclosure>
         </>
       ) : null}
-    </div>
+    </AppPage>
   );
 }

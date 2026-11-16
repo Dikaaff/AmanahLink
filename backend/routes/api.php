@@ -48,6 +48,7 @@ Route::prefix('v1')->group(function (): void {
             Route::post('donations', [DonationController::class, 'store']);
             Route::post('donations/{donation}/simulate-payment', [DonationController::class, 'simulatePayment']);
             Route::post('disbursements/simulate', [DisbursementController::class, 'simulate']);
+            Route::post('disbursements/scan', [DisbursementController::class, 'scan']);
             Route::post('disbursements', [DisbursementController::class, 'store']);
             Route::post('disbursements/{transaction}/receipts', [ReceiptController::class, 'store']);
         });
@@ -57,9 +58,11 @@ Route::prefix('v1')->group(function (): void {
         Route::get('donations', [DonationController::class, 'index']);
 
         Route::get('merchants', [MerchantController::class, 'index']);
+        Route::get('merchants/qr-sheet', [MerchantController::class, 'qrSheet']);
         Route::post('merchants', [MerchantController::class, 'store']);
         Route::put('merchants/{merchant}', [MerchantController::class, 'update']);
         Route::patch('merchants/{merchant}/verify', [MerchantController::class, 'verify']);
+        Route::get('merchants/{merchant}/qr', [MerchantController::class, 'qr']);
 
         Route::get('disbursements', [DisbursementController::class, 'index']);
 

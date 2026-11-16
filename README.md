@@ -93,7 +93,7 @@ PHP-FPM/staging dan Docker.
 - Halaman publik kampanye dengan progress dan label kategori.
 
 ### Donasi & Pay-in
-- Payment instruction melalui interface `PaymentGateway`; driver `fake` deterministik saat ini mengembalikan VA. QRIS nyata menunggu adapter payment provider.
+- Payment instruction melalui interface `PaymentGateway`; driver `fake` deterministik mengembalikan VA **dan QR simulasi** (SVG data URI, payload = URL sandbox driver). QRIS nyata menunggu adapter payment provider.
 - **Idempotency-Key** per pengguna, payload di-hash, replay mengembalikan body identik.
 - Webhook settlement dengan **HMAC-SHA256**, toleransi timestamp 5 menit, deduplikasi `external_id`, dan audit setiap penolakan.
 - Fee platform 2% dicatat sebagai transaksi terpisah.
@@ -235,7 +235,7 @@ AmanahLink/
 │   ├── prd.md                   # problem, FR/NFR, state machine, error catalog
 │   ├── backlog.md               # 29 user story + AC Gherkin
 │   └── progress.md              # status eksekusi per fase/story (sumber kebenaran)
-├── DECISIONS.md                 # register keputusan D-001 … D-019
+├── DECISIONS.md                 # register keputusan D-001 … D-032
 └── README.md
 ```
 
@@ -519,8 +519,12 @@ Saat dependency gagal, status root menjadi `unavailable` dan HTTP statusnya
 | `GET` | `/campaigns/{id}/disbursement-limit` | owner/admin | Baca limit dan pemakaian |
 | `POST` | `/donations` | token + `Idempotency-Key` | Membuat payment instruction (fake: VA) |
 | `GET` | `/donations` | token | Riwayat donasi sendiri |
+| `GET` | `/merchants` | token | Registry merchant terverifikasi (filter `status`, `q`) |
+| `GET` | `/merchants/{id}/qr` | campaigner/admin | QR merchant terbitan sistem (HMAC atas id + MCC) |
+| `GET` | `/merchants/qr-sheet` | campaigner/admin | Semua QR merchant terverifikasi dalam satu respons (limit 50) |
 | `POST` | `/disbursements` | owner/admin + `Idempotency-Key` | Authorize + capture |
 | `POST` | `/disbursements/simulate` | owner/admin | Dry-run read-only: status, MCC, saldo, limit; tanpa tulis ledger |
+| `POST` | `/disbursements/scan` | owner/admin | Resolusi QR merchant + dry-run read-only; QR cacat/kedaluwarsa -> 422 |
 | `POST` | `/disbursements/{transaction}/receipts` | owner/admin | Multipart `file` (JPEG/PNG) |
 | `GET` | `/receipts` | verifier/admin (semua), campaigner (milik sendiri) | Filter `status`, mis. `needs_review` |
 | `POST` | `/receipts/{receipt}/review` | verifier/admin | Approve/reject nota |
@@ -558,6 +562,8 @@ curl -X POST http://127.0.0.1:8000/api/v1/donations \
       "payment_ref": "PAY-...",
       "payment_url": "https://sandbox.fake.amanahlink.test/pay/PAY-...",
       "va_number": "8808...",
+      "qr_string": "https://sandbox.fake.amanahlink.test/pay/PAY-...",
+      "qr_image": "data:image/svg+xml;base64,PHN2Zy...",
       "expires_at": "2026-11-03T10:00:00+07:00"
     }
   },
@@ -653,11 +659,11 @@ Hasil verifikasi terakhir (2026-11-04):
 
 | Suite | Hasil |
 |---|---|
-| PHPUnit | **193 passed (778 assertions)**, tanpa warning/failure |
+| PHPUnit | **233 passed (931 assertions)**, tanpa warning/failure |
 | pytest | **8 passed** |
-| Playwright | **2 passed**, login campaigner dan register donor |
+| Playwright | **4 passed**: login campaigner, register donor, donasi demo + settle, pindai QR merchant → cairkan |
 
-Cakupan utama: auth/RBAC, siklus kampanye, validasi MCC, limit & saldo, idempotensi, replay webhook, invariant ledger, konkurensi double-spend, refund proporsional, upload/auto-match/review nota, freeze/unfreeze, audit viewer, serta kontrak OCR Flask.
+Cakupan utama: auth/RBAC, siklus kampanye, validasi MCC, limit & saldo, idempotensi, replay webhook, invariant ledger, konkurensi double-spend, refund proporsional, upload/auto-match/review nota, freeze/unfreeze, audit viewer, kontrak OCR Flask, serta QR merchant (HMAC, scan read-only, QR kedaluwarsa).
 
 Sebelum commit, jalankan formatter:
 
@@ -675,7 +681,7 @@ vendor/bin/pint --format agent <file-yang-diubah>
 | [`docs/prd.md`](docs/prd.md) | Problem, persona, FR/NFR, business rules, state machine, matriks izin, katalog error |
 | [`docs/backlog.md`](docs/backlog.md) | 29 user story, acceptance criteria Gherkin, estimasi, traceability FR → US |
 | [`docs/progress.md`](docs/progress.md) | **Status eksekusi per fase/story + bukti test + langkah berikutnya** |
-| [`DECISIONS.md`](DECISIONS.md) | Register keputusan arsitektur D-001 … D-022 beserta alasan dan alternatif yang ditolak |
+| [`DECISIONS.md`](DECISIONS.md) | Register keputusan arsitektur D-001 … D-032 beserta alasan dan alternatif yang ditolak |
 
 > AI/engineer berikutnya: baca `docs/progress.md` dan `DECISIONS.md` sebelum menulis kode, lalu perbarui `docs/progress.md` setelah setiap story selesai.
 
@@ -688,6 +694,8 @@ vendor/bin/pint --format agent <file-yang-diubah>
 - **Alert DLQ > 1000 baru berupa log `critical`** dari `webhooks:retry`; integrasi alerting eksternal belum tersedia.
 - **p95 dashboard mengukur waktu proses aplikasi**, bukan latency jaringan end-to-end; target NFR-01 tetap menunggu benchmark staging.
 - **Adapter Midtrans belum diisi.** Hanya driver `fake` yang aktif; interface dan alur webhook sudah siap.
+- **QR yang dirender saat ini simulasi.** `qr_string`/`qr_image` dari driver `fake` berisi URL sandbox driver itu sendiri, bukan payload QRIS dari acquirer; label UI wajib menyebut "QRIS simulasi" (D-031).
+- **QR merchant adalah artefak platform, bukan QRIS acquirer.** Payload `AMANAH:MERCHANT:...` ditandatangani HMAC dengan `app.key` dan hanya berlaku selama merchant berstatus `verified` dengan MCC yang sama; mencabut/mengganti `app.key` membuat semua QR lama tidak berlaku. Pemindaian memakai allowlist registry + MCC, bukan pemblokiran jaringan (D-032).
 - **Adapter OpenAI OCR belum diuji dengan API key nyata.** Jalur `fake` yang diuji otomatis.
 - **Docker belum diverifikasi.** `docker-compose.yml` dan Dockerfile sudah tersedia, tetapi `docker compose up --build` belum pernah dijalankan karena Docker Desktop belum tersedia di mesin pengembangan.
 - **CI sudah tersedia dan hijau** untuk backend, frontend, dan OCR; deployment/CD production belum dikonfigurasi.

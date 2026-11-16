@@ -155,9 +155,18 @@ async function openDashboard(
   await expect(page.getByRole("heading", { name: "Halo, Budi Santoso" })).toBeVisible();
 }
 
+async function openCampaigns(
+  page: Page,
+  options: { submitStatus?: number; submitBody?: unknown } = {},
+): Promise<void> {
+  await openDashboard(page, options);
+  await page.getByRole("link", { name: "Kampanye saya" }).click();
+  await expect(page).toHaveURL(/\/dashboard\/campaigns$/);
+}
+
 test.describe("P4 feedback loop", () => {
   test("satu toast maksimal: toast kedua menggantikan yang pertama", async ({ page }) => {
-    await openDashboard(page);
+    await openCampaigns(page);
 
     // Ajukan dua kampanye berturut-turut; hanya boleh ada satu toast tampil.
     const submitButtons = page.getByRole("button", { name: "Ajukan review" });
@@ -169,7 +178,7 @@ test.describe("P4 feedback loop", () => {
   });
 
   test("durasi toast sukses 3 detik", async ({ page }) => {
-    await openDashboard(page);
+    await openCampaigns(page);
 
     await page.getByRole("button", { name: "Ajukan review" }).first().click();
     await expect(page.locator("[data-sonner-toast]")).toHaveCount(1);
@@ -185,7 +194,7 @@ test.describe("P4 feedback loop", () => {
   });
 
   test("durasi toast gagal 6 detik", async ({ page }) => {
-    await openDashboard(page, { submitStatus: 409 });
+    await openCampaigns(page, { submitStatus: 409 });
 
     await page.getByRole("button", { name: "Ajukan review" }).first().click();
     await expect(page.locator("[data-sonner-toast]")).toHaveCount(1);
@@ -201,9 +210,9 @@ test.describe("P4 feedback loop", () => {
   });
 
   test("highlight baris hilang dalam ≤2 detik setelah update di tempat", async ({ page }) => {
-    await openDashboard(page);
+    await openCampaigns(page);
 
-    const row = page.locator("tr", { hasText: "Kampanye Draf Uji" }).first();
+    const row = page.locator("li", { hasText: "Kampanye Draf Uji" }).first();
     await page.getByRole("button", { name: "Ajukan review" }).first().click();
 
     await expect(row).toHaveClass(/feedback-flash/);
@@ -470,32 +479,34 @@ test.describe("P4 feedback loop", () => {
     await page.getByRole("button", { name: "Masuk" }).click();
     await expect(page).toHaveURL(/\/dashboard$/);
 
+    // Token disimpan di memori; navigasi lewat link agar sesi tidak hilang.
+    await page.getByRole("link", { name: "Dana", exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard\/pencairan$/);
+
     const history = page.locator("section", {
       has: page.getByRole("heading", { name: "Riwayat pencairan" }),
     });
 
     await expect(
-      history.locator("tr", { hasText: "DSB-UJI-LAMA" }),
+      history.locator("li", { hasText: "DSB-UJI-LAMA" }),
     ).toHaveCount(1);
 
-    await page.getByRole("button", { name: "Cairkan dana" }).click();
-    const overlay = page.locator("[role='dialog']");
-    await overlay.getByLabel("Kampanye", { exact: true }).selectOption("2");
-    await overlay.getByLabel("Merchant terverifikasi").selectOption("1");
-    await overlay.getByLabel("Nominal (Rp)").fill("100000");
-    await overlay
+    await page.locator("#campaign").selectOption("2");
+    await page.locator("#merchant").selectOption("1");
+    await page.locator("#disbursement-amount").fill("100000");
+    await page
       .getByRole("button", { name: "Cairkan dana", exact: true })
       .click();
 
     // Selama permintaan berjalan, tidak ada baris baru dan tidak ada toast.
     await page.waitForTimeout(1200);
     expect(
-      await history.locator("tr", { hasText: "DSB-UJI-BARU" }).count(),
+      await history.locator("li", { hasText: "DSB-UJI-BARU" }).count(),
     ).toBe(0);
     expect(await toastCount(page)).toBe(0);
 
     // Setelah respons server, baris muncul dengan highlight dan toast sukses.
-    await expect(history.locator("tr", { hasText: "DSB-UJI-BARU" })).toHaveCount(1);
+    await expect(history.locator("li", { hasText: "DSB-UJI-BARU" })).toHaveCount(1);
     await expect(page.locator("[data-sonner-toast]")).toHaveCount(1);
   });
 });

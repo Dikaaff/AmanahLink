@@ -11,12 +11,19 @@ import { useOnlineStatus } from "@/lib/feedback";
  * reference routes render without it so the specimen is judged on its own
  * typography, not on the old palette.
  */
+const APP_ROUTES = ["/dashboard", "/admin", "/notifications"];
+
 export function SiteChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isDesignRoute = pathname?.startsWith("/design") ?? false;
+  const isAppRoute = APP_ROUTES.some(
+    (route) => pathname === route || pathname?.startsWith(`${route}/`),
+  );
   const online = useOnlineStatus();
 
-  if (isDesignRoute) {
+  // Signed-in screens own their chrome: a desktop sidebar and a mobile bottom
+  // bar. The public marketing shell would only compete with them.
+  if (isDesignRoute || isAppRoute) {
     return <main className="flex-1">{children}</main>;
   }
 

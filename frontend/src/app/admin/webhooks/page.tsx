@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { AppPage } from "@/components/app-shell";
 import { useAuth } from "@/components/auth-provider";
+import { ScreenHeader } from "@/components/screen-header";
+import { SectionTabs } from "@/components/section-tabs";
 import {
   Alert,
   ClearFilterAction,
@@ -12,6 +15,7 @@ import {
   Loading,
   StatusBadge,
 } from "@/components/ui";
+import { OPS_TABS } from "@/lib/sections";
 import {
   api,
   errorMessage,
@@ -145,24 +149,15 @@ export default function WebhookEventsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-10 sm:px-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
-            Reliabilitas
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-ink">
-            Webhook & dead-letter queue
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm text-ink-muted">
-            Event gagal dicoba ulang otomatis dengan backoff 1m/5m/30m. Setelah
-            itu event masuk DLQ dan hanya diproses ulang lewat replay admin.
-          </p>
-        </div>
-        <Link href="/admin" className="btn-secondary">
-          Dasbor admin
-        </Link>
-      </header>
+    <AppPage>
+      <ScreenHeader
+        eyebrow="Admin"
+        title="Webhook & dead-letter queue"
+        description="Event gagal dicoba ulang otomatis; setelah itu masuk DLQ dan hanya diproses lewat replay."
+        className="!items-start"
+      />
+
+      <SectionTabs label="Menu operasional" items={OPS_TABS} />
 
       <form
         className="card grid gap-4 p-5 sm:grid-cols-3"
@@ -316,6 +311,6 @@ export default function WebhookEventsPage() {
           </div>
         </>
       )}
-    </div>
+    </AppPage>
   );
 }

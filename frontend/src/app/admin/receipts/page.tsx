@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { AppPage } from "@/components/app-shell";
 import { useAuth } from "@/components/auth-provider";
+import { ScreenHeader } from "@/components/screen-header";
+import { SectionTabs } from "@/components/section-tabs";
 import {
   Alert,
   ClearFilterAction,
@@ -16,6 +19,7 @@ import { FormOverlay } from "@/components/ui/form-overlay";
 import { api, errorMessage, type Paginated, type Receipt } from "@/lib/api";
 import { dateTime } from "@/lib/format";
 import { notifySuccess, useFlash } from "@/lib/feedback";
+import { REVIEW_TABS } from "@/lib/sections";
 
 function replaceReceipt(items: Receipt[], next: Receipt): Receipt[] {
   return items.map((receipt) => (receipt.id === next.id ? next : receipt));
@@ -170,27 +174,15 @@ export default function ReceiptReviewPage() {
   const lastPage = result?.meta?.last_page ?? 1;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-10 sm:px-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink">
-            Verifikasi
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold text-ink">
-            Antrean nota
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm text-ink-muted">
-            Cocokkan hasil OCR dengan transaksi sebelum dana dianggap
-            terekonsiliasi. Nota dengan confidence rendah masuk ke review manual.
-          </p>
-        </div>
-        <Link
-          href={user.role === "admin" ? "/admin" : "/dashboard"}
-          className="btn-secondary"
-        >
-          Dasbor
-        </Link>
-      </header>
+    <AppPage>
+      <ScreenHeader
+        eyebrow="Review"
+        title="Antrean nota"
+        description="Cocokkan nota dengan transaksi sebelum dana dianggap selesai."
+        className="!items-start"
+      />
+
+      <SectionTabs label="Menu review" items={REVIEW_TABS} />
 
       <form onSubmit={handleFilter} className="card grid gap-4 p-5 sm:grid-cols-[1fr_auto]">
         <div>
@@ -425,6 +417,6 @@ export default function ReceiptReviewPage() {
           ) : null}
         </>
       )}
-    </div>
+    </AppPage>
   );
 }

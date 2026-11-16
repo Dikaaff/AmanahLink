@@ -235,6 +235,28 @@ export function DonationSheet({
               {payment ? (
                 <Alert tone="success">
                   <p className="font-semibold">Instruksi pembayaran dibuat.</p>
+                  {payment.qr_image ? (
+                    <figure className="mt-3 rounded-md border border-line bg-surface p-3 text-center">
+                      {/* A data URI SVG cannot go through next/image optimisation. */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={payment.qr_image}
+                        alt={`Kode QR pembayaran simulasi untuk ${payment.payment_ref}`}
+                        width={176}
+                        height={176}
+                        className="mx-auto h-44 w-44"
+                      />
+                      <figcaption className="mt-2 text-xs">
+                        <span className="font-semibold">
+                          QRIS simulasi (driver fake)
+                        </span>
+                        <span className="mt-1 block text-ink-muted">
+                          Hanya untuk demo. Kode ini tidak terhubung ke aplikasi
+                          pembayaran mana pun dan tidak memindahkan dana.
+                        </span>
+                      </figcaption>
+                    </figure>
+                  ) : null}
                   <dl className="mt-2 space-y-1 text-xs">
                     <div className="flex justify-between gap-3">
                       <dt>Virtual account</dt>

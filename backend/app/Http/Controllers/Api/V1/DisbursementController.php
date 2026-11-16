@@ -10,12 +10,15 @@ use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\LimitExceededException;
 use App\Exceptions\LimitExpiredException;
 use App\Exceptions\MccNotAllowedException;
+use App\Http\Requests\ScanMerchantRequest;
 use App\Http\Requests\StoreDisbursementRequest;
 use App\Http\Resources\DisbursementResource;
+use App\Http\Resources\MerchantResource;
 use App\Models\Campaign;
 use App\Models\Merchant;
 use App\Models\Transaction;
 use App\Services\DisbursementService;
+use App\Support\MerchantQr;
 use App\Support\Money;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,7 +28,10 @@ use Illuminate\Validation\ValidationException;
 
 final class DisbursementController
 {
-    public function __construct(private readonly DisbursementService $disbursements) {}
+    public function __construct(
+        private readonly DisbursementService $disbursements,
+        private readonly MerchantQr $merchantQr,
+    ) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -80,6 +86,59 @@ final class DisbursementController
                 'allowed' => true,
                 'code' => null,
                 'message' => 'Pencairan dapat diproses.',
+                ...$preview,
+            ],
+        ]);
+    }
+
+    /**
+     * Resolve a scanned merchant QR, then run the same read-only rules used by
+     * the capture path. The QR is only an input: MCC, status, limits, and the
+     * ledger balance are all re-checked server-side before anything moves.
+     */
+    public function scan(ScanMerchantRequest $request): JsonResponse
+    {
+        $campaign = Campaign::query()->findOrFail($request->integer('campaign_id'));
+
+        $merchant = $this->merchantQr->resolve($request->string('qr')->toString());
+
+        if ($merchant === null) {
+            throw ValidationException::withMessages([
+                'qr' => ['Kode QR merchant tidak dikenali atau sudah tidak berlaku.'],
+            ]);
+        }
+
+        $merchant->loadMissing('mccCode');
+
+        try {
+            $preview = $this->disbursements->preview(
+                $campaign,
+                $merchant,
+                Money::of((string) $request->input('amount')),
+            );
+        } catch (CampaignNotActiveException|MccNotAllowedException|InsufficientFundsException|LimitExceededException|LimitExpiredException $exception) {
+            return response()->json([
+                'data' => [
+                    'allowed' => false,
+                    'code' => $this->simulationCode($exception),
+                    'message' => $exception->getMessage(),
+                    'merchant' => new MerchantResource($merchant),
+                    'details' => $exception instanceof LimitExceededException
+                        ? [
+                            'scope' => $exception->scope,
+                            'remaining' => $exception->remaining->toDecimalString(),
+                        ]
+                        : null,
+                ],
+            ]);
+        }
+
+        return response()->json([
+            'data' => [
+                'allowed' => true,
+                'code' => null,
+                'message' => 'Merchant cocok dan pencairan dapat diproses.',
+                'merchant' => new MerchantResource($merchant),
                 ...$preview,
             ],
         ]);
