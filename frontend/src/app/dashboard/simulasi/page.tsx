@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { AppPage } from "@/components/app-shell";
 import { ScreenHeader } from "@/components/screen-header";
-import { SectionTabs } from "@/components/section-tabs";
+import { DanaTabs } from "@/components/dana-tabs";
 import { Alert, ErrorState, Loading } from "@/components/ui";
 import {
   api,
@@ -16,7 +16,6 @@ import {
   type Merchant,
 } from "@/lib/api";
 import { rupiah } from "@/lib/format";
-import { DANA_TABS } from "@/lib/sections";
 
 const DISBURSABLE = ["active", "funded"];
 
@@ -137,7 +136,7 @@ export default function SimulateScanPage() {
         className="!items-start"
       />
 
-      <SectionTabs label="Menu dana" items={DANA_TABS} />
+      <DanaTabs />
 
       {error ? (
         <ErrorState message={error} onRetry={() => router.refresh()} />

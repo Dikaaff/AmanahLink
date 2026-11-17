@@ -393,3 +393,4 @@
 | 1.20 | 2026-11-16 | D-032 QR merchant terbitan sistem (HMAC, `merchants/{merchant}/qr`, `merchants/qr-sheet`), `POST /disbursements/scan`, route `/dashboard/pindai` (periksa dulu, cairkan setelah konfirmasi) |
 | 1.21 | 2026-11-16 | D-033 pemisahan tugas admin (policy maker-checker), pengelolaan pengguna (`suspend`/peran), console admin task-first, riset + spesifikasi P8 |
 | 1.22 | 2026-11-17 | D-034 dana donasi sebagai kewajiban platform: riset alur dana (`docs/research/`), kosakata UI "belanja/otorisasi/dana tersedia", `settled` di state machine, PUB sebagai kewajiban platform |
+| 1.23 | 2026-11-18 | D-035 tahan belanja per kampanye saat nota ditolak atau lewat 7×24 jam; nota pengganti wajib disetujui staf lain (maker-checker); write-off + suspend merchant + audit; IA Dana menjadi Belanja/Nota dengan badge; badge publik netral "Penyaluran dana sedang ditinjau" |

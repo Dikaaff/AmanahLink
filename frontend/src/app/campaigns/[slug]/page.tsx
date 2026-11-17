@@ -141,6 +141,16 @@ export default function CampaignDetailPage() {
             </p>
           </div>
 
+          {campaign.spending_held ? (
+            <div className="mt-5">
+              <Alert tone="warning" title="Penyaluran dana sedang ditinjau">
+                Belanja kampanye ini ditahan sementara sambil bukti penggunaan
+                dana dilengkapi. Donasi tetap berjalan dan tidak ada dana
+                tambahan yang diambil dari donatur.
+              </Alert>
+            </div>
+          ) : null}
+
           {campaign.freeze_reason ? (
             <div className="mt-5">
               <Alert tone="warning">

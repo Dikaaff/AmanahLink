@@ -36,6 +36,7 @@ export interface Campaign {
   reviewed_at: string | null;
   rejection_reason?: string | null;
   is_accepting_donations: boolean;
+  spending_held?: boolean;
   campaigner?: { id: number; name: string };
   created_at: string | null;
 }
@@ -69,6 +70,8 @@ export interface Disbursement {
   status: string;
   status_label: string;
   settled_at?: string | null;
+  receipt_due_at?: string | null;
+  receipt_overdue?: boolean;
   mcc_used: string | null;
   campaign?: { id: number; title: string; slug: string };
   merchant?: { id: number; name: string };
@@ -113,7 +116,12 @@ export interface DisbursementSimulation {
   remaining_today?: string;
   remaining_month?: string;
   limit_expires_at?: string | null;
-  details?: { scope: "daily" | "monthly"; remaining: string } | null;
+  details?: {
+    scope?: "daily" | "monthly";
+    remaining?: string;
+    hold_code?: string;
+    reference_id?: string | null;
+  } | null;
 }
 
 export interface MerchantQr {
@@ -484,6 +492,22 @@ export const api = {
     amount: string;
   }) =>
     request<{ data: DisbursementSimulation }>("/disbursements/simulate", json(body)),
+
+  spendingHold: (campaignId: number) =>
+    request<{
+      data: {
+        held: boolean;
+        code: string | null;
+        message: string | null;
+        reference_id: string | null;
+        due_at: string | null;
+      };
+    }>(`/campaigns/${campaignId}/spending-hold`),
+
+  receiptPendingCount: () =>
+    request<{ data: { pending: number; overdue: number } }>(
+      "/receipts/pending-count",
+    ),
 
   merchantQr: (merchantId: number) =>
     request<{ data: MerchantQr }>(`/merchants/${merchantId}/qr`),

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppPage } from "@/components/app-shell";
 import { useAuth } from "@/components/auth-provider";
 import { ScreenHeader } from "@/components/screen-header";
-import { SectionTabs } from "@/components/section-tabs";
+import { DanaTabs } from "@/components/dana-tabs";
 import { Alert, EmptyState, Loading, StatusBadge } from "@/components/ui";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -17,7 +17,6 @@ import {
   type Receipt,
 } from "@/lib/api";
 import { dateTime, rupiah } from "@/lib/format";
-import { DANA_TABS } from "@/lib/sections";
 import { notifySuccess, useFlash } from "@/lib/feedback";
 
 function withRows<T>(page: Paginated<T> | null): Paginated<T> | null {
@@ -49,10 +48,23 @@ export default function ReceiptsPage() {
 
   const [flashKey, flash] = useFlash();
 
+  // A rejected receipt still leaves the payment without accepted proof, so
+  // the campaigner must be able to upload a replacement from here.
   const pending = useMemo(
-    () => transactions.filter((item) => !item.receipt),
+    () =>
+      transactions.filter(
+        (item) =>
+          !item.receipt ||
+          (item.status === "disputed" && item.receipt.status === "rejected"),
+      ),
     [transactions],
   );
+
+  const selectedTransaction =
+    transactions.find((item) => String(item.id) === transactionId) ?? null;
+  const isReplacement =
+    selectedTransaction?.status === "disputed" &&
+    selectedTransaction.receipt?.status === "rejected";
 
   const loadTransactions = useCallback(async () => {
     const response = await api.disbursements(1);
@@ -226,11 +238,16 @@ export default function ReceiptsPage() {
       <ScreenHeader
         eyebrow="Dana"
         title="Nota"
-        description="Unggah bukti transaksi setelah pembayaran ke merchant dan pantau statusnya."
+        description="Unggah bukti transaksi setelah pembayaran ke merchant dan pantau statusnya. Nota adalah kewajiban bukti, bukan cara menarik uang."
         className="!items-start"
       />
 
-      <SectionTabs label="Menu dana" items={DANA_TABS} />
+      <DanaTabs />
+
+      <p className="rounded-md border border-line bg-sunken p-3 text-body-sm text-ink-secondary">
+        Penggantian dana tunai (reimbursement) belum tersedia di demo ini.
+        Dana hanya bergerak lewat pembayaran ke merchant.
+      </p>
 
       <div className="grid gap-8 lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start">
       <section aria-labelledby="upload-heading">
@@ -282,9 +299,22 @@ export default function ReceiptsPage() {
                   <option key={item.id} value={item.id}>
                     {item.campaign?.title ?? "Pembayaran ke merchant"} · {rupiah(item.amount)}{" "}
                     · {item.merchant?.name ?? "merchant"}
+                    {item.receipt?.status === "rejected"
+                      ? " · nota pengganti"
+                      : ""}
                   </option>
                 ))}
               </select>
+              {isReplacement ? (
+                <p className="mt-2 rounded-md border border-line bg-sunken p-3 text-xs text-ink-secondary">
+                  Nota sebelumnya ditolak
+                  {selectedTransaction.receipt?.rejection_reason
+                    ? `: ${selectedTransaction.receipt.rejection_reason}`
+                    : "."}{" "}
+                  Nota pengganti harus disetujui staf lain sebelum belanja
+                  kampanye dibuka lagi.
+                </p>
+              ) : null}
             </div>
 
             <div>
@@ -314,7 +344,11 @@ export default function ReceiptsPage() {
                 disabled={uploading}
                 aria-busy={uploading || undefined}
               >
-                {uploading ? "Mengunggah…" : "Upload nota"}
+                {uploading
+                  ? "Mengunggah…"
+                  : isReplacement
+                    ? "Upload nota pengganti"
+                    : "Upload nota"}
               </button>
             </div>
           </form>

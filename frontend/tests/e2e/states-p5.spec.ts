@@ -160,6 +160,20 @@ test.describe("P5 empty dan failure state", () => {
           ]),
         });
       }
+      if (path === "/disbursements/simulate") {
+        return route.fulfill({
+          json: {
+            data: {
+              allowed: true,
+              code: null,
+              message: "Pembayaran ini lolos pemeriksaan.",
+              ledger_balance: "1000000.00",
+              remaining_today: "5000000.00",
+              remaining_month: "20000000.00",
+            },
+          },
+        });
+      }
       if (path === "/disbursements" && method === "POST") {
         return route.fulfill({
           status: 403,
@@ -182,9 +196,8 @@ test.describe("P5 empty dan failure state", () => {
     await page.getByLabel("Kampanye", { exact: true }).selectOption("2");
     await page.getByLabel("Merchant terverifikasi").selectOption("1");
     await page.getByLabel("Nominal (Rp)").fill("100000");
-    await page
-      .getByRole("button", { name: "Otorisasi pembayaran", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Periksa kelayakan" }).click();
+    await page.getByRole("button", { name: /^Belanja Rp/ }).click();
 
     // Kegagalan mutasi uang tampil di dalam form, bukan toast, dan isian
     // tetap ada sehingga pengguna bisa memperbaikinya.

@@ -6,8 +6,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppPage } from "@/components/app-shell";
 import { useAuth } from "@/components/auth-provider";
 import { ScreenHeader } from "@/components/screen-header";
-import { SectionTabs } from "@/components/section-tabs";
+import { DanaTabs } from "@/components/dana-tabs";
 import { Disclosure } from "@/components/ui/disclosure";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+} from "@/components/ui/sheet";
 import {
   Alert,
   EmptyState,
@@ -27,7 +32,6 @@ import {
 } from "@/lib/api";
 import { dateTime, rupiah } from "@/lib/format";
 import { mccTitle } from "@/lib/mcc";
-import { DANA_TABS } from "@/lib/sections";
 import { notifySuccess, useFlash } from "@/lib/feedback";
 
 function withRows<T>(page: Paginated<T> | null): Paginated<T> | null {
@@ -37,6 +41,57 @@ function withRows<T>(page: Paginated<T> | null): Paginated<T> | null {
 
 function isDisbursable(campaign: Campaign): boolean {
   return campaign.status === "active" || campaign.status === "funded";
+}
+
+const SENT_STATUSES = new Set([
+  "captured",
+  "settled",
+  "receipt_pending",
+  "verified",
+  "reconciled",
+  "disputed",
+]);
+
+/**
+ * The four steps a campaigner can act on, in plain language. Technical status
+ * stays available in the detail disclosure so nothing is lost for audit.
+ */
+function PaymentTimeline({ item }: { item: Disbursement }) {
+  const sent = SENT_STATUSES.has(item.status);
+  const uploaded = Boolean(item.receipt);
+  const verified =
+    item.receipt?.status === "approved" ||
+    item.status === "verified" ||
+    item.status === "reconciled";
+
+  const steps = [
+    { label: "Dibayar", done: true },
+    { label: "Dana terkirim", done: sent },
+    { label: "Nota diunggah", done: uploaded },
+    { label: "Terverifikasi", done: verified },
+  ];
+
+  return (
+    <ol className="mt-3 flex flex-wrap gap-x-4 gap-y-2" aria-label="Tahap pembayaran">
+      {steps.map((step, index) => (
+        <li key={step.label} className="flex items-center gap-2 text-xs">
+          <span
+            aria-hidden="true"
+            className={`inline-flex size-5 items-center justify-center rounded-full border text-[10px] font-semibold ${
+              step.done
+                ? "border-ink bg-ink text-canvas"
+                : "border-line-strong text-ink-muted"
+            }`}
+          >
+            {index + 1}
+          </span>
+          <span className={step.done ? "text-ink" : "text-ink-muted"}>
+            {step.label}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
 }
 
 export default function DisbursementPage() {
@@ -66,6 +121,13 @@ export default function DisbursementPage() {
     null,
   );
   const [last, setLast] = useState<Disbursement | null>(null);
+  const [receiptSheetOpen, setReceiptSheetOpen] = useState(false);
+  const [hold, setHold] = useState<{
+    campaignId: string;
+    held: boolean;
+    code: string | null;
+    message: string | null;
+  } | null>(null);
 
   const [history, setHistory] = useState<Paginated<Disbursement> | null>(null);
   const [page, setPage] = useState(1);
@@ -131,6 +193,25 @@ export default function DisbursementPage() {
       cancelled = true;
     };
   }, [ready, user, canUse, fetchWorkspace, router]);
+
+  useEffect(() => {
+    if (!ready || !user || !canUse || form.campaignId === "") return;
+
+    let cancelled = false;
+
+    api
+      .spendingHold(Number(form.campaignId))
+      .then((response) => {
+        if (!cancelled) {
+          setHold({ ...response.data, campaignId: form.campaignId });
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, user, canUse, form.campaignId, last]);
 
   useEffect(() => {
     if (!ready || !user || !canUse) return;
@@ -208,8 +289,7 @@ export default function DisbursementPage() {
     }
   }
 
-  async function handleDisburse(event: React.FormEvent) {
-    event.preventDefault();
+  async function handleDisburse() {
     setDisbursementError(null);
     setDisbursing(true);
 
@@ -226,6 +306,7 @@ export default function DisbursementPage() {
         } tercatat sebagai ${response.data.status_label.toLowerCase()}.`,
       );
       setLast(response.data);
+      setReceiptSheetOpen(true);
       setSimulation(null);
       setForm({ campaignId: "", merchantId: "", amount: "" });
       setHistory((current) =>
@@ -288,35 +369,43 @@ export default function DisbursementPage() {
       <ScreenHeader
         eyebrow="Dana"
         title="Belanja kampanye"
-        description="Pilih kampanye dan merchant, periksa kelayakan, lalu otorisasi pembayaran."
+        description="Pilih kampanye dan merchant, periksa kelayakan, lalu kirim dana. Uang tidak pernah masuk ke rekening penggalang."
         className="!items-start"
       />
 
-      <SectionTabs label="Menu dana" items={DANA_TABS} />
+      <DanaTabs />
 
       {loadError ? (
         <ErrorState message={loadError} onRetry={() => handleReloadWorkspace()} />
       ) : null}
 
       {last ? (
-        <Alert tone="success" title="Pembayaran ke merchant tercatat">
-          {rupiah(last.amount)} ke {last.merchant?.name ?? "merchant"} · status{" "}
-          {last.status_label.toLowerCase()} · referensi{" "}
+        <Alert tone="success" title="Dana terkirim ke merchant">
+          {rupiah(last.amount)} ke {last.merchant?.name ?? "merchant"} · referensi{" "}
           <span className="font-mono">{last.reference_id}</span>.{" "}
-          <Link
-            href="/dashboard/nota"
+          <button
+            type="button"
             className="font-medium underline underline-offset-4"
+            onClick={() => setReceiptSheetOpen(true)}
           >
-            Unggah nota
-          </Link>
+            Lihat kewajiban nota
+          </button>
         </Alert>
       ) : null}
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
       <section aria-labelledby="disburse-heading">
-        <h2 id="disburse-heading" className="text-h2 font-semibold text-ink">
-          Pembayaran baru
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="disburse-heading" className="text-h2 font-semibold text-ink">
+            Pembayaran baru
+          </h2>
+          <Link
+            href="/dashboard/pindai"
+            className="btn-secondary"
+          >
+            Pindai QR merchant
+          </Link>
+        </div>
 
         {disbursable.length === 0 ? (
           <div className="mt-4">
@@ -329,7 +418,13 @@ export default function DisbursementPage() {
             </Link>
           </div>
         ) : (
-          <form onSubmit={handleDisburse} className="mt-4 grid gap-5">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleCheck();
+            }}
+            className="mt-4 grid gap-5"
+          >
             <div>
               <label htmlFor="campaign" className="field-label">
                 Kampanye
@@ -383,10 +478,19 @@ export default function DisbursementPage() {
                 ))}
               </select>
               {selectedCampaign && merchantOptions.length === 0 ? (
-                <p className="mt-2 text-xs text-ink-muted">
-                  Belum ada merchant terverifikasi untuk kategori kampanye ini (
-                  {selectedCampaign.allowed_mcc.join(", ") || "tanpa MCC"}).
-                </p>
+                <div className="mt-3 rounded-md border border-line bg-sunken p-3">
+                  <p className="text-xs text-ink-secondary">
+                    Belum ada merchant terverifikasi untuk kategori kampanye ini
+                    {selectedCampaign.allowed_mcc.length > 0
+                      ? ` (${selectedCampaign.allowed_mcc.map(mccTitle).join(", ")})`
+                      : ""}
+                    .
+                  </p>
+                  <p className="mt-1 text-xs text-ink-muted">
+                    Minta admin menambahkan merchant kategori ini. Pengajuan
+                    merchant belum tersedia di demo.
+                  </p>
+                </div>
               ) : null}
             </div>
 
@@ -413,6 +517,18 @@ export default function DisbursementPage() {
 
             {merchantsError ? (
               <Alert>Gagal memuat daftar merchant: {merchantsError}</Alert>
+            ) : null}
+            {hold?.held && hold.campaignId === form.campaignId ? (
+              <Alert tone="warning" title="Belanja kampanye ini sedang ditahan">
+                {hold.message ??
+                  "Selesaikan kewajiban nota sebelum belanja lagi."}{" "}
+                <Link
+                  href="/dashboard/nota"
+                  className="font-medium underline underline-offset-4"
+                >
+                  Buka Nota
+                </Link>
+              </Alert>
             ) : null}
             {checkError ? <Alert>{checkError}</Alert> : null}
             {disbursementError ? <Alert>{disbursementError}</Alert> : null}
@@ -452,7 +568,9 @@ export default function DisbursementPage() {
                   ) : null}
                   {simulation.ledger_balance ? (
                     <div>
-                      <dt className="text-ink-muted">Dana tersedia (ledger)</dt>
+                      <dt className="text-ink-muted">
+                        Dana kampanye yang bisa dibelanjakan
+                      </dt>
                       <dd className="numeric text-ink">
                         {rupiah(simulation.ledger_balance)}
                       </dd>
@@ -462,24 +580,36 @@ export default function DisbursementPage() {
               </div>
             ) : null}
 
-            <div className="flex flex-wrap items-center gap-3 border-t border-line pt-5">
-              <button
-                type="submit"
-                className="btn-primary"
-                disabled={disbursing || !formReady}
-                aria-busy={disbursing || undefined}
-              >
-                {disbursing ? "Memproses…" : "Otorisasi pembayaran"}
-              </button>
-              <button
-                type="button"
-                className="btn-secondary"
-                disabled={checking || !formReady}
-                aria-busy={checking || undefined}
-                onClick={() => void handleCheck()}
-              >
-                {checking ? "Memeriksa…" : "Periksa kelayakan"}
-              </button>
+            <div className="border-t border-line pt-5">
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  className={simulation?.allowed ? "btn-secondary" : "btn-primary"}
+                  disabled={checking || !formReady || (!simulation && disbursing)}
+                  aria-busy={checking || undefined}
+                >
+                  {checking ? "Memeriksa…" : "Periksa kelayakan"}
+                </button>
+                {simulation?.allowed ? (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    disabled={disbursing}
+                    aria-busy={disbursing || undefined}
+                    onClick={() => void handleDisburse()}
+                  >
+                    {disbursing ? "Memproses…" : `Belanja ${rupiah(form.amount)}`}
+                  </button>
+                ) : null}
+              </div>
+              <p className="mt-2 text-xs text-ink-muted">
+                Dana dikirim ke {
+                  merchants.find((item) => String(item.id) === form.merchantId)
+                    ?.name ?? "merchant"
+                }
+                , bukan ke rekeningmu. Periksa kelayakan dulu; tombol belanja
+                baru aktif setelah lolos.
+              </p>
             </div>
           </form>
         )}
@@ -497,7 +627,9 @@ export default function DisbursementPage() {
               </p>
               <dl className="mt-4 space-y-3 text-body-sm">
                 <div>
-                  <dt className="text-xs text-ink-muted">Dana tersedia</dt>
+                  <dt className="text-xs text-ink-muted">
+                    Dana kampanye yang bisa dibelanjakan
+                  </dt>
                   <dd className="numeric font-medium text-ink">
                     {rupiah(selectedCampaign.current_amount)}
                   </dd>
@@ -610,6 +742,15 @@ export default function DisbursementPage() {
                     <StatusBadge status={item.status} label={item.status_label} />
                   </div>
 
+                  <PaymentTimeline item={item} />
+
+                  {item.status === "disputed" ? (
+                    <p className="mt-2 text-xs text-ink-secondary">
+                      Pembayaran ini sedang ditinjau. Belanja kampanye ditahan
+                      sampai nota pengganti disetujui atau sengketa ditutup admin.
+                    </p>
+                  ) : null}
+
                   <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
                     <span className="numeric text-body-sm font-semibold text-ink">
                       {rupiah(item.amount)}
@@ -625,7 +766,9 @@ export default function DisbursementPage() {
                           href="/dashboard/nota"
                           className="font-medium underline underline-offset-4"
                         >
-                          Nota belum diunggah
+                          {item.receipt_due_at
+                            ? `Nota belum diunggah · tenggat ${dateTime(item.receipt_due_at)}`
+                            : "Nota belum diunggah"}
                         </Link>
                       )}
                     </span>
@@ -648,6 +791,20 @@ export default function DisbursementPage() {
                           {item.mcc_used ?? "—"}
                         </dd>
                       </div>
+                      <div className="flex justify-between gap-3">
+                        <dt>Status teknis</dt>
+                        <dd className="font-mono text-ink">
+                          {item.status_label}
+                        </dd>
+                      </div>
+                      {item.receipt_due_at ? (
+                        <div className="flex justify-between gap-3">
+                          <dt>Tenggat nota</dt>
+                          <dd className="text-ink">
+                            {dateTime(item.receipt_due_at)}
+                          </dd>
+                        </div>
+                      ) : null}
                     </dl>
                   </Disclosure>
                 </li>
@@ -680,6 +837,53 @@ export default function DisbursementPage() {
           </>
         )}
       </section>
+
+      <Sheet open={receiptSheetOpen} onOpenChange={setReceiptSheetOpen}>
+        <SheetContent
+          title="Dana terkirim ke merchant"
+          description="Pembayaran tidak dapat dibatalkan. Sekarang satu hal tersisa: unggah nota sebagai bukti."
+          footer={
+            <>
+              <SheetClose asChild>
+                <button type="button" className="btn-secondary">
+                  Nanti
+                </button>
+              </SheetClose>
+              <SheetClose asChild>
+                <Link href="/dashboard/nota" className="btn-primary">
+                  Unggah nota sekarang
+                </Link>
+              </SheetClose>
+            </>
+          }
+        >
+          <dl className="space-y-3 text-body-sm">
+            <div className="flex justify-between gap-3">
+              <dt className="text-ink-muted">Nominal</dt>
+              <dd className="numeric font-medium text-ink">
+                {last ? rupiah(last.amount) : "—"}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-ink-muted">Merchant</dt>
+              <dd className="text-ink">{last?.merchant?.name ?? "—"}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-ink-muted">Tenggat nota</dt>
+              <dd className="text-ink">
+                {last?.receipt_due_at
+                  ? dateTime(last.receipt_due_at)
+                  : "7 hari setelah pembayaran"}
+              </dd>
+            </div>
+          </dl>
+          <p className="mt-4 text-xs text-ink-muted">
+            Pengingat dikirim H-3 dan H-1. Bila nota ditolak, belanja kampanye
+            ditahan sampai nota pengganti disetujui staf lain. Donasi tetap
+            berjalan.
+          </p>
+        </SheetContent>
+      </Sheet>
     </AppPage>
   );
 }

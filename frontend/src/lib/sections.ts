@@ -3,9 +3,7 @@ import type { SectionTabItem } from "@/components/section-tabs";
 /** Sibling screens reached from one sidebar entry, in task order. */
 export const DANA_TABS: SectionTabItem[] = [
   { href: "/dashboard/pencairan", label: "Belanja" },
-  { href: "/dashboard/pindai", label: "Pindai" },
   { href: "/dashboard/nota", label: "Nota" },
-  { href: "/dashboard/simulasi", label: "Simulasi" },
 ];
 
 export const REVIEW_TABS: SectionTabItem[] = [

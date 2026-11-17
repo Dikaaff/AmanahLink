@@ -9,6 +9,8 @@ export type SectionTabItem = {
   label: string;
   /** Only match this exact route (used for section index pages). */
   exact?: boolean;
+  /** Unread/outstanding count, e.g. notes still waiting for proof. */
+  badge?: number;
 };
 
 /**
@@ -49,6 +51,14 @@ export function SectionTabs({
                 )}
               >
                 {item.label}
+                {item.badge ? (
+                  <span
+                    className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-ink px-1.5 py-0.5 text-[11px] font-semibold leading-none text-canvas"
+                    aria-label={`${item.badge} menunggu`}
+                  >
+                    {item.badge}
+                  </span>
+                ) : null}
                 {active ? (
                   <span
                     aria-hidden="true"

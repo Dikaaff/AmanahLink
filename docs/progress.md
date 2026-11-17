@@ -409,3 +409,44 @@ limit) dan beberapa state/UX.
    (spec `screenshots.spec.ts`); menunggu persetujuan GATE 5.
 4. **GATE 7/8 sudah disetujui (D-028)** dengan catatan; jangan klaim NFR-01,
    NFR-03, atau NFR-10 sebelum bukti staging tersedia.
+
+## 2026-11-18 — Alur belanja jelas + tahan nota (D-035)
+
+**Backend**
+- `SpendingHoldService`: tahan belanja per kampanye karena nota ditolak atau
+  nota belum diunggah >7×24 jam; tidak menghentikan donasi/kampanye lain.
+- `SpendingHeldException` + pengecekan di `pay()`/`preview()`, renderer
+  `SPENDING_HELD` (409, `details.hold_code`/`reference_id`), dan endpoint baca
+  `GET /campaigns/{campaign}/spending-hold`.
+- `DisbursementResource`: `receipt_due_at`, `receipt_overdue`;
+  `GET /receipts/pending-count` untuk badge Nota.
+- Nota pengganti: boleh diunggah saat `disputed` tanpa memindahkan status;
+  persetujuan wajib staf berbeda dari penolak dan langsung `reconciled`.
+- `amanahlink:write-off-dispute {reference} {reason}`: `reconciled`, merchant
+  disuspend, audit `disbursement.written_off`, notifikasi campaigner.
+- `amanahlink:receipt-reminders` harian 08:00 (H-3/H-1) + notifikasi
+  `ReceiptRejected`, `ReceiptDueSoon`, `DisputeWrittenOff`.
+- Seeder menambah `verifier@amanahlink.test` agar maker-checker bisa didemokan.
+- `CampaignResource` mengekspos `spending_held` (boolean netral) untuk badge
+  publik; tidak membocorkan merchant/nominal/alasan.
+
+**Frontend**
+- Tab Dana menjadi Belanja/Nota; Nota punya badge jumlah nota tertunda.
+  Pindai tetap ada sebagai mode/deep link dari Belanja; Simulasi menjadi
+  tombol "Periksa kelayakan".
+- Belanja dua langkah: isi → "Periksa kelayakan" → "Belanja Rp…" hanya aktif
+  bila lolos; salinan menegaskan dana dikirim ke merchant, bukan rekening
+  penggalang. Banner tahan + empty state merchant + link minta admin.
+- Sheet pasca-bayar "Dana terkirim ke merchant" dengan tenggat nota dan aksi
+  "Unggah nota sekarang"/"Nanti"; riwayat memakai timeline 4 langkah dengan
+  status teknis di detail.
+- Nota: penjelasan Model C, unggah nota pengganti untuk nota ditolak beserta
+  alasan penolakan.
+- Halaman kampanye publik menampilkan badge netral saat `spending_held`.
+
+**Bukti**
+- Backend: `php artisan test --compact` → **260 passed (1031 assertions)**;
+  `vendor/bin/pint --dirty` bersih.
+- Frontend: `npx tsc --noEmit` dan `npx eslint src --max-warnings=0` bersih.
+- Playwright: **56 passed** (termasuk 3 tes baru `spending-hold.spec.ts` untuk
+  banner tahan, badge + nota pengganti, dan badge publik netral).

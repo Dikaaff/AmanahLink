@@ -462,10 +462,31 @@ test.describe("P4 feedback loop", () => {
           ]),
         });
       }
+      if (path === "/disbursements/simulate") {
+        return route.fulfill({
+          json: {
+            data: {
+              allowed: true,
+              code: null,
+              message: "Pembayaran ini lolos pemeriksaan.",
+              ledger_balance: "1000000.00",
+              remaining_today: "5000000.00",
+              remaining_month: "20000000.00",
+            },
+          },
+        });
+      }
       if (path === "/disbursements" && method === "POST") {
         // Latensi server 2,5 detik: selama itu tidak boleh ada baris baru.
         await new Promise((resolve) => setTimeout(resolve, 2500));
-        return route.fulfill({ json: { data: disbursement(99, "DSB-UJI-BARU") } });
+        return route.fulfill({
+          json: {
+            data: {
+              ...disbursement(99, "DSB-UJI-BARU"),
+              merchant: { id: 2, name: "Apotek Baru" },
+            },
+          },
+        });
       }
       if (path === "/disbursements") {
         return route.fulfill({ json: paginated([existing]) });
@@ -494,19 +515,21 @@ test.describe("P4 feedback loop", () => {
     await page.locator("#campaign").selectOption("2");
     await page.locator("#merchant").selectOption("1");
     await page.locator("#disbursement-amount").fill("100000");
-    await page
-      .getByRole("button", { name: "Otorisasi pembayaran", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Periksa kelayakan" }).click();
+    await page.getByRole("button", { name: /^Belanja Rp/ }).click();
 
     // Selama permintaan berjalan, tidak ada baris baru dan tidak ada toast.
     await page.waitForTimeout(1200);
     expect(
-      await history.locator("li", { hasText: "DSB-UJI-BARU" }).count(),
+      await history.locator("li", { hasText: "Apotek Baru" }).count(),
     ).toBe(0);
     expect(await toastCount(page)).toBe(0);
 
+    // Sheet kewajiban nota menutup latar; tutup dulu agar riwayat terbaca.
+    await page.getByRole("button", { name: "Tutup" }).click();
+
     // Setelah respons server, baris muncul dengan highlight dan toast sukses.
-    await expect(history.locator("li", { hasText: "DSB-UJI-BARU" })).toHaveCount(1);
+    await expect(history.locator("li", { hasText: "Apotek Baru" })).toHaveCount(1);
     await expect(page.locator("[data-sonner-toast]")).toHaveCount(1);
   });
 });

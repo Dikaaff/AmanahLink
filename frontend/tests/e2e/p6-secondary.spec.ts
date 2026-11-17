@@ -362,13 +362,14 @@ test.describe("P6 mobile secondary @390", () => {
     await page.locator("#campaign").selectOption("1");
     await page.locator("#merchant").selectOption("1");
     await page.locator("#disbursement-amount").fill("50000");
-    await page.getByRole("button", { name: "Otorisasi pembayaran", exact: true }).click();
+    await page.getByRole("button", { name: "Periksa kelayakan" }).click();
+    await page.getByRole("button", { name: /^Belanja Rp/ }).click();
 
     await expect(
-      page.getByText("Pembayaran ke merchant tercatat", { exact: true }),
+      page.getByText("Dana terkirim ke merchant", { exact: true }).first(),
     ).toBeVisible();
     await expect(
-      page.getByText(/Rp\s?50\.000 ke Apotek Sehat Sentosa.*status dana keluar/),
+      page.getByText(/Rp\s?50\.000 ke Apotek Sehat Sentosa/).first(),
     ).toBeVisible();
     await expectNoOverflow(page, "L17 success @390");
   });
@@ -395,7 +396,8 @@ test.describe("P6 mobile secondary @390", () => {
     await page.locator("#campaign").selectOption("1");
     await page.locator("#merchant").selectOption("1");
     await page.locator("#disbursement-amount").fill("50000");
-    await page.getByRole("button", { name: "Otorisasi pembayaran", exact: true }).click();
+    await page.getByRole("button", { name: "Periksa kelayakan" }).click();
+    await page.getByRole("button", { name: /^Belanja Rp/ }).click();
 
     await expect(page.getByText(/tidak bisa diproses di toko elektronik/)).toBeVisible();
     await expect(page.locator("#disbursement-amount")).toBeVisible();
@@ -447,7 +449,7 @@ test.describe("P6 mobile secondary @390", () => {
     await mockApi(page);
     await login(page);
 
-    await page.getByRole("link", { name: "Simulasi pindai" }).click();
+    await page.getByRole("link", { name: "Periksa kelayakan pembayaran" }).click();
     await expect(page).toHaveURL(/\/dashboard\/simulasi$/);
     await page.locator("#simulation-campaign").selectOption("1");
     await page.locator("#simulation-merchant").selectOption("1");
@@ -479,7 +481,7 @@ test.describe("P6 mobile secondary @390", () => {
     });
     await login(page);
 
-    await page.getByRole("link", { name: "Simulasi pindai" }).click();
+    await page.getByRole("link", { name: "Periksa kelayakan pembayaran" }).click();
     await page.locator("#simulation-campaign").selectOption("1");
     await page.locator("#simulation-merchant").selectOption("1");
     await page.locator("#simulation-amount").fill("50000");
@@ -526,7 +528,7 @@ test.describe("P6 mobile secondary @390", () => {
 
     await page.getByRole("link", { name: "Dasbor", exact: true }).click();
     await expect(page).toHaveURL(/\/dashboard$/);
-    await page.getByRole("link", { name: "Simulasi pindai" }).click();
+    await page.getByRole("link", { name: "Periksa kelayakan pembayaran" }).click();
     await page.locator("#simulation-campaign").selectOption("1");
     await page.locator("#simulation-merchant").selectOption("1");
     await page.locator("#simulation-amount").fill("50000");

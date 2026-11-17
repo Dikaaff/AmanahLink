@@ -167,11 +167,14 @@ settled → failed: ditolak (dana sudah di merchant; koreksi = refund/dispute)
 ```
 Aturan: `authorized` wajib punya 2 ledger entry sebelum `commit`. `captured` tanpa ledger entry = bug kritis (invariant test gagal). Driver demo `fake` menyelesaikan transfer secara sinkron (`captured → settled` dengan `settled_at`); rail bank nyata menunggu callback sebelum `settled`.
 
+Belanja kampanye ditahan (bukan akun, bukan donasi) bila ada pembayaran `disputed` dengan nota ditolak, atau pembayaran `settled`/`receipt_pending` yang notanya belum diunggah lebih dari 7×24 jam. `POST /disbursements` dan `POST /disbursements/simulate` mengembalikan `SPENDING_HELD` (409) beserta `hold_code`/`reference_id`; `GET /campaigns/{campaign}/spending-hold` memberi status baca untuk banner. Halaman publik hanya menampilkan `spending_held` (badge netral), tanpa merchant, nominal, atau alasan penolakan.
+
 ### 7.4 Receipt
 ```
 uploaded → extracting → auto_matched → verified → reconciled
                      └→ needs_review → approved | rejected → disputed
 ```
+Nota pengganti untuk transaksi `disputed` tidak mengubah status saat diunggah dan tidak pernah auto-approve; persetujuannya mewajibkan staf berbeda dari penolak (`maker-checker`). Sengketa hanya bisa keluar ke `reconciled` lewat persetujuan nota pengganti atau write-off admin (platform menanggung, merchant disuspend, audit).
 
 ---
 

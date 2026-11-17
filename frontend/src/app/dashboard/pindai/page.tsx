@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { AppPage } from "@/components/app-shell";
 import { useAuth } from "@/components/auth-provider";
 import { ScreenHeader } from "@/components/screen-header";
-import { SectionTabs } from "@/components/section-tabs";
+import { DanaTabs } from "@/components/dana-tabs";
 import { Alert } from "@/components/ui/alert";
 import { Disclosure } from "@/components/ui/disclosure";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -20,7 +20,6 @@ import {
 } from "@/lib/api";
 import { rupiah } from "@/lib/format";
 import { mccTitle } from "@/lib/mcc";
-import { DANA_TABS } from "@/lib/sections";
 
 const DISBURSABLE = ["active", "funded"];
 
@@ -325,12 +324,22 @@ export default function MerchantScanPage() {
     <AppPage narrow>
       <ScreenHeader
         eyebrow="Dana"
-        title="Pindai QR merchant"
-        description="Periksa apakah merchant ini boleh menerima dana kampanye sebelum uang keluar."
+        title="Belanja · Pindai QR"
+        description="Mode pindai dari Belanja. Periksa apakah merchant ini boleh menerima dana kampanye sebelum uang keluar."
         className="!items-start"
       />
 
-      <SectionTabs label="Menu dana" items={DANA_TABS} />
+      <DanaTabs />
+
+      <p className="text-body-sm text-ink-secondary">
+        <Link
+          href="/dashboard/pencairan"
+          className="font-medium underline underline-offset-4"
+        >
+          Kembali ke Belanja
+        </Link>{" "}
+        untuk memilih merchant dari katalog.
+      </p>
 
       {loadError ? <Alert tone="error">{loadError}</Alert> : null}
 

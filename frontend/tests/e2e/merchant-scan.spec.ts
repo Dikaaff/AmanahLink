@@ -10,9 +10,9 @@ test("campaigner scans a merchant QR, passes the MCC check, then disburses", asy
   await expect(page).toHaveURL(/\/dashboard$/);
 
   await page.getByRole("link", { name: "Dana", exact: true }).click();
-  await page.getByRole("link", { name: "Pindai", exact: true }).click();
+  await page.getByRole("link", { name: "Pindai QR merchant" }).click();
   await expect(
-    page.getByRole("heading", { name: "Pindai QR merchant" }),
+    page.getByRole("heading", { name: "Belanja · Pindai QR" }),
   ).toBeVisible();
 
   const campaignOption = page

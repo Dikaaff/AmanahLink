@@ -470,7 +470,7 @@ export default function DashboardPage() {
               href="/dashboard/simulasi"
               className="font-medium text-ink underline underline-offset-4"
             >
-              Simulasi pindai
+              Periksa kelayakan pembayaran
             </Link>
           </p>
         </>
