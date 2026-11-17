@@ -6,6 +6,7 @@ namespace App\Http\Resources;
 
 use App\Enums\CampaignStatus;
 use App\Models\Campaign;
+use App\Services\SpendingHoldService;
 use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -46,6 +47,9 @@ final class CampaignResource extends JsonResource
                 $this->rejection_reason,
             ),
             'is_accepting_donations' => $this->acceptsDonations(),
+            // Neutral public signal: never expose the merchant, amount, or
+            // rejection reason behind a dispute (D-034).
+            'spending_held' => app(SpendingHoldService::class)->reasonFor($this->resource) !== null,
             'campaigner' => $this->whenLoaded('campaigner', fn (): array => [
                 'id' => $this->campaigner->id,
                 'name' => $this->campaigner->name,

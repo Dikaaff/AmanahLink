@@ -66,7 +66,7 @@ class Transaction extends Model
 
     public function receipt(): HasOne
     {
-        return $this->hasOne(Receipt::class);
+        return $this->hasOne(Receipt::class)->latestOfMany();
     }
 
     /**

@@ -19,5 +19,12 @@ class DatabaseSeeder extends Seeder
             'name' => 'Admin AmanahLink',
             'email' => 'admin@amanahlink.test',
         ]);
+
+        // A second reviewer makes the maker-checker rule demoable: the admin
+        // who rejects a receipt cannot approve its replacement.
+        User::factory()->verifier()->create([
+            'name' => 'Verifikator AmanahLink',
+            'email' => 'verifier@amanahlink.test',
+        ]);
     }
 }

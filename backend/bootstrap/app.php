@@ -15,6 +15,7 @@ use App\Exceptions\LedgerMismatchException;
 use App\Exceptions\LimitExceededException;
 use App\Exceptions\LimitExpiredException;
 use App\Exceptions\MccNotAllowedException;
+use App\Exceptions\SpendingHeldException;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureEmailIsVerified;
@@ -253,6 +254,17 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return ApiError::response('LIMIT_EXPIRED', $e->getMessage(), 409);
+        });
+
+        $exceptions->render(function (SpendingHeldException $e, Request $request) use ($isApi) {
+            if (! $isApi($request)) {
+                return null;
+            }
+
+            return ApiError::response('SPENDING_HELD', $e->getMessage(), 409, [
+                'hold_code' => $e->holdCode,
+                'reference_id' => $e->referenceId,
+            ]);
         });
 
         $exceptions->render(function (InvalidSignatureException $e, Request $request) use ($isApi) {

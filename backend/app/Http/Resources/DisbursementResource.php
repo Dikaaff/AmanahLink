@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Transaction;
+use App\Services\SpendingHoldService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,6 +19,10 @@ final class DisbursementResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $dueAt = $this->status->awaitsReceipt() && $this->settled_at !== null
+            ? $this->settled_at->copy()->addDays(SpendingHoldService::RECEIPT_DUE_DAYS)
+            : null;
+
         return [
             'id' => $this->id,
             'reference_id' => $this->reference_id,
@@ -25,6 +30,8 @@ final class DisbursementResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'settled_at' => $this->settled_at?->toIso8601String(),
+            'receipt_due_at' => $dueAt?->toIso8601String(),
+            'receipt_overdue' => $dueAt?->isPast() ?? false,
             'mcc_used' => $this->mcc_used,
             'campaign' => $this->whenLoaded('campaign', fn (): array => [
                 'id' => $this->campaign->id,

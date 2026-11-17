@@ -55,6 +55,7 @@ Route::prefix('v1')->group(function (): void {
         });
         Route::post('campaigns/{campaign}/review', [CampaignController::class, 'review']);
         Route::get('campaigns/{campaign}/disbursement-limit', [DisbursementLimitController::class, 'show']);
+        Route::get('campaigns/{campaign}/spending-hold', [DisbursementController::class, 'spendingHold']);
 
         Route::get('donations', [DonationController::class, 'index']);
 
@@ -68,6 +69,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('disbursements', [DisbursementController::class, 'index']);
 
         Route::get('receipts', [ReceiptController::class, 'index']);
+        Route::get('receipts/pending-count', [ReceiptController::class, 'pendingCount']);
         Route::post('receipts/{receipt}/review', [ReceiptController::class, 'review']);
 
         Route::get('notifications', [NotificationController::class, 'index']);

@@ -10,6 +10,7 @@ use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\LimitExceededException;
 use App\Exceptions\LimitExpiredException;
 use App\Exceptions\MccNotAllowedException;
+use App\Exceptions\SpendingHeldException;
 use App\Http\Requests\ScanMerchantRequest;
 use App\Http\Requests\StoreDisbursementRequest;
 use App\Http\Resources\DisbursementResource;
@@ -18,6 +19,7 @@ use App\Models\Campaign;
 use App\Models\Merchant;
 use App\Models\Transaction;
 use App\Services\DisbursementService;
+use App\Services\SpendingHoldService;
 use App\Support\MerchantQr;
 use App\Support\Money;
 use Illuminate\Http\JsonResponse;
@@ -31,6 +33,7 @@ final class DisbursementController
     public function __construct(
         private readonly DisbursementService $disbursements,
         private readonly MerchantQr $merchantQr,
+        private readonly SpendingHoldService $holds,
     ) {}
 
     public function index(Request $request): AnonymousResourceCollection
@@ -65,18 +68,13 @@ final class DisbursementController
                 $merchant,
                 Money::of((string) $request->input('amount')),
             );
-        } catch (CampaignNotActiveException|MccNotAllowedException|InsufficientFundsException|LimitExceededException|LimitExpiredException $exception) {
+        } catch (CampaignNotActiveException|MccNotAllowedException|InsufficientFundsException|LimitExceededException|LimitExpiredException|SpendingHeldException $exception) {
             return response()->json([
                 'data' => [
                     'allowed' => false,
                     'code' => $this->simulationCode($exception),
                     'message' => $exception->getMessage(),
-                    'details' => $exception instanceof LimitExceededException
-                        ? [
-                            'scope' => $exception->scope,
-                            'remaining' => $exception->remaining->toDecimalString(),
-                        ]
-                        : null,
+                    'details' => $this->simulationDetails($exception),
                 ],
             ]);
         }
@@ -116,19 +114,14 @@ final class DisbursementController
                 $merchant,
                 Money::of((string) $request->input('amount')),
             );
-        } catch (CampaignNotActiveException|MccNotAllowedException|InsufficientFundsException|LimitExceededException|LimitExpiredException $exception) {
+        } catch (CampaignNotActiveException|MccNotAllowedException|InsufficientFundsException|LimitExceededException|LimitExpiredException|SpendingHeldException $exception) {
             return response()->json([
                 'data' => [
                     'allowed' => false,
                     'code' => $this->simulationCode($exception),
                     'message' => $exception->getMessage(),
                     'merchant' => new MerchantResource($merchant),
-                    'details' => $exception instanceof LimitExceededException
-                        ? [
-                            'scope' => $exception->scope,
-                            'remaining' => $exception->remaining->toDecimalString(),
-                        ]
-                        : null,
+                    'details' => $this->simulationDetails($exception),
                 ],
             ]);
         }
@@ -170,15 +163,56 @@ final class DisbursementController
         ], $result['replayed'] ? 200 : 201);
     }
 
+    /**
+     * Read-only hold state for the Belanja banner, so the campaigner sees the
+     * block before filling the form instead of after pressing the button.
+     */
+    public function spendingHold(Request $request, Campaign $campaign): JsonResponse
+    {
+        Gate::authorize('viewLimits', $campaign);
+
+        $hold = $this->holds->reasonFor($campaign);
+
+        return response()->json([
+            'data' => [
+                'held' => $hold !== null,
+                'code' => $hold['code'] ?? null,
+                'message' => $hold['message'] ?? null,
+                'reference_id' => $hold['reference_id'] ?? null,
+                'due_at' => $hold['due_at'] ?? null,
+            ],
+        ]);
+    }
+
     private function simulationCode(
-        CampaignNotActiveException|MccNotAllowedException|InsufficientFundsException|LimitExceededException|LimitExpiredException $exception,
+        CampaignNotActiveException|MccNotAllowedException|InsufficientFundsException|LimitExceededException|LimitExpiredException|SpendingHeldException $exception,
     ): string {
         return match (true) {
             $exception instanceof CampaignNotActiveException => 'CAMPAIGN_NOT_ACTIVE',
             $exception instanceof MccNotAllowedException => 'MCC_NOT_ALLOWED',
             $exception instanceof InsufficientFundsException => 'INSUFFICIENT_FUNDS',
             $exception instanceof LimitExceededException => 'LIMIT_EXCEEDED',
+            $exception instanceof SpendingHeldException => 'SPENDING_HELD',
             default => 'LIMIT_EXPIRED',
+        };
+    }
+
+    /**
+     * @return array<string, string>|null
+     */
+    private function simulationDetails(
+        CampaignNotActiveException|MccNotAllowedException|InsufficientFundsException|LimitExceededException|LimitExpiredException|SpendingHeldException $exception,
+    ): ?array {
+        return match (true) {
+            $exception instanceof LimitExceededException => [
+                'scope' => $exception->scope,
+                'remaining' => $exception->remaining->toDecimalString(),
+            ],
+            $exception instanceof SpendingHeldException => [
+                'hold_code' => $exception->holdCode,
+                'reference_id' => (string) $exception->referenceId,
+            ],
+            default => null,
         };
     }
 }

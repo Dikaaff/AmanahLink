@@ -15,6 +15,7 @@ use App\Exceptions\InvalidStateTransitionException;
 use App\Exceptions\LimitExceededException;
 use App\Exceptions\LimitExpiredException;
 use App\Exceptions\MccNotAllowedException;
+use App\Exceptions\SpendingHeldException;
 use App\Models\Campaign;
 use App\Models\DisbursementLimit;
 use App\Models\IdempotencyKey;
@@ -41,6 +42,7 @@ final class DisbursementService
         private readonly CampaignBalanceService $balances,
         private readonly IdempotencyService $idempotency,
         private readonly AuditLogger $audit,
+        private readonly SpendingHoldService $holds,
     ) {}
 
     /**
@@ -59,6 +61,8 @@ final class DisbursementService
             if (! $campaign->allowsDisbursement()) {
                 throw new CampaignNotActiveException('Kampanye tidak dapat melakukan pembayaran saat ini.');
             }
+
+            $this->assertSpendingNotHeld($campaign);
 
             $merchant = Merchant::query()->findOrFail($merchantId);
             $this->assertMerchantAllowed($campaign, $merchant);
@@ -197,6 +201,8 @@ final class DisbursementService
         if (! $campaign->allowsDisbursement()) {
             throw new CampaignNotActiveException('Kampanye tidak dapat melakukan pembayaran saat ini.');
         }
+
+        $this->assertSpendingNotHeld($campaign);
 
         $this->assertMerchantAllowed($campaign, $merchant);
 
@@ -353,6 +359,15 @@ final class DisbursementService
         }
 
         return Money::zero()->toDecimalString();
+    }
+
+    private function assertSpendingNotHeld(Campaign $campaign): void
+    {
+        $hold = $this->holds->reasonFor($campaign);
+
+        if ($hold !== null) {
+            throw new SpendingHeldException($hold['message'], $hold['code'], $hold['reference_id']);
+        }
     }
 
     private function assertMerchantAllowed(Campaign $campaign, Merchant $merchant): void
