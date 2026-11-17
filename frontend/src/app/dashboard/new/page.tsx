@@ -192,7 +192,7 @@ export default function NewCampaignPage() {
         <fieldset>
           <legend className="field-label">Kategori transaksi yang diizinkan</legend>
           <p className="mb-3 text-xs text-ink-muted">
-            Pilih minimal satu. Pencairan hanya dapat dilakukan ke merchant
+            Pilih minimal satu. Pembayaran hanya dapat dilakukan ke merchant
             terverifikasi dengan kategori ini.
           </p>
           <div className="grid gap-2 sm:grid-cols-2">

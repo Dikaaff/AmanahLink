@@ -85,7 +85,7 @@ final class DisbursementController
             'data' => [
                 'allowed' => true,
                 'code' => null,
-                'message' => 'Pencairan dapat diproses.',
+                'message' => 'Pembayaran dapat diproses.',
                 ...$preview,
             ],
         ]);
@@ -137,7 +137,7 @@ final class DisbursementController
             'data' => [
                 'allowed' => true,
                 'code' => null,
-                'message' => 'Merchant cocok dan pencairan dapat diproses.',
+                'message' => 'Merchant cocok dan pembayaran dapat diproses.',
                 'merchant' => new MerchantResource($merchant),
                 ...$preview,
             ],

@@ -52,6 +52,7 @@ final class AdminDashboardController
                         ->where('type', TransactionType::Disbursement->value)
                         ->whereIn('status', [
                             TransactionStatus::Captured->value,
+                            TransactionStatus::Settled->value,
                             TransactionStatus::ReceiptPending->value,
                             TransactionStatus::Verified->value,
                             TransactionStatus::Reconciled->value,

@@ -2,8 +2,8 @@ import type { SectionTabItem } from "@/components/section-tabs";
 
 /** Sibling screens reached from one sidebar entry, in task order. */
 export const DANA_TABS: SectionTabItem[] = [
-  { href: "/dashboard/pencairan", label: "Cairkan" },
-  { href: "/dashboard/pindai", label: "Pindai QR" },
+  { href: "/dashboard/pencairan", label: "Belanja" },
+  { href: "/dashboard/pindai", label: "Pindai" },
   { href: "/dashboard/nota", label: "Nota" },
   { href: "/dashboard/simulasi", label: "Simulasi" },
 ];
@@ -11,7 +11,7 @@ export const DANA_TABS: SectionTabItem[] = [
 export const REVIEW_TABS: SectionTabItem[] = [
   { href: "/admin/campaigns", label: "Kampanye" },
   { href: "/admin/receipts", label: "Nota" },
-  { href: "/admin/pencairan", label: "Pencairan" },
+  { href: "/admin/pencairan", label: "Pembayaran" },
   { href: "/admin/audit-logs", label: "Audit log" },
 ];
 

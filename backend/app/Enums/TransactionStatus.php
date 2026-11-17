@@ -10,6 +10,7 @@ enum TransactionStatus: string
     case MccValidated = 'mcc_validated';
     case Authorized = 'authorized';
     case Captured = 'captured';
+    case Settled = 'settled';
     case ReceiptPending = 'receipt_pending';
     case Verified = 'verified';
     case Reconciled = 'reconciled';
@@ -25,7 +26,8 @@ enum TransactionStatus: string
             self::Requested => [self::MccValidated, self::Failed],
             self::MccValidated => [self::Authorized, self::Failed],
             self::Authorized => [self::Captured, self::Failed],
-            self::Captured => [self::ReceiptPending],
+            self::Captured => [self::Settled, self::Failed],
+            self::Settled => [self::ReceiptPending],
             self::ReceiptPending => [self::Verified, self::Disputed],
             self::Verified => [self::Reconciled, self::Disputed],
             self::Reconciled => [],
@@ -46,7 +48,15 @@ enum TransactionStatus: string
 
     public function movesFunds(): bool
     {
-        return in_array($this, [self::Captured, self::Reconciled], true);
+        return in_array($this, [self::Captured, self::Settled, self::Reconciled], true);
+    }
+
+    /**
+     * Statuses where the merchant payment still needs a receipt before review.
+     */
+    public function awaitsReceipt(): bool
+    {
+        return in_array($this, [self::Settled, self::ReceiptPending], true);
     }
 
     public function label(): string
@@ -55,7 +65,8 @@ enum TransactionStatus: string
             self::Requested => 'Diminta',
             self::MccValidated => 'MCC Tervalidasi',
             self::Authorized => 'Diotorisasi',
-            self::Captured => 'Dana Ditarik',
+            self::Captured => 'Pembayaran Diproses',
+            self::Settled => 'Dana Terkirim ke Merchant',
             self::ReceiptPending => 'Menunggu Nota',
             self::Verified => 'Nota Terverifikasi',
             self::Reconciled => 'Terekonsiliasi',

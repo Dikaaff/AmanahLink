@@ -28,7 +28,7 @@ class VerifyLedgerCommand extends Command
             SELECT t.id
             FROM transactions t
             LEFT JOIN ledger_entries e ON e.transaction_id = t.id
-            WHERE t.status IN ('captured', 'receipt_pending', 'verified', 'reconciled', 'disputed')
+            WHERE t.status IN ('captured', 'settled', 'receipt_pending', 'verified', 'reconciled', 'disputed')
               AND e.id IS NULL
         SQL);
 

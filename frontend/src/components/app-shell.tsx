@@ -89,7 +89,7 @@ function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
       className={cn(
         "group relative flex min-h-10 items-center gap-3 rounded-sm px-3 text-body-sm font-medium transition-colors",
         active
-          ? "bg-accent text-white"
+          ? "bg-accent-strong text-white"
           : "text-ink-secondary hover:bg-accent-soft hover:text-accent-strong",
       )}
     >
@@ -104,7 +104,7 @@ function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
         <span
           className={cn(
             "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
-            active ? "bg-white text-accent-strong" : "bg-accent text-white",
+            active ? "bg-white text-accent-strong" : "bg-accent-strong text-white",
           )}
         >
           {item.badge > 99 ? "99+" : item.badge}
@@ -378,7 +378,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {!online ? (
           <div
             role="status"
-            className="bg-accent px-4 py-2 text-center text-body-sm font-medium text-white"
+            className="bg-accent-strong px-4 py-2 text-center text-body-sm font-medium text-white"
           >
             Anda sedang offline. Perubahan tidak dapat disimpan sampai koneksi
             kembali.

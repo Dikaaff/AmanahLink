@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -221,7 +221,7 @@ export default function DisbursementPage() {
       });
 
       notifySuccess(
-        `Pencairan ${rupiah(response.data.amount)} ke ${
+        `Pembayaran ${rupiah(response.data.amount)} ke ${
           response.data.merchant?.name ?? "merchant"
         } tercatat sebagai ${response.data.status_label.toLowerCase()}.`,
       );
@@ -250,8 +250,8 @@ export default function DisbursementPage() {
   if (!ready || (canUse && loading)) {
     return (
       <AppPage>
-        <div role="status" aria-label="Memuat pencairan" className="space-y-6">
-          <span className="sr-only">Memuat data pencairan.</span>
+        <div role="status" aria-label="Memuat belanja kampanye" className="space-y-6">
+          <span className="sr-only">Memuat data belanja kampanye.</span>
           <Skeleton className="h-9 w-64" />
           <Skeleton className="h-4 w-80" />
           <div className="space-y-4 border-y border-line py-6">
@@ -270,7 +270,7 @@ export default function DisbursementPage() {
     return (
       <AppPage narrow>
         <Alert tone="info">
-          Pencairan dana hanya untuk akun penggalang dana dan administrator.
+          Belanja kampanye hanya untuk akun penggalang dana dan administrator.
         </Alert>
         <Link href="/dashboard" className="btn-secondary mt-5">
           Kembali ke dasbor
@@ -287,8 +287,8 @@ export default function DisbursementPage() {
     <AppPage>
       <ScreenHeader
         eyebrow="Dana"
-        title="Cairkan dana"
-        description="Pilih kampanye dan merchant, periksa kelayakan, lalu cairkan."
+        title="Belanja kampanye"
+        description="Pilih kampanye dan merchant, periksa kelayakan, lalu otorisasi pembayaran."
         className="!items-start"
       />
 
@@ -299,7 +299,7 @@ export default function DisbursementPage() {
       ) : null}
 
       {last ? (
-        <Alert tone="success" title="Pencairan tercatat">
+        <Alert tone="success" title="Pembayaran ke merchant tercatat">
           {rupiah(last.amount)} ke {last.merchant?.name ?? "merchant"} · status{" "}
           {last.status_label.toLowerCase()} · referensi{" "}
           <span className="font-mono">{last.reference_id}</span>.{" "}
@@ -315,14 +315,14 @@ export default function DisbursementPage() {
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
       <section aria-labelledby="disburse-heading">
         <h2 id="disburse-heading" className="text-h2 font-semibold text-ink">
-          Pencairan baru
+          Pembayaran baru
         </h2>
 
         {disbursable.length === 0 ? (
           <div className="mt-4">
             <Alert tone="info">
-              Belum ada kampanye aktif yang dapat dicairkan. Ajukan kampanye
-              untuk review terlebih dahulu.
+              Belum ada kampanye aktif yang bisa dipakai untuk belanja. Ajukan
+              kampanye untuk review terlebih dahulu.
             </Alert>
             <Link href="/dashboard/campaigns" className="btn-secondary mt-4">
               Lihat kampanye
@@ -427,8 +427,8 @@ export default function DisbursementPage() {
               >
                 <p className="text-body-sm font-semibold text-ink">
                   {simulation.allowed
-                    ? "Pencairan ini lolos pemeriksaan."
-                    : "Pencairan ini akan ditolak."}
+                    ? "Pembayaran ini lolos pemeriksaan."
+                    : "Pembayaran ini akan ditolak."}
                 </p>
                 <p className="mt-1 text-body-sm text-ink-secondary">
                   {simulation.message}
@@ -436,7 +436,7 @@ export default function DisbursementPage() {
                 <dl className="mt-3 grid gap-2 text-xs text-ink-secondary sm:grid-cols-3">
                   {simulation.remaining_today ? (
                     <div>
-                      <dt className="text-ink-muted">Sisa limit hari ini</dt>
+                      <dt className="text-ink-muted">Sisa batas hari ini</dt>
                       <dd className="numeric text-ink">
                         {rupiah(simulation.remaining_today)}
                       </dd>
@@ -444,7 +444,7 @@ export default function DisbursementPage() {
                   ) : null}
                   {simulation.remaining_month ? (
                     <div>
-                      <dt className="text-ink-muted">Sisa limit bulan ini</dt>
+                      <dt className="text-ink-muted">Sisa batas bulan ini</dt>
                       <dd className="numeric text-ink">
                         {rupiah(simulation.remaining_month)}
                       </dd>
@@ -452,7 +452,7 @@ export default function DisbursementPage() {
                   ) : null}
                   {simulation.ledger_balance ? (
                     <div>
-                      <dt className="text-ink-muted">Saldo ledger</dt>
+                      <dt className="text-ink-muted">Dana tersedia (ledger)</dt>
                       <dd className="numeric text-ink">
                         {rupiah(simulation.ledger_balance)}
                       </dd>
@@ -469,7 +469,7 @@ export default function DisbursementPage() {
                 disabled={disbursing || !formReady}
                 aria-busy={disbursing || undefined}
               >
-                {disbursing ? "Memproses…" : "Cairkan dana"}
+                {disbursing ? "Memproses…" : "Otorisasi pembayaran"}
               </button>
               <button
                 type="button"
@@ -535,8 +535,8 @@ export default function DisbursementPage() {
         >
           <ul className="space-y-2 text-body-sm text-ink-secondary">
             <li>Merchant harus terverifikasi dan kategorinya ada di allowlist kampanye.</li>
-            <li>Nominal tidak boleh melewati limit harian/bulanan dan saldo dana kampanye.</li>
-            <li>Setiap pencairan menulis dua entri ledger dan tidak dapat dibatalkan.</li>
+            <li>Nominal tidak boleh melewati batas harian/bulanan dan dana kampanye yang tersedia.</li>
+            <li>Setiap pembayaran menulis dua entri ledger dan tidak dapat dibatalkan setelah dikirim.</li>
           </ul>
         </Disclosure>
       </aside>
@@ -546,7 +546,7 @@ export default function DisbursementPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 id="history-heading" className="text-h2 font-semibold text-ink">
-              Riwayat pencairan
+              Riwayat pembayaran
             </h2>
             <p className="mt-1 text-body-sm text-ink-secondary">
               Status transaksi dan nota, tanpa kehilangan jejak audit.
@@ -570,13 +570,13 @@ export default function DisbursementPage() {
           </div>
         ) : historyLoading && history === null ? (
           <div className="mt-4">
-            <Loading label="Memuat riwayat pencairan…" />
+            <Loading label="Memuat riwayat pembayaran…" />
           </div>
         ) : !history || history.data.length === 0 ? (
           <div className="mt-4">
             <EmptyState
-              title="Belum ada pencairan"
-              description="Pencairan yang berhasil tercatat di sini bersama status nota dan merchant penerima."
+              title="Belum ada pembayaran"
+              description="Pembayaran yang berhasil tercatat di sini bersama status nota dan merchant penerima."
             />
           </div>
         ) : (
@@ -598,7 +598,7 @@ export default function DisbursementPage() {
                         </Link>
                       ) : (
                         <span className="text-body-sm font-semibold text-ink">
-                          Pencairan dana
+                          Pembayaran ke merchant
                         </span>
                       )}
                       <p className="mt-1 text-xs text-ink-muted">
@@ -655,7 +655,7 @@ export default function DisbursementPage() {
             </ul>
 
             {lastPage > 1 ? (
-              <div className="mt-5 flex items-center justify-center gap-3">
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
                 <button
                   type="button"
                   className="btn-secondary"
@@ -664,7 +664,7 @@ export default function DisbursementPage() {
                 >
                   Sebelumnya
                 </button>
-                <span className="text-body-sm text-ink-muted">
+                <span className="whitespace-nowrap text-body-sm text-ink-muted">
                   Halaman {page} dari {lastPage}
                 </span>
                 <button

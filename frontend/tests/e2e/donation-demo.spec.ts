@@ -10,6 +10,9 @@ test("donor settles a demo payment and sees the updated campaign balance", async
   await expect(page).toHaveURL(/\/dashboard$/);
 
   await page.getByRole("link", { name: "Kampanye" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Kampanye berjalan" }),
+  ).toBeVisible();
   await page.getByRole("link", { name: "Bantu Biaya Operasi Ibu Sari" }).click();
   await expect(
     page.getByRole("heading", { name: "Bantu Biaya Operasi Ibu Sari" }),

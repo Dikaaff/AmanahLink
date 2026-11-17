@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -165,7 +165,7 @@ export default function DonationsPage() {
             <ul className="mt-4 divide-y divide-line border-y border-line">
               {donations.data.map((donation) => (
                 <li key={donation.id} className="py-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       {donation.campaign ? (
                         <Link
@@ -175,28 +175,30 @@ export default function DonationsPage() {
                           {donation.campaign.title}
                         </Link>
                       ) : (
-                        <span className="text-body-sm font-semibold text-ink">
+                        <span className="break-words text-body-sm font-semibold text-ink">
                           Donasi
                         </span>
                       )}
-                      <p className="mt-1 text-xs text-ink-muted">
-                        {dateTime(donation.created_at)}
-                      </p>
                     </div>
                     <StatusBadge
                       status={donation.status}
                       label={donation.status_label}
                     />
                   </div>
-                  <p className="numeric mt-3 text-body-sm font-semibold text-ink">
-                    {rupiah(donation.amount)}
-                  </p>
+                  <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                    <span className="numeric text-body-sm text-ink">
+                      {rupiah(donation.amount)}
+                    </span>
+                    <span className="text-xs text-ink-muted">
+                      {dateTime(donation.created_at)}
+                    </span>
+                  </div>
                 </li>
               ))}
             </ul>
 
             {lastPage > 1 ? (
-              <div className="mt-5 flex items-center justify-center gap-3">
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
                 <button
                   type="button"
                   className="btn-secondary"
@@ -205,7 +207,7 @@ export default function DonationsPage() {
                 >
                   Sebelumnya
                 </button>
-                <span className="text-body-sm text-ink-muted">
+                <span className="whitespace-nowrap text-body-sm text-ink-muted">
                   Halaman {page} dari {lastPage}
                 </span>
                 <button

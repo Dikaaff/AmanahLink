@@ -324,7 +324,10 @@ export default function CampaignsPage() {
                       </span>
                     </p>
                     <div className="mt-2">
-                      <Progress value={Math.round(campaign.progress_percent)} />
+                      <Progress
+                        value={Math.round(campaign.progress_percent)}
+                        label={`Progres ${campaign.title}`}
+                      />
                     </div>
                   </div>
 
@@ -367,12 +370,12 @@ export default function CampaignsPage() {
 
       <section aria-labelledby="limit-heading" className="border-t border-line pt-8">
         <h2 id="limit-heading" className="text-h2 font-semibold text-ink">
-          {isAdmin ? "Atur limit pencairan" : "Limit pencairan"}
+          {isAdmin ? "Atur batas belanja" : "Batas belanja"}
         </h2>
         <p className="mt-1 max-w-2xl text-body-sm text-ink-secondary">
           {isAdmin
-            ? "Batasi pencairan baru per kampanye. Limit yang kedaluwarsa ditolak sistem."
-            : "Limit ditetapkan admin. Anda dapat melihat pemakaian terbaru."}
+            ? "Batasi pembayaran baru per kampanye. Batas yang kedaluwarsa ditolak sistem."
+            : "Batas ditetapkan admin. Anda dapat melihat pemakaian terbaru."}
         </p>
 
         {disbursable.length === 0 ? (
@@ -391,8 +394,8 @@ export default function CampaignsPage() {
             <FormOverlay
               open={limitOpen}
               onOpenChange={setLimitOpen}
-              title="Atur limit pencairan"
-              description="Limit membatasi pencairan baru per kampanye. Saldo tetap diverifikasi dari ledger dan limit yang kedaluwarsa akan ditolak backend."
+              title="Atur batas belanja"
+              description="Batas ini membatasi pembayaran baru per kampanye. Dana tersedia tetap diverifikasi dari ledger dan batas yang kedaluwarsa akan ditolak backend."
               dirty={Boolean(limitForm.campaignId)}
               onDiscard={() => {
                 setLimitForm({
@@ -540,8 +543,8 @@ export default function CampaignsPage() {
             limitViewCampaignId &&
             !limitInfo ? (
               <Alert tone="info">
-                Admin belum menetapkan limit untuk kampanye ini, sehingga
-                pencairan belum bisa dilakukan.
+                Admin belum menetapkan batas belanja untuk kampanye ini, sehingga
+                pembayaran belum bisa dilakukan.
               </Alert>
             ) : null}
 

@@ -11,6 +11,7 @@ use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Exceptions\CampaignNotActiveException;
 use App\Exceptions\InsufficientFundsException;
+use App\Exceptions\InvalidStateTransitionException;
 use App\Exceptions\LimitExceededException;
 use App\Exceptions\LimitExpiredException;
 use App\Exceptions\MccNotAllowedException;
@@ -56,7 +57,7 @@ final class DisbursementService
             $campaign = Campaign::query()->whereKey($campaignId)->lockForUpdate()->firstOrFail();
 
             if (! $campaign->allowsDisbursement()) {
-                throw new CampaignNotActiveException('Kampanye tidak dapat mencairkan dana saat ini.');
+                throw new CampaignNotActiveException('Kampanye tidak dapat melakukan pembayaran saat ini.');
             }
 
             $merchant = Merchant::query()->findOrFail($merchantId);
@@ -89,11 +90,11 @@ final class DisbursementService
                 ->first();
 
             if ($limit === null) {
-                throw new LimitExpiredException('Limit pencairan kampanye belum diatur.');
+                throw new LimitExpiredException('Batas belanja kampanye belum diatur.');
             }
 
             if ($limit->isExpired()) {
-                throw new LimitExpiredException('Limit pencairan kampanye sudah kedaluwarsa.');
+                throw new LimitExpiredException('Masa berlaku batas belanja kampanye sudah lewat.');
             }
 
             $this->rollWindows($limit);
@@ -159,6 +160,14 @@ final class DisbursementService
                 'campaign_balance_after' => $campaign->current_amount,
             ], $actor);
 
+            /**
+             * The demo transfer driver settles immediately, so the public record
+             * jumps to `settled`. A real bank rail keeps the transaction at
+             * `captured` until the transfer callback arrives and calls
+             * failSettlement() when the transfer bounces.
+             */
+            $this->settle($transaction, $actor);
+
             return [$transaction, false, $acquisition['record']];
         });
 
@@ -186,7 +195,7 @@ final class DisbursementService
         }
 
         if (! $campaign->allowsDisbursement()) {
-            throw new CampaignNotActiveException('Kampanye tidak dapat mencairkan dana saat ini.');
+            throw new CampaignNotActiveException('Kampanye tidak dapat melakukan pembayaran saat ini.');
         }
 
         $this->assertMerchantAllowed($campaign, $merchant);
@@ -196,11 +205,11 @@ final class DisbursementService
             ->first();
 
         if ($limit === null) {
-            throw new LimitExpiredException('Limit pencairan kampanye belum diatur.');
+            throw new LimitExpiredException('Batas belanja kampanye belum diatur.');
         }
 
         if ($limit->isExpired()) {
-            throw new LimitExpiredException('Limit pencairan kampanye sudah kedaluwarsa.');
+            throw new LimitExpiredException('Masa berlaku batas belanja kampanye sudah lewat.');
         }
 
         $usedToday = $limit->daily_window?->toDateString() === now()->toDateString()
@@ -236,6 +245,114 @@ final class DisbursementService
             'remaining_month' => $remainingMonth->toDecimalString(),
             'limit_expires_at' => $limit->expires_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * Mark a captured disbursement as delivered to the merchant.
+     */
+    public function settle(Transaction $transaction, ?User $actor = null): Transaction
+    {
+        if ($transaction->status === TransactionStatus::Settled) {
+            return $transaction;
+        }
+
+        if (! $transaction->status->canTransitionTo(TransactionStatus::Settled)) {
+            throw new InvalidStateTransitionException($transaction->status, TransactionStatus::Settled);
+        }
+
+        $transaction->forceFill([
+            'status' => TransactionStatus::Settled,
+            'settled_at' => now(),
+        ])->save();
+
+        $this->audit->record('disbursement.settled', $transaction, null, [
+            'reference_id' => $transaction->reference_id,
+            'settled_at' => $transaction->settled_at?->toIso8601String(),
+        ], $actor);
+
+        return $transaction;
+    }
+
+    /**
+     * The transfer never reached the merchant. Reverse the ledger posting,
+     * give the campaign its spending headroom back, and fail the transaction.
+     *
+     * A settled payment is not reversed here: once the merchant has the money
+     * the correction is a refund or a dispute, not a settlement failure.
+     */
+    public function failSettlement(Transaction $transaction, string $reason, ?User $actor = null): Transaction
+    {
+        return DB::transaction(function () use ($transaction, $reason, $actor): Transaction {
+            /** @var Transaction $locked */
+            $locked = Transaction::query()->whereKey($transaction->getKey())->lockForUpdate()->firstOrFail();
+
+            if ($locked->status === TransactionStatus::Failed) {
+                return $locked;
+            }
+
+            if (! $locked->status->canTransitionTo(TransactionStatus::Failed)) {
+                throw new InvalidStateTransitionException($locked->status, TransactionStatus::Failed);
+            }
+
+            /** @var Campaign $campaign */
+            $campaign = Campaign::query()->whereKey($locked->campaign_id)->lockForUpdate()->firstOrFail();
+            $amount = Money::of($locked->amount);
+
+            $this->ledger->post($locked, [
+                [
+                    'account' => AccountCode::MerchantClearing,
+                    'direction' => LedgerDirection::Debit,
+                    'amount' => $amount,
+                ],
+                [
+                    'account' => AccountCode::CampaignRestricted,
+                    'direction' => LedgerDirection::Credit,
+                    'amount' => $amount,
+                    'campaign_id' => $campaign->getKey(),
+                ],
+            ]);
+
+            /** @var DisbursementLimit|null $limit */
+            $limit = DisbursementLimit::query()
+                ->where('campaign_id', $campaign->getKey())
+                ->lockForUpdate()
+                ->first();
+
+            if ($limit !== null) {
+                $limit->forceFill([
+                    'used_today' => $this->release($limit->used_today, $amount),
+                    'used_this_month' => $this->release($limit->used_this_month, $amount),
+                ])->save();
+            }
+
+            $locked->forceFill([
+                'status' => TransactionStatus::Failed,
+                'settled_at' => null,
+            ])->save();
+
+            $this->balances->sync($campaign);
+            $this->balances->assertConsistent($campaign);
+
+            $this->audit->record('disbursement.settlement_failed', $locked, null, [
+                'reference_id' => $locked->reference_id,
+                'amount' => $amount->toDecimalString(),
+                'reason' => $reason,
+                'campaign_balance_after' => $campaign->current_amount,
+            ], $actor);
+
+            return $locked;
+        });
+    }
+
+    private function release(string $used, Money $amount): string
+    {
+        $current = Money::of($used);
+
+        if ($current->isGreaterThan($amount)) {
+            return $current->minus($amount)->toDecimalString();
+        }
+
+        return Money::zero()->toDecimalString();
     }
 
     private function assertMerchantAllowed(Campaign $campaign, Merchant $merchant): void

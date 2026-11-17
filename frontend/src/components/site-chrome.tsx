@@ -32,7 +32,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
       {!online ? (
         <div
           role="status"
-          className="bg-accent px-4 py-2 text-center text-body-sm font-medium text-white"
+          className="bg-accent-strong px-4 py-2 text-center text-body-sm font-medium text-white"
         >
           Anda sedang offline. Perubahan tidak dapat disimpan sampai koneksi kembali.
         </div>
@@ -42,7 +42,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
       <footer className="mt-16 border-t border-line bg-sunken">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>
-            AmanahLink membatasi pencairan ke merchant terverifikasi dengan
+            AmanahLink membatasi pembayaran ke merchant terverifikasi dengan
             kategori transaksi (MCC) yang diizinkan kampanye.
           </p>
           <p>IDR · Asia/Jakarta · MVP</p>

@@ -7,6 +7,7 @@ namespace Tests\Feature\Api;
 use App\Enums\AccountCode;
 use App\Enums\MerchantStatus;
 use App\Enums\TransactionStatus;
+use App\Exceptions\InvalidStateTransitionException;
 use App\Models\Campaign;
 use App\Models\DisbursementLimit;
 use App\Models\Donation;
@@ -14,6 +15,7 @@ use App\Models\Merchant;
 use App\Models\Receipt;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\DisbursementService;
 use App\Services\DonationSettlementService;
 use App\Services\LedgerService;
 use Database\Seeders\MccCodeSeeder;
@@ -121,6 +123,82 @@ final class DisbursementApiTest extends TestCase
             'used_this_month' => '30000.00',
         ]);
         $this->assertDatabaseHas('audit_logs', ['action' => 'disbursement.captured']);
+    }
+
+    public function test_the_demo_driver_settles_the_payment_immediately(): void
+    {
+        $campaign = $this->fundedCampaign();
+        $this->limit($campaign);
+        $merchant = $this->merchant();
+
+        $response = $this->pay($campaign->campaigner, $campaign, $merchant, '30000');
+
+        $response->assertCreated()
+            ->assertJsonPath('data.status', 'settled')
+            ->assertJsonPath('data.status_label', 'Dana Terkirim ke Merchant');
+
+        $transaction = Transaction::query()->where('type', 'disbursement')->sole();
+        $this->assertSame(TransactionStatus::Settled, $transaction->status);
+        $this->assertNotNull($transaction->settled_at);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'disbursement.settled']);
+    }
+
+    public function test_a_failed_settlement_returns_the_money_and_the_limit(): void
+    {
+        $campaign = $this->fundedCampaign();
+        $this->limit($campaign);
+        $merchant = $this->merchant();
+        $this->pay($campaign->campaigner, $campaign, $merchant, '30000')->assertCreated();
+
+        $transaction = Transaction::query()->where('type', 'disbursement')->sole();
+        // Simulate a transaction that was captured but never confirmed by the bank.
+        $transaction->forceFill(['status' => TransactionStatus::Captured, 'settled_at' => null])->save();
+
+        app(DisbursementService::class)->failSettlement($transaction, 'Rekening merchant ditolak bank');
+
+        $failed = $transaction->refresh();
+
+        $this->assertSame(TransactionStatus::Failed, $failed->status);
+        $this->assertNull($failed->settled_at);
+        $this->assertSame(
+            '98000.00',
+            app(LedgerService::class)
+                ->balanceOf(AccountCode::CampaignRestricted, $campaign->id)
+                ->toDecimalString(),
+        );
+        $this->assertSame(
+            '0.00',
+            app(LedgerService::class)
+                ->balanceOf(AccountCode::MerchantClearing)
+                ->toDecimalString(),
+        );
+        $this->assertDatabaseHas('campaigns', [
+            'id' => $campaign->id,
+            'current_amount' => '98000.00',
+        ]);
+        $this->assertDatabaseHas('disbursement_limits', [
+            'campaign_id' => $campaign->id,
+            'used_today' => '0.00',
+            'used_this_month' => '0.00',
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'disbursement.settlement_failed',
+            'subject_id' => $failed->id,
+        ]);
+    }
+
+    public function test_a_settled_payment_cannot_be_failed_after_the_money_landed(): void
+    {
+        $campaign = $this->fundedCampaign();
+        $this->limit($campaign);
+        $merchant = $this->merchant();
+        $this->pay($campaign->campaigner, $campaign, $merchant, '30000')->assertCreated();
+
+        $transaction = Transaction::query()->where('type', 'disbursement')->sole();
+
+        $this->expectException(InvalidStateTransitionException::class);
+
+        app(DisbursementService::class)->failSettlement($transaction, 'Terlambat dibatalkan');
     }
 
     public function test_authorize_can_expose_query_count_for_local_profiling(): void

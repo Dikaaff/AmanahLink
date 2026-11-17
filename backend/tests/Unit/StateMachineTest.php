@@ -16,6 +16,7 @@ class StateMachineTest extends TestCase
             TransactionStatus::MccValidated,
             TransactionStatus::Authorized,
             TransactionStatus::Captured,
+            TransactionStatus::Settled,
             TransactionStatus::ReceiptPending,
             TransactionStatus::Verified,
             TransactionStatus::Reconciled,
@@ -38,7 +39,15 @@ class StateMachineTest extends TestCase
     public function test_captured_transaction_must_pass_receipt_stage_before_reconciliation(): void
     {
         $this->assertFalse(TransactionStatus::Captured->canTransitionTo(TransactionStatus::Reconciled));
-        $this->assertTrue(TransactionStatus::Captured->canTransitionTo(TransactionStatus::ReceiptPending));
+        $this->assertFalse(TransactionStatus::Captured->canTransitionTo(TransactionStatus::ReceiptPending));
+        $this->assertTrue(TransactionStatus::Captured->canTransitionTo(TransactionStatus::Settled));
+        $this->assertTrue(TransactionStatus::Settled->canTransitionTo(TransactionStatus::ReceiptPending));
+    }
+
+    public function test_captured_transaction_can_fail_settlement_but_settled_cannot(): void
+    {
+        $this->assertTrue(TransactionStatus::Captured->canTransitionTo(TransactionStatus::Failed));
+        $this->assertFalse(TransactionStatus::Settled->canTransitionTo(TransactionStatus::Failed));
     }
 
     public function test_disputed_transaction_can_be_reconciled_after_manual_review(): void

@@ -17,7 +17,7 @@ enum TransactionType: string
         return match ($this) {
             self::DonationSettlement => 'Donasi Masuk',
             self::PlatformFee => 'Fee Platform',
-            self::Disbursement => 'Pencairan',
+            self::Disbursement => 'Pembayaran',
             self::MerchantSettlement => 'Settlement Merchant',
             self::Refund => 'Refund',
         };

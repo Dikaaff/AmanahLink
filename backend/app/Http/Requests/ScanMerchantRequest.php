@@ -36,7 +36,7 @@ final class ScanMerchantRequest extends FormRequest
     {
         return [
             'campaign_id.exists' => 'Kampanye tidak ditemukan.',
-            'amount.min' => 'Nominal pencairan minimal Rp1.',
+            'amount.min' => 'Nominal pembayaran minimal Rp1.',
             'qr.required' => 'Pindai atau tempel kode QR merchant terlebih dahulu.',
         ];
     }

@@ -44,7 +44,7 @@ final class ReceiptService
     {
         if ($transaction->type !== TransactionType::Disbursement) {
             throw ValidationException::withMessages([
-                'transaction' => ['Hanya transaksi pencairan yang dapat dilampiri nota.'],
+                'transaction' => ['Hanya transaksi pembayaran ke merchant yang dapat dilampiri nota.'],
             ]);
         }
 
@@ -348,7 +348,7 @@ final class ReceiptService
 
     private function ensureReceiptPending(Transaction $transaction): void
     {
-        if ($transaction->status === TransactionStatus::Captured) {
+        if ($transaction->status->awaitsReceipt()) {
             $this->moveTransaction($transaction, TransactionStatus::ReceiptPending);
         }
     }

@@ -142,7 +142,7 @@ export default function AdminDashboardPage() {
       <ScreenHeader
         eyebrow="Admin"
         title="Pusat tugas"
-        description="Antrean keputusan lebih dulu; angka platform di bawahnya. Admin memutuskan, bukan membuat kampanye atau mencairkan dana."
+        description="Antrean keputusan lebih dulu; angka platform di bawahnya. Admin memutuskan, bukan membuat kampanye atau mengotorisasi pembayaran."
         className="!items-start"
       />
 
@@ -158,7 +158,7 @@ export default function AdminDashboardPage() {
                 {data.ledger_mismatch_count} kampanye memiliki saldo yang berbeda
                 dari catatan ledger.
               </span>{" "}
-              Tahan pencairan sampai selisih ini ditelusuri.
+              Tahan pembayaran sampai selisih ini ditelusuri.
             </Alert>
           ) : (
             <Alert tone="success">Saldo kampanye konsisten dengan ledger.</Alert>
@@ -196,7 +196,7 @@ export default function AdminDashboardPage() {
               />
               <QueueCard
                 href="/admin/pencairan"
-                label="Pencairan menunggu nota"
+                label="Pembayaran menunggu nota"
                 value={awaitingReceipt}
                 hint="Penggalang belum mengunggah bukti; pantau, jangan unggah sendiri."
               />
@@ -237,9 +237,9 @@ export default function AdminDashboardPage() {
                 hint="Dana terkunci seluruh kampanye"
               />
               <Stat
-                label="Dana dicairkan"
+                label="Dana dibayarkan ke merchant"
                 value={rupiah(data.disbursements_captured_total)}
-                hint="Total pencairan tercatat"
+                hint="Total pembayaran tercatat"
               />
               <Stat
                 label="Perlu review nota"
@@ -295,7 +295,7 @@ export default function AdminDashboardPage() {
               <ul className="space-y-2 text-body-sm text-ink-secondary">
                 <li>
                   Admin <strong className="text-ink">tidak</strong> membuat
-                  kampanye, berdonasi, memulai pencairan, atau mengunggah nota.
+                  kampanye, berdonasi, memulai pembayaran, atau mengunggah nota.
                   Tindakan itu milik donatur dan penggalang.
                 </li>
                 <li>

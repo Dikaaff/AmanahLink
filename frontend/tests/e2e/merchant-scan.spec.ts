@@ -10,7 +10,7 @@ test("campaigner scans a merchant QR, passes the MCC check, then disburses", asy
   await expect(page).toHaveURL(/\/dashboard$/);
 
   await page.getByRole("link", { name: "Dana", exact: true }).click();
-  await page.getByRole("link", { name: "Pindai QR" }).click();
+  await page.getByRole("link", { name: "Pindai", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Pindai QR merchant" }),
   ).toBeVisible();
@@ -46,16 +46,16 @@ test("campaigner scans a merchant QR, passes the MCC check, then disburses", asy
     page.getByRole("heading", { name: "Apotek Sehat Sentosa" }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: /^Cairkan Rp/ }).click();
+  await page.getByRole("button", { name: /^Otorisasi Rp/ }).click();
   await expect(
-    page.getByRole("alertdialog", { name: "Cairkan dana sekarang?" }),
+    page.getByRole("alertdialog", { name: "Otorisasi pembayaran sekarang?" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Ya, cairkan" }).click();
+  await page.getByRole("button", { name: "Ya, otorisasi" }).click();
 
-  await expect(page.getByText("Pencairan tercatat")).toBeVisible({
+  await expect(page.getByText("Pembayaran ke merchant tercatat")).toBeVisible({
     timeout: 60_000,
   });
   await expect(
-    page.getByText(/dicairkan ke Apotek Sehat Sentosa/),
+    page.getByText(/dibayarkan ke Apotek Sehat Sentosa/),
   ).toBeVisible();
 });

@@ -484,7 +484,7 @@ test.describe("P4 feedback loop", () => {
     await expect(page).toHaveURL(/\/dashboard\/pencairan$/);
 
     const history = page.locator("section", {
-      has: page.getByRole("heading", { name: "Riwayat pencairan" }),
+      has: page.getByRole("heading", { name: "Riwayat pembayaran" }),
     });
 
     await expect(
@@ -495,7 +495,7 @@ test.describe("P4 feedback loop", () => {
     await page.locator("#merchant").selectOption("1");
     await page.locator("#disbursement-amount").fill("100000");
     await page
-      .getByRole("button", { name: "Cairkan dana", exact: true })
+      .getByRole("button", { name: "Otorisasi pembayaran", exact: true })
       .click();
 
     // Selama permintaan berjalan, tidak ada baris baru dan tidak ada toast.

@@ -219,7 +219,7 @@ test.describe("L04 extreme data", () => {
 });
 
 test.describe("L04 keyboard focus", () => {
-  test("every tab stop against 390px shows the 2px ink focus ring", async ({
+  test("every tab stop against 390px shows the 2px accent focus ring", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -269,7 +269,7 @@ test.describe("L04 keyboard focus", () => {
       expect(stop.outlineWidth, `${stop.element} has no 2px ring`).toBe("2px");
       expect(stop.outlineOffset, `${stop.element} ring offset`).toBe("2px");
       expect(stop.outlineColor, `${stop.element} ring colour`).toBe(
-        "rgb(10, 10, 10)",
+        "rgb(22, 138, 173)",
       );
     }
   });
@@ -310,9 +310,16 @@ test.describe("L09/L19 extreme data", () => {
     await expect(title).toBeVisible();
     await expectInsideViewport(page, title, "L09 campaign title");
     await expect(
-      page.getByRole("heading", { name: "Riwayat pencairan" }),
+      page.getByRole("heading", { name: "Aktivitas terakhir" }),
     ).toBeVisible();
     await expectNoHorizontalOverflow(page, "L09/L19 @390");
+
+    await page.getByRole("link", { name: "Dana", exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard\/pencairan$/);
+    await expect(
+      page.getByRole("heading", { name: "Riwayat pembayaran" }),
+    ).toBeVisible();
+    await expectNoHorizontalOverflow(page, "L09/L19 pencairan @390");
   });
 
   test("dashboard table at 768px keeps the page inside the viewport", async ({
@@ -327,8 +334,12 @@ test.describe("L09/L19 extreme data", () => {
 
     await expect(page).toHaveURL(/\/dashboard$/);
     await expect(
-      page.getByRole("heading", { name: "Riwayat donasi" }),
+      page.getByRole("heading", { name: "Aktivitas terakhir" }),
     ).toBeVisible();
     await expectNoHorizontalOverflow(page, "L09/L19 @768");
+
+    await page.getByRole("link", { name: "Dana", exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard\/pencairan$/);
+    await expectNoHorizontalOverflow(page, "L09/L19 pencairan @768");
   });
 });

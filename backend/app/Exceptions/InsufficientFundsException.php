@@ -10,6 +10,6 @@ final class InsufficientFundsException extends RuntimeException
 {
     public function __construct()
     {
-        parent::__construct('Saldo kampanye tidak mencukupi untuk pencairan ini.');
+        parent::__construct('Dana kampanye tidak mencukupi untuk pembayaran ini.');
     }
 }

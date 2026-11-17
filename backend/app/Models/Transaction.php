@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'amount',
     'mcc_used',
     'status',
+    'settled_at',
     'reference_id',
     'idempotency_key',
 ])]
@@ -33,6 +34,7 @@ class Transaction extends Model
         return [
             'type' => TransactionType::class,
             'status' => TransactionStatus::class,
+            'settled_at' => 'datetime',
             'amount' => 'decimal:2',
         ];
     }
@@ -74,6 +76,7 @@ class Transaction extends Model
     {
         return $query->whereIn('status', [
             TransactionStatus::Captured->value,
+            TransactionStatus::Settled->value,
             TransactionStatus::ReceiptPending->value,
             TransactionStatus::Verified->value,
             TransactionStatus::Reconciled->value,

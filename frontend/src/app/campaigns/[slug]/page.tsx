@@ -108,26 +108,33 @@ export default function CampaignDetailPage() {
           </p>
 
           <div className="card mt-6 p-4 sm:p-5">
-            <div className="flex items-baseline justify-between gap-4">
-              <div>
+            {/*
+              Stacks on mobile: two 8-digit rupiah values side by side touched
+              the card edge at 390px. Desktop keeps the two-column receipt.
+            */}
+            <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
+              <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Terkumpul
                 </p>
-                <p className="numeric mt-1 text-num-lg font-semibold text-ink">
+                <p className="numeric mt-1 break-words text-h1 font-semibold text-ink sm:text-num-lg">
                   {rupiah(campaign.current_amount)}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="min-w-0 border-t border-line pt-4 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0 sm:text-right">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Target
                 </p>
-                <p className="mt-1 text-lg font-semibold text-ink">
+                <p className="numeric mt-1 break-words text-h2 font-semibold text-ink sm:text-lg">
                   {rupiah(campaign.target_amount)}
                 </p>
               </div>
             </div>
             <div className="mt-4">
-              <Progress value={Math.round(campaign.progress_percent)} />
+              <Progress
+                value={Math.round(campaign.progress_percent)}
+                label="Progres kampanye"
+              />
             </div>
             <p className="mt-2 text-xs text-ink-muted">
               {Math.round(campaign.progress_percent)}% dari target
@@ -156,7 +163,7 @@ export default function CampaignDetailPage() {
               Batas penggunaan dana
             </h2>
             <p className="mt-2 text-sm text-ink-secondary">
-              Pencairan hanya dapat dilakukan ke merchant terverifikasi dengan
+              Dana hanya dapat dibayarkan ke merchant terverifikasi dengan
               kategori transaksi berikut:
             </p>
             <ul className="mt-3 flex flex-wrap gap-2">
@@ -172,7 +179,7 @@ export default function CampaignDetailPage() {
             <p className="mt-3 text-xs leading-relaxed text-ink-muted">
               Platform tidak mengklaim pemblokiran di level jaringan. Batas
               ditegakkan lewat registry merchant terverifikasi dan validasi
-              kategori transaksi saat pencairan.
+              kategori transaksi saat pembayaran.
             </p>
           </section>
         </div>
@@ -183,7 +190,7 @@ export default function CampaignDetailPage() {
           {campaign.is_accepting_donations ? (
             <>
               <p className="mt-2 text-body-sm text-ink-secondary">
-                Dana langsung masuk ke saldo terkunci kampanye setelah pembayaran
+                Dana langsung masuk ke dana terkunci kampanye setelah pembayaran
                 terkonfirmasi. Biaya platform 2% dipotong sekali saat dana diterima.
               </p>
               <button
@@ -194,8 +201,8 @@ export default function CampaignDetailPage() {
                 Buka formulir donasi
               </button>
               <ul className="mt-4 space-y-2 border-t border-line pt-4 text-xs text-ink-muted">
-                <li>Dana terkunci sampai pencairan disetujui.</li>
-                <li>Setiap pencairan punya bukti nota dan jejak ledger.</li>
+                <li>Dana terkunci sampai pembayaran ke merchant diotorisasi.</li>
+                <li>Setiap pembayaran punya bukti nota dan jejak ledger.</li>
                 <li>Tidak ada biaya tersembunyi di luar biaya platform 2%.</li>
               </ul>
             </>

@@ -104,7 +104,7 @@ test.describe("P5 empty dan failure state", () => {
     await expect(page.getByText(/Anda sedang offline/)).toHaveCount(0);
   });
 
-  test("kegagalan jaringan memunculkan 'Data gagal dimuat' dengan pesan manusiawi dan Coba lagi", async ({ page }) => {
+  test("kegagalan jaringan memunculkan 'Data belum tersedia' dengan pesan manusiawi dan Coba lagi", async ({ page }) => {
     await mockAuth(page);
 
     // Semua permintaan kecuali auth diabort: memetakan ke NETWORK_ERROR.
@@ -118,7 +118,7 @@ test.describe("P5 empty dan failure state", () => {
 
     await login(page);
 
-    const errorState = page.locator("text=Data gagal dimuat").first();
+    const errorState = page.locator("text=Data belum tersedia").first();
     await expect(errorState).toBeVisible();
     await expect(
       page.getByText("Tidak dapat menghubungi server. Periksa koneksi lalu coba lagi."),
@@ -183,7 +183,7 @@ test.describe("P5 empty dan failure state", () => {
     await page.getByLabel("Merchant terverifikasi").selectOption("1");
     await page.getByLabel("Nominal (Rp)").fill("100000");
     await page
-      .getByRole("button", { name: "Cairkan dana", exact: true })
+      .getByRole("button", { name: "Otorisasi pembayaran", exact: true })
       .click();
 
     // Kegagalan mutasi uang tampil di dalam form, bukan toast, dan isian

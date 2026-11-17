@@ -14,7 +14,8 @@ export function Progress({
 }: HTMLAttributes<HTMLDivElement> & {
   value?: number;
   percent?: number;
-  label?: string;
+  /** Required: a progressbar without a name is invisible to screen readers. */
+  label: string;
 }) {
   const normalized = Math.max(0, Math.min(100, Math.round(percent ?? value)));
 

@@ -30,7 +30,7 @@ function isRunning(status: string): boolean {
 
 type Activity = {
   key: string;
-  kind: "Donasi" | "Pencairan";
+  kind: "Donasi" | "Pembayaran";
   title: string;
   amount: string;
   status: string;
@@ -56,8 +56,8 @@ function activityFrom(
     })),
     ...disbursements.map((item) => ({
       key: `disbursement-${item.id}`,
-      kind: "Pencairan" as const,
-      title: item.campaign?.title ?? "Pencairan dana",
+      kind: "Pembayaran" as const,
+      title: item.campaign?.title ?? "Pembayaran ke merchant",
       amount: item.amount,
       status: item.status,
       statusLabel: item.status_label,
@@ -264,7 +264,7 @@ export default function DashboardPage() {
           isFundraiser ? (
             <>
               <Link href="/dashboard/pencairan" className="btn-primary">
-                Cairkan dana
+                Belanja kampanye
               </Link>
               <Link href="/dashboard/new" className="btn-secondary">
                 Buat kampanye
@@ -337,7 +337,7 @@ export default function DashboardPage() {
             </p>
             {totals.target > 0 ? (
               <div className="mt-5 max-w-lg">
-                <Progress value={totals.percent} />
+                <Progress value={totals.percent} label="Progres target gabungan" />
                 <p className="mt-2 text-xs text-ink-muted">
                   {totals.percent}% dari target gabungan
                 </p>
@@ -346,7 +346,7 @@ export default function DashboardPage() {
           </section>
 
           <div className="grid gap-9 lg:grid-cols-[1.6fr_1fr]">
-            <section aria-labelledby="running-campaigns">
+            <section aria-labelledby="running-campaigns" className="min-w-0">
               <div className="flex items-end justify-between gap-3">
                 <h2 id="running-campaigns" className="text-h2 font-semibold text-ink">
                   Kampanye berjalan
@@ -375,7 +375,7 @@ export default function DashboardPage() {
                 <ul className="mt-3 divide-y divide-line border-y border-line">
                   {running.slice(0, 3).map((campaign) => (
                     <li key={campaign.id} className="py-4">
-                      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+                      <div className="flex items-start justify-between gap-3">
                         <Link
                           href={`/campaigns/${campaign.slug}`}
                           className="min-w-0 break-words text-body-sm font-semibold text-ink hover:underline"
@@ -387,57 +387,59 @@ export default function DashboardPage() {
                           label={campaign.status_label}
                         />
                       </div>
-                      <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
-                        <span className="numeric text-body-sm font-medium text-ink">
-                          {rupiah(campaign.current_amount)}
-                          <span className="font-normal text-ink-muted">
-                            {" "}
-                            / {rupiah(campaign.target_amount)}
-                          </span>
+                      <p className="numeric mt-1.5 text-body-sm text-ink">
+                        {rupiah(campaign.current_amount)}
+                        <span className="font-normal text-ink-muted">
+                          {" "}
+                          dari {rupiah(campaign.target_amount)}
                         </span>
-                        <span className="text-xs text-ink-muted">
-                          Tenggat {dateOnly(campaign.deadline_at)}
-                        </span>
+                      </p>
+                      <div className="mt-2">
+                        <Progress
+                          value={campaign.progress_percent}
+                          label={`Progres ${campaign.title}`}
+                        />
                       </div>
-                      <div className="mt-2 max-w-sm">
-                        <Progress value={campaign.progress_percent} />
-                      </div>
+                      <p className="mt-1.5 text-xs text-ink-muted">
+                        {Math.round(campaign.progress_percent)}% · Tenggat{" "}
+                        {dateOnly(campaign.deadline_at)}
+                      </p>
                     </li>
                   ))}
                 </ul>
               )}
             </section>
 
-            <section aria-labelledby="recent-activity">
+            <section aria-labelledby="recent-activity" className="min-w-0">
               <h2 id="recent-activity" className="text-h2 font-semibold text-ink">
                 Aktivitas terakhir
               </h2>
 
               {activity.length === 0 ? (
                 <p className="mt-3 text-body-sm text-ink-secondary">
-                  Belum ada donasi atau pencairan yang tercatat.
+                  Belum ada donasi atau pembayaran yang tercatat.
                 </p>
               ) : (
                 <ul className="mt-3 divide-y divide-line border-y border-line">
                   {activity.map((item) => (
-                    <li key={item.key} className="py-3">
-                      <Link href={item.href} className="group block">
-                        <div className="flex items-baseline justify-between gap-3">
-                          <span className="text-xs font-medium uppercase text-ink-muted">
-                            {item.kind}
-                          </span>
-                          <span className="text-xs text-ink-muted">
-                            {dateTime(item.at)}
-                          </span>
+                    <li key={item.key}>
+                      <Link href={item.href} className="group block py-3.5">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="min-w-0 break-words text-body-sm font-medium text-ink group-hover:underline">
+                            {item.title}
+                          </p>
+                          <StatusBadge
+                            status={item.status}
+                            label={item.statusLabel}
+                          />
                         </div>
-                        <p className="mt-1 truncate text-body-sm font-medium text-ink group-hover:underline">
-                          {item.title}
-                        </p>
-                        <div className="mt-1 flex items-baseline justify-between gap-3">
+                        <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
                           <span className="numeric text-body-sm text-ink">
                             {rupiah(item.amount)}
                           </span>
-                          <StatusBadge status={item.status} label={item.statusLabel} />
+                          <span className="text-xs text-ink-muted">
+                            {item.kind} · {dateTime(item.at)}
+                          </span>
                         </div>
                       </Link>
                     </li>
@@ -450,7 +452,7 @@ export default function DashboardPage() {
                   href="/dashboard/pencairan"
                   className="font-medium text-ink-secondary underline underline-offset-4 hover:text-ink"
                 >
-                  Riwayat pencairan
+                  Riwayat pembayaran
                 </Link>
                 <Link
                   href="/dashboard/donasi"
@@ -517,7 +519,7 @@ export default function DashboardPage() {
               <ul className="mt-3 divide-y divide-line border-y border-line">
                 {donations.data.slice(0, 6).map((donation) => (
                   <li key={donation.id} className="py-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex items-start justify-between gap-3">
                       {donation.campaign ? (
                         <Link
                           href={`/campaigns/${donation.campaign.slug}`}
@@ -526,7 +528,7 @@ export default function DashboardPage() {
                           {donation.campaign.title}
                         </Link>
                       ) : (
-                        <span className="text-body-sm font-semibold text-ink">
+                        <span className="min-w-0 break-words text-body-sm font-semibold text-ink">
                           Donasi
                         </span>
                       )}
@@ -535,7 +537,7 @@ export default function DashboardPage() {
                         label={donation.status_label}
                       />
                     </div>
-                    <div className="mt-2 flex items-baseline justify-between gap-3">
+                    <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
                       <span className="numeric text-body-sm text-ink">
                         {rupiah(donation.amount)}
                       </span>

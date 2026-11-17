@@ -218,7 +218,7 @@ async function mockApi(page: Page, scenario: Scenario = {}) {
             data: {
               allowed: true,
               code: null,
-              message: "Pencairan dapat diproses.",
+              message: "Pembayaran dapat diproses.",
               mcc: "5912",
               allowed_mcc: ["5912"],
               ledger_balance: "2500000.00",
@@ -323,18 +323,14 @@ test.describe("P6 mobile secondary @390", () => {
     await login(page);
 
     await expect(page.getByText("Dana terkumpul")).toBeVisible();
-    await expect(page.getByText("Kampanye saya")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Riwayat donasi" })).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Riwayat pencairan" }),
+      page.getByRole("heading", { name: "Kampanye berjalan" }),
     ).toBeVisible();
     await expect(
-      page
-        .locator("section")
-        .filter({ hasText: "Riwayat pencairan" })
-        .first()
-        .getByText(/Apotek Sehat Sentosa/)
-        .filter({ visible: true }),
+      page.getByRole("heading", { name: "Aktivitas terakhir" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(new RegExp(activeCampaign.title)).first(),
     ).toBeVisible();
     await expectNoOverflow(page, "L11 @390");
   });
@@ -345,6 +341,8 @@ test.describe("P6 mobile secondary @390", () => {
     await mockApi(page);
     await login(page);
 
+    await page.getByRole("link", { name: "Kampanye", exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard\/campaigns$/);
     await page.locator("#limit-view-campaign").selectOption("1");
 
     await expect(page.getByText(/Rp\s?5\.000\.000/)).toBeVisible();
@@ -359,14 +357,18 @@ test.describe("P6 mobile secondary @390", () => {
     await mockApi(page);
     await login(page);
 
-    await page.getByRole("button", { name: "Cairkan dana", exact: true }).click();
+    await page.getByRole("link", { name: "Dana", exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard\/pencairan$/);
     await page.locator("#campaign").selectOption("1");
     await page.locator("#merchant").selectOption("1");
     await page.locator("#disbursement-amount").fill("50000");
-    await page.getByRole("button", { name: "Cairkan dana", exact: true }).click();
+    await page.getByRole("button", { name: "Otorisasi pembayaran", exact: true }).click();
 
     await expect(
-      page.getByText(/Pencairan Rp\s?50\.000.*tercatat sebagai captured/),
+      page.getByText("Pembayaran ke merchant tercatat", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/Rp\s?50\.000 ke Apotek Sehat Sentosa.*status dana keluar/),
     ).toBeVisible();
     await expectNoOverflow(page, "L17 success @390");
   });
@@ -388,11 +390,12 @@ test.describe("P6 mobile secondary @390", () => {
     });
     await login(page);
 
-    await page.getByRole("button", { name: "Cairkan dana", exact: true }).click();
+    await page.getByRole("link", { name: "Dana", exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard\/pencairan$/);
     await page.locator("#campaign").selectOption("1");
     await page.locator("#merchant").selectOption("1");
     await page.locator("#disbursement-amount").fill("50000");
-    await page.getByRole("button", { name: "Cairkan dana", exact: true }).click();
+    await page.getByRole("button", { name: "Otorisasi pembayaran", exact: true }).click();
 
     await expect(page.getByText(/tidak bisa diproses di toko elektronik/)).toBeVisible();
     await expect(page.locator("#disbursement-amount")).toBeVisible();
@@ -403,9 +406,12 @@ test.describe("P6 mobile secondary @390", () => {
     await mockApi(page);
     await login(page);
 
+    await page.getByRole("link", { name: "Dana", exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard\/pencairan$/);
+
     const history = page
       .locator("section")
-      .filter({ hasText: "Riwayat pencairan" })
+      .filter({ hasText: "Riwayat pembayaran" })
       .first();
 
     await expect(
@@ -449,9 +455,9 @@ test.describe("P6 mobile secondary @390", () => {
     await page.getByRole("button", { name: "Periksa kelayakan" }).click();
 
     await expect(
-      page.getByText("Pencairan dapat diproses", { exact: true }),
+      page.getByText("Pembayaran dapat diproses", { exact: true }),
     ).toBeVisible();
-    await expect(page.getByText(/Sisa limit hari ini/)).toBeVisible();
+    await expect(page.getByText(/Sisa batas hari ini/)).toBeVisible();
     await expectNoOverflow(page, "L17 simulation @390");
   });
 
@@ -465,7 +471,7 @@ test.describe("P6 mobile secondary @390", () => {
           data: {
             allowed: false,
             code: "LIMIT_EXCEEDED",
-            message: "Pencairan melebihi limit harian kampanye.",
+            message: "Pembayaran melebihi batas harian kampanye.",
             details: { scope: "daily", remaining: "10000.00" },
           },
         },
@@ -480,9 +486,9 @@ test.describe("P6 mobile secondary @390", () => {
     await page.getByRole("button", { name: "Periksa kelayakan" }).click();
 
     await expect(
-      page.getByText("Pencairan akan ditolak", { exact: true }),
+      page.getByText("Pembayaran akan ditolak", { exact: true }),
     ).toBeVisible();
-    await expect(page.getByText(/Sisa limit harian: Rp\s?10\.000/)).toBeVisible();
+    await expect(page.getByText(/Sisa batas harian: Rp\s?10\.000/)).toBeVisible();
     await expectNoOverflow(page, "L17 rejected simulation @390");
   });
 
@@ -502,31 +508,37 @@ test.describe("P6 mobile secondary @390", () => {
       fullPage: true,
     });
 
-    await page.getByRole("link", { name: "← Dasbor" }).click();
+    await page.getByRole("link", { name: "Dasbor", exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await page.getByRole("link", { name: "Kampanye", exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard\/campaigns$/);
     await page.locator("#limit-view-campaign").selectOption("1");
     await expect(page.getByText(/Rp\s?5\.000\.000/)).toBeVisible();
     await page
       .locator("section")
       .filter({
-        has: page.getByRole("heading", { name: "Limit pencairan" }),
+        has: page.getByRole("heading", { name: "Batas belanja" }),
       })
       .first()
       .screenshot({
         path: resolve(outDir, "p6-l16-limit-card-390.png"),
       });
 
+    await page.getByRole("link", { name: "Dasbor", exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard$/);
     await page.getByRole("link", { name: "Simulasi pindai" }).click();
     await page.locator("#simulation-campaign").selectOption("1");
     await page.locator("#simulation-merchant").selectOption("1");
     await page.locator("#simulation-amount").fill("50000");
     await page.getByRole("button", { name: "Periksa kelayakan" }).click();
-    await expect(page.getByText(/Sisa limit hari ini/)).toBeVisible();
+    await expect(page.getByText(/Sisa batas hari ini/)).toBeVisible();
     await page.screenshot({
       path: resolve(outDir, "p6-l17-simulasi-390.png"),
       fullPage: true,
     });
 
-    await page.getByRole("link", { name: "← Dasbor" }).click();
+    await page.getByRole("link", { name: "Dana", exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard\/pencairan$/);
     await expect(
       page.getByText(/Apotek Sehat Sentosa/).filter({ visible: true }),
     ).toBeVisible();

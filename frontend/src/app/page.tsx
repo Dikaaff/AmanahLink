@@ -73,7 +73,7 @@ export default function HomePage() {
             Dana tidak bisa dipakai sembarangan.
           </h1>
           <p className="mt-4 max-w-xl text-body text-ink-secondary">
-            Setiap pencairan hanya boleh ke merchant terverifikasi dengan
+            Setiap pembayaran hanya boleh ke merchant terverifikasi dengan
             kategori transaksi yang disetujui kampanye. Semua pergerakan dana
             tercatat di ledger yang tidak dapat diubah.
           </p>
@@ -101,27 +101,27 @@ export default function HomePage() {
             <dd className="mt-1 text-body-sm font-semibold text-ink">
               Ledger double-entry
             </dd>
-            <p className="mt-1 hidden text-xs text-ink-muted lg:block">
+            <dd className="mt-1 hidden text-xs text-ink-muted lg:block">
               Setiap rupiah punya jejak debit-kredit yang dapat diaudit.
-            </p>
+            </dd>
           </div>
           <div className="lg:border-b lg:border-line lg:py-4">
-            <dt className="text-label">Pencairan</dt>
+            <dt className="text-label">Pembayaran</dt>
             <dd className="mt-1 text-body-sm font-semibold text-ink">
               Merchant + MCC
             </dd>
-            <p className="mt-1 hidden text-xs text-ink-muted lg:block">
+            <dd className="mt-1 hidden text-xs text-ink-muted lg:block">
               Dana hanya keluar ke merchant terverifikasi di kategori yang sah.
-            </p>
+            </dd>
           </div>
           <div className="lg:py-4 lg:last:pb-0">
             <dt className="text-label">Nota</dt>
             <dd className="mt-1 text-body-sm font-semibold text-ink">
               OCR + review manual
             </dd>
-            <p className="mt-1 hidden text-xs text-ink-muted lg:block">
+            <dd className="mt-1 hidden text-xs text-ink-muted lg:block">
               Bukti belanja dibaca mesin, lalu diputuskan manusia.
-            </p>
+            </dd>
           </div>
         </dl>
       </section>
@@ -185,7 +185,7 @@ export default function HomePage() {
         </div>
 
         {lastPage > 1 ? (
-          <div className="mt-8 flex items-center justify-center gap-3">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
               className="btn-secondary"
@@ -197,7 +197,7 @@ export default function HomePage() {
             >
               Sebelumnya
             </button>
-            <span className="text-body-sm text-ink-secondary">
+            <span className="whitespace-nowrap text-body-sm text-ink-secondary">
               Halaman {page} dari {lastPage}
             </span>
             <button

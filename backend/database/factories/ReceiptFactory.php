@@ -20,7 +20,7 @@ class ReceiptFactory extends Factory
     public function definition(): array
     {
         return [
-            'transaction_id' => Transaction::factory()->captured(),
+            'transaction_id' => Transaction::factory()->settled(),
             'file_path' => 'receipts/'.fake()->uuid().'.jpg',
             'ocr_payload' => null,
             'confidence' => null,

@@ -395,7 +395,7 @@ export function Gallery() {
             title="Bekukan kampanye ini?"
             description={
               <>
-                Pembayaran baru ditolak dan pencairan dihentikan sampai
+                Pembayaran baru ditolak dan belanja dihentikan sampai
                 pembekuan dicabut. Dana yang sudah masuk tetap tercatat di
                 ledger.
               </>

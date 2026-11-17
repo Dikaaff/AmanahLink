@@ -83,10 +83,10 @@ export function DisbursementHistorySkeleton({ rows = 2 }: { rows?: number }) {
   return (
     <section
       role="status"
-      aria-label="Memuat riwayat pencairan"
+      aria-label="Memuat riwayat pembayaran"
       className="card overflow-hidden"
     >
-      <span className="sr-only">Memuat riwayat pencairan.</span>
+      <span className="sr-only">Memuat riwayat pembayaran.</span>
       <div className="border-b border-line px-6 py-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -94,7 +94,7 @@ export function DisbursementHistorySkeleton({ rows = 2 }: { rows?: number }) {
               Jejak penggunaan dana
             </p>
             <h2 className="mt-1 text-xl font-semibold text-ink">
-              Riwayat pencairan
+              Riwayat pembayaran
             </h2>
             <p className="mt-1 text-sm text-ink-muted">
               Pantau status transaksi dan proses nota tanpa kehilangan jejak
@@ -251,7 +251,7 @@ export function DashboardSkeleton({
                   className="skeleton-shimmer inline-block h-8 w-36 rounded-sm"
                 />
               }
-              hint="Saldo cache, diverifikasi terhadap ledger saat pencairan"
+              hint="Dana tersedia (cache), diverifikasi terhadap ledger saat pembayaran"
             />
           </section>
 
@@ -315,12 +315,12 @@ export function DashboardSkeleton({
 
           <section className="card p-6">
             <h2 className="text-xl font-semibold text-ink">
-              {admin ? "Atur limit pencairan" : "Limit pencairan"}
+              {admin ? "Atur batas belanja" : "Batas belanja"}
             </h2>
             <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
-              Limit membatasi pencairan baru per kampanye. Saldo tetap
-              diverifikasi dari ledger dan limit yang kedaluwarsa akan ditolak
-              oleh backend.
+              Batas ini membatasi pembayaran baru per kampanye. Dana tersedia
+              tetap diverifikasi dari ledger dan batas yang kedaluwarsa akan
+              ditolak oleh backend.
             </p>
             <div className="mt-5 grid gap-4 md:grid-cols-4">
               {Array.from({ length: 4 }, (_, index) => (
@@ -335,12 +335,12 @@ export function DashboardSkeleton({
 
           <section className="card p-6">
             <h2 className="text-xl font-semibold text-ink">
-              Cairkan dana ke merchant
+              Otorisasi pembayaran ke merchant
             </h2>
             <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
-              Pencairan hanya berhasil ke merchant terverifikasi dengan kategori
-              transaksi yang diizinkan kampanye, selama limit harian/bulanan dan
-              saldo ledger mencukupi.
+              Pembayaran hanya berhasil ke merchant terverifikasi dengan kategori
+              transaksi yang diizinkan kampanye, selama batas harian/bulanan dan
+              dana tersedia menurut ledger mencukupi.
             </p>
             <div className="mt-5 grid gap-4 md:grid-cols-3">
               {Array.from({ length: 3 }, (_, index) => (

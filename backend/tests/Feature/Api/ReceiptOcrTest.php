@@ -50,7 +50,7 @@ final class ReceiptOcrTest extends TestCase
             'city' => 'Bandung',
         ]);
 
-        $transaction = Transaction::factory()->captured()->create([
+        $transaction = Transaction::factory()->settled()->create([
             'campaign_id' => $campaign->id,
             'user_id' => $campaign->user_id,
             'type' => 'disbursement',

@@ -50,7 +50,7 @@ export default function LoginPage() {
         </h1>
         <p className="mt-4 max-w-md text-sm leading-relaxed text-ink-secondary">
           Donatur dapat melihat riwayat donasi. Penggalang dana dapat mengajukan
-          kampanye dan mencairkan dana ke merchant terverifikasi. Verifikator dan
+          kampanye dan mengotorisasi pembayaran ke merchant terverifikasi. Verifikator dan
           admin memakai akun yang disediakan pengelola.
         </p>
         <div className="mt-6 rounded-md border border-line bg-white/70 p-4 text-sm text-ink-secondary">

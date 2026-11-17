@@ -91,7 +91,13 @@ export function Nav() {
 
         <div className="flex items-center gap-3">
           {!ready ? (
-            <span className="h-9 w-24 animate-pulse rounded-sm bg-sunken" />
+            // Reserve the exact size of the two guest buttons (68px + 82px + 12px
+            // gap) so the header keeps its height and the nav does not jump when
+            // auth resolves. A single h-9 bar used to shift the page by 4px+66px.
+            <span className="flex items-center gap-3" aria-hidden="true">
+              <span className="h-11 w-[4.25rem] animate-pulse rounded-sm bg-sunken" />
+              <span className="h-11 w-[5.125rem] animate-pulse rounded-sm bg-sunken" />
+            </span>
           ) : user ? (
             <>
               <span className="hidden text-right leading-snug lg:block">

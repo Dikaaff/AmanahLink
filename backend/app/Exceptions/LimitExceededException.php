@@ -15,8 +15,8 @@ final class LimitExceededException extends RuntimeException
     ) {
         parent::__construct(
             $scope === 'daily'
-                ? 'Pencairan melebihi limit harian kampanye.'
-                : 'Pencairan melebihi limit bulanan kampanye.'
+                ? 'Pembayaran melebihi batas harian kampanye.'
+                : 'Pembayaran melebihi batas bulanan kampanye.'
         );
     }
 }

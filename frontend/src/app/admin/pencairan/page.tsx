@@ -70,7 +70,7 @@ export default function DisbursementOversightPage() {
   if (!ready || (isAdmin && loading)) {
     return (
       <AppPage>
-        <Loading label="Memuat pencairan…" />
+        <Loading label="Memuat pembayaran…" />
       </AppPage>
     );
   }
@@ -81,7 +81,7 @@ export default function DisbursementOversightPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
         <Alert tone="info">
-          Pengawasan pencairan hanya untuk administrator.
+          Pengawasan pembayaran hanya untuk administrator.
         </Alert>
         <Link href="/dashboard" className="btn-secondary mt-5">
           Kembali ke dasbor
@@ -97,8 +97,8 @@ export default function DisbursementOversightPage() {
     <AppPage>
       <ScreenHeader
         eyebrow="Review"
-        title="Pengawasan pencairan"
-        description="Baca semua pencairan untuk mencari anomali. Tidak ada aksi cairkan atau unggah nota di sini."
+        title="Pengawasan pembayaran"
+        description="Baca semua pembayaran ke merchant untuk mencari anomali. Tidak ada aksi otorisasi atau unggah nota di sini."
         className="!items-start"
       />
 
@@ -120,8 +120,8 @@ export default function DisbursementOversightPage() {
       {!result || result.data.length === 0 ? (
         error ? null : (
           <EmptyState
-            title="Belum ada pencairan"
-            description="Pencairan yang dilakukan penggalang akan muncul di sini untuk diawasi."
+            title="Belum ada pembayaran"
+            description="Pembayaran yang dilakukan penggalang akan muncul di sini untuk diawasi."
           />
         )
       ) : (

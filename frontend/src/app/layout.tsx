@@ -11,7 +11,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "AmanahLink — Donasi terverifikasi, dana terkunci untuk tujuan",
   description:
-    "Platform penggalangan dana dengan pencairan terbatas ke merchant terverifikasi dan kategori transaksi (MCC) yang diizinkan kampanye.",
+    "Platform penggalangan dana dengan pembayaran terbatas ke merchant terverifikasi dan kategori transaksi (MCC) yang diizinkan kampanye.",
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {

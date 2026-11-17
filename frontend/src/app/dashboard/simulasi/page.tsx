@@ -133,7 +133,7 @@ export default function SimulateScanPage() {
       <ScreenHeader
         eyebrow="Dana"
         title="Simulasi pindai"
-        description="Coba pencairan tanpa memindahkan dana; aturan yang dipakai sama dengan pencairan sungguhan."
+        description="Coba otorisasi pembayaran tanpa memindahkan dana; aturan yang dipakai sama dengan pembayaran sungguhan."
         className="!items-start"
       />
 
@@ -170,7 +170,7 @@ export default function SimulateScanPage() {
           </select>
           {campaigns.length === 0 ? (
             <p className="mt-1 text-body-sm text-ink-secondary">
-              Belum ada kampanye aktif yang dapat dicairkan.
+              Belum ada kampanye aktif yang bisa dipakai untuk belanja.
             </p>
           ) : null}
         </div>
@@ -245,18 +245,18 @@ export default function SimulateScanPage() {
 
       {result ? (
         result.allowed ? (
-          <Alert tone="success" title="Pencairan dapat diproses">
-            Merchant berkategori {result.mcc}. Sisa limit hari ini{" "}
+          <Alert tone="success" title="Pembayaran dapat diproses">
+            Merchant berkategori {result.mcc}. Sisa batas hari ini{" "}
             {rupiah(result.remaining_today)} dan bulan ini{" "}
-            {rupiah(result.remaining_month)}. Saldo ledger kampanye{" "}
-            {rupiah(result.ledger_balance)}. Pencairan sesungguhnya tetap
+            {rupiah(result.remaining_month)}. Dana tersedia menurut ledger{" "}
+            {rupiah(result.ledger_balance)}. Pembayaran sesungguhnya tetap
             menyimpan Idempotency-Key dan menulis dua entri ledger.
           </Alert>
         ) : (
-          <Alert tone="error" title="Pencairan akan ditolak">
+          <Alert tone="error" title="Pembayaran akan ditolak">
             {result.message}
             {result.details
-              ? ` Sisa limit ${
+              ? ` Sisa batas ${
                   result.details.scope === "daily" ? "harian" : "bulanan"
                 }: ${rupiah(result.details.remaining)}.`
               : ""}

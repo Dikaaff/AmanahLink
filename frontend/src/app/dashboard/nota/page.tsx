@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -226,7 +226,7 @@ export default function ReceiptsPage() {
       <ScreenHeader
         eyebrow="Dana"
         title="Nota"
-        description="Unggah bukti transaksi setelah pencairan dan pantau statusnya."
+        description="Unggah bukti transaksi setelah pembayaran ke merchant dan pantau statusnya."
         className="!items-start"
       />
 
@@ -253,10 +253,10 @@ export default function ReceiptsPage() {
           <div className="mt-4">
             <EmptyState
               title="Tidak ada transaksi tanpa nota"
-              description="Semua pencairan terbaru sudah punya nota. Pencairan baru akan muncul di sini."
+              description="Semua pembayaran terbaru sudah punya nota. Pembayaran baru akan muncul di sini."
               action={
                 <Link href="/dashboard/pencairan" className="btn-secondary">
-                  Lihat pencairan
+                  Lihat pembayaran
                 </Link>
               }
             />
@@ -280,7 +280,7 @@ export default function ReceiptsPage() {
                 <option value="">Pilih transaksi</option>
                 {pending.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.campaign?.title ?? "Pencairan"} · {rupiah(item.amount)}{" "}
+                    {item.campaign?.title ?? "Pembayaran ke merchant"} · {rupiah(item.amount)}{" "}
                     · {item.merchant?.name ?? "merchant"}
                   </option>
                 ))}
@@ -367,7 +367,7 @@ export default function ReceiptsPage() {
           <div className="mt-4">
             <EmptyState
               title="Belum ada nota"
-              description="Unggah nota setelah pencairan berhasil; status OCR dan keputusan verifikator akan muncul di sini."
+              description="Unggah nota setelah pembayaran ke merchant berhasil; status OCR dan keputusan verifikator akan muncul di sini."
             />
           </div>
         ) : (
@@ -409,7 +409,7 @@ export default function ReceiptsPage() {
             </ul>
 
             {lastPage > 1 ? (
-              <div className="mt-5 flex items-center justify-center gap-3">
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
                 <button
                   type="button"
                   className="btn-secondary"
@@ -418,7 +418,7 @@ export default function ReceiptsPage() {
                 >
                   Sebelumnya
                 </button>
-                <span className="text-body-sm text-ink-muted">
+                <span className="whitespace-nowrap text-body-sm text-ink-muted">
                   Halaman {page} dari {lastPage}
                 </span>
                 <button

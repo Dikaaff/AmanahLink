@@ -99,7 +99,7 @@ function SpecRow({ label, mobile, desktop, mono, note }: (typeof rows)[0]) {
           lineHeight: 1.4,
         }}
       >
-        #P2 {label === "num-lg" ? "Rp999.999.999" : label === "num-md" ? "Rp1.250.000" : label === "num-sm" ? "0123456789" : label === "display" ? "AmanahLink" : label === "h1" ? "Donasi Kampanye Kesehatan Ibu Sari" : label === "h2" ? "Bantuan Medis Ibu Sari" : label === "h3" ? "Apotek & toko obat" : label === "body" ? "Setiap pencairan hanya boleh ke merchant terverifikasi dengan kategori transaksi yang disetujui kampanye." : label === "body-sm" ? "MCC 5912 — Apotek & toko obat" : label === "label" ? "STATUS: MENUNGGU VERIFIKASI" : "AmanahLink"}
+        #P2 {label === "num-lg" ? "Rp999.999.999" : label === "num-md" ? "Rp1.250.000" : label === "num-sm" ? "0123456789" : label === "display" ? "AmanahLink" : label === "h1" ? "Donasi Kampanye Kesehatan Ibu Sari" : label === "h2" ? "Bantuan Medis Ibu Sari" : label === "h3" ? "Apotek & toko obat" : label === "body" ? "Setiap pembayaran hanya boleh ke merchant terverifikasi dengan kategori transaksi yang disetujui kampanye." : label === "body-sm" ? "MCC 5912 — Apotek & toko obat" : label === "label" ? "STATUS: MENUNGGU VERIFIKASI" : "AmanahLink"}
       </p>
       <p className="mt-2 text-xs text-ink-secondary">{note}</p>
     </section>
@@ -113,7 +113,7 @@ function SampleTable() {
     ["h1", "Donasi Kampanye Kesehatan Ibu Sari", false, "judul layar"],
     ["h2", "Bantuan Medis Ibu Sari", false, "judul bagian"],
     ["h3", "Apotek & toko obat", false, "nama merchant"],
-    ["body", "Setiap pencairan hanya boleh ke merchant terverifikasi.", false, "teks utama"],
+    ["body", "Setiap pembayaran hanya boleh ke merchant terverifikasi.", false, "teks utama"],
     ["body-sm", "MCC 5912 — Apotek & toko obat", false, "metadata"],
     ["label", "STATUS: MENUNGGU VERIFIKASI", false, "kapital"],
     ["num-lg", "Rp999.999.999", true, "nominal utama"],

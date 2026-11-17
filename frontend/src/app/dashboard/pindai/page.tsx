@@ -335,8 +335,8 @@ export default function MerchantScanPage() {
       {loadError ? <Alert tone="error">{loadError}</Alert> : null}
 
       {paid ? (
-        <Alert tone="success" title="Pencairan tercatat">
-          {rupiah(paid.amount)} dicairkan ke{" "}
+        <Alert tone="success" title="Pembayaran ke merchant tercatat">
+          {rupiah(paid.amount)} dibayarkan ke{" "}
           {paid.merchant?.name ?? "merchant"}. Status{" "}
           {paid.status_label.toLowerCase()}, referensi{" "}
           <span className="font-mono">{paid.reference_id}</span>. Dua entri
@@ -369,7 +369,7 @@ export default function MerchantScanPage() {
           </select>
           {campaigns.length === 0 ? (
             <p className="mt-1 text-body-sm text-ink-secondary">
-              Belum ada kampanye aktif yang dapat dicairkan.
+              Belum ada kampanye aktif yang bisa dipakai untuk belanja.
             </p>
           ) : null}
         </div>
@@ -541,12 +541,12 @@ export default function MerchantScanPage() {
                       className="btn-primary"
                       disabled={paying}
                     >
-                      {paying ? "Mencairkan…" : `Cairkan ${rupiah(amount)}`}
+                      {paying ? "Memproses…" : `Otorisasi ${rupiah(amount)}`}
                     </button>
                   }
-                  title="Cairkan dana sekarang?"
-                  description={`${rupiah(amount)} akan dicatat permanen di ledger kampanye dan diteruskan ke ${result.merchant.name}. Pencairan tidak dapat dibatalkan; klik ganda dicegah oleh Idempotency-Key.`}
-                  confirmLabel="Ya, cairkan"
+                  title="Otorisasi pembayaran sekarang?"
+                  description={`${rupiah(amount)} akan dicatat permanen di ledger kampanye dan diteruskan ke ${result.merchant.name}. Pembayaran tidak dapat dibatalkan setelah dikirim; klik ganda dicegah oleh Idempotency-Key.`}
+                  confirmLabel="Ya, otorisasi"
                   onConfirm={() => void handleDisburse()}
                 />
                 <button
@@ -564,7 +564,7 @@ export default function MerchantScanPage() {
               title={
                 result.code === "MCC_NOT_ALLOWED"
                   ? "Kategori merchant tidak diizinkan"
-                  : "Pencairan akan ditolak"
+                  : "Pembayaran akan ditolak"
               }
             >
               {result.message}

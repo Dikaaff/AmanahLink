@@ -249,14 +249,14 @@ for (const width of [768, 1440]) {
     ).toBeVisible();
     await expectNoOverflow(page, `P7 receipts @${width}`);
 
-    await page.getByRole("link", { name: "Pencairan", exact: true }).click();
+    await page.getByRole("link", { name: "Pembayaran", exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/pencairan$/);
     await expect(
-      page.getByRole("heading", { name: "Pengawasan pencairan" }),
+      page.getByRole("heading", { name: "Pengawasan pembayaran" }),
     ).toBeVisible();
     await expect(page.getByText("Apotek Sehat Sentosa").first()).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Cairkan" }),
+      page.getByRole("button", { name: "Otorisasi" }),
     ).toHaveCount(0);
     await expectNoOverflow(page, `P7 disbursements @${width}`);
 

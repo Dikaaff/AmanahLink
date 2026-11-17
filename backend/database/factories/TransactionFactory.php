@@ -42,4 +42,12 @@ class TransactionFactory extends Factory
             'status' => TransactionStatus::Captured,
         ]);
     }
+
+    public function settled(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => TransactionStatus::Settled,
+            'settled_at' => now(),
+        ]);
+    }
 }

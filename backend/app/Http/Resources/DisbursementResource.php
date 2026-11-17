@@ -24,6 +24,7 @@ final class DisbursementResource extends JsonResource
             'amount' => $this->amount,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
+            'settled_at' => $this->settled_at?->toIso8601String(),
             'mcc_used' => $this->mcc_used,
             'campaign' => $this->whenLoaded('campaign', fn (): array => [
                 'id' => $this->campaign->id,

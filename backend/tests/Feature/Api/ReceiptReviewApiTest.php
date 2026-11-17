@@ -36,7 +36,7 @@ final class ReceiptReviewApiTest extends TestCase
     {
         $campaign ??= Campaign::factory()->active()->create();
 
-        $transaction = Transaction::factory()->captured()->create([
+        $transaction = Transaction::factory()->settled()->create([
             'campaign_id' => $campaign->id,
             'user_id' => $campaign->user_id,
             'type' => 'disbursement',

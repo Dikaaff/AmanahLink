@@ -188,7 +188,7 @@ final class MerchantController
 
         if ($merchant->status !== MerchantStatus::Verified) {
             throw ValidationException::withMessages([
-                'merchant' => ['Merchant belum terverifikasi sehingga belum memiliki QR pencairan.'],
+                'merchant' => ['Merchant belum terverifikasi sehingga belum memiliki QR pembayaran.'],
             ]);
         }
 

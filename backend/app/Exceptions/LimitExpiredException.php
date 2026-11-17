@@ -8,7 +8,7 @@ use RuntimeException;
 
 final class LimitExpiredException extends RuntimeException
 {
-    public function __construct(string $reason = 'Limit pencairan kampanye sudah tidak berlaku.')
+    public function __construct(string $reason = 'Masa berlaku batas belanja kampanye sudah lewat.')
     {
         parent::__construct($reason);
     }

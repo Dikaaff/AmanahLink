@@ -68,6 +68,7 @@ export interface Disbursement {
   amount: string;
   status: string;
   status_label: string;
+  settled_at?: string | null;
   mcc_used: string | null;
   campaign?: { id: number; title: string; slug: string };
   merchant?: { id: number; name: string };
@@ -619,9 +620,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   FORBIDDEN_ROLE: "Peran Anda tidak memiliki akses untuk aksi ini.",
   MCC_NOT_ALLOWED:
     "Kategori transaksi merchant tidak diizinkan oleh kampanye ini.",
-  INSUFFICIENT_FUNDS: "Saldo kampanye tidak mencukupi untuk pencairan ini.",
-  LIMIT_EXCEEDED: "Batas harian atau bulanan pencairan terlampaui.",
-  LIMIT_EXPIRED: "Masa berlaku limit pencairan sudah lewat.",
+  INSUFFICIENT_FUNDS: "Dana kampanye tidak mencukupi untuk pembayaran ini.",
+  LIMIT_EXCEEDED: "Batas harian atau bulanan belanja terlampaui.",
+  LIMIT_EXPIRED: "Masa berlaku batas belanja sudah lewat.",
   CAMPAIGN_NOT_ACTIVE: "Kampanye tidak dalam status aktif atau funded.",
   CAMPAIGN_LOCKED: "Kampanye tidak dapat diedit setelah donasi pertama settle.",
   CONFLICT_STATE: "Perubahan status tidak sah untuk keadaan saat ini.",

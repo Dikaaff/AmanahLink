@@ -16,7 +16,7 @@
 
 **Masalah.** Platform donasi konvensional mencairkan dana menjadi uang tunai ke rekening penggalang. Setelah dana berpindah, platform kehilangan kendali atas penggunaannya. Muncul *moral hazard*: dana medis dipakai membeli barang elektronik, dana pendidikan dipakai konsumsi pribadi. Donatur hanya punya laporan manual yang tidak dapat diverifikasi.
 
-**Solusi.** *Purpose-Bound Money* — dana donasi tidak pernah cair sebagai cash. Dana menjadi **limit pembayaran terikat kategori** yang hanya dapat dipakai pada merchant terverifikasi dengan MCC linier dengan tujuan kampanye. Setiap rupiah punya jejak: `donation → ledger → disbursement → receipt → reconciliation`.
+**Solusi.** *Purpose-Bound Money* — dana donasi tidak pernah cair sebagai cash ke penggalang; ini **kebijakan produk**, bukan kewajiban regulasi (praktik pasar seperti Kitabisa memberi opsi pencairan ke rekening penggalang). Dana menjadi **hak belanja terikat kategori** yang hanya dapat dibayarkan ke merchant terverifikasi dengan MCC linier dengan tujuan kampanye. Satu-satunya jalur uang ke penggalang adalah **penggantian nota**, dibatasi plafon per nota dan plafon total per kampanye. Setiap rupiah punya jejak: `donation → ledger → disbursement → receipt → reconciliation`.
 
 **Pembeda yang wajib tercermin di UI, API, dan skema:**
 1. Dana terikat **kategori**, bukan orang.
@@ -32,7 +32,7 @@
 | Persona | Role sistem | Tujuan utama | Rasa sakit | Fitur kunci |
 |---|---|---|---|---|
 | Donatur | `donor` | Yakin dana tepat sasaran | Takut dana diselewengkan | Feed transparansi, bukti kategori, refund |
-| Penggalang | `campaigner` | Mencairkan dana cepat untuk kebutuhan riil | Verifikasi berbelit | Limit terikat kategori, upload nota via OCR |
+| Penggalang | `campaigner` | Membelanjakan dana cepat untuk kebutuhan riil | Verifikasi berbelit | Batas belanja terikat kategori, upload nota via OCR |
 | Verifikator | `verifier` | Meninjau nota & kampanye | Volume manual tinggi | Review queue, confidence score, audit log |
 | Admin | `admin` | Menjaga kepatuhan & menindak penyalahgunaan | Butuh visibilitas real-time | Dashboard monitoring, freeze, audit log |
 | Merchant | — (eksternal) | Menerima pembayaran aman | Ragu terhadap dana "aneh" | Settlement jelas, status transparan |
@@ -159,11 +159,13 @@ initiated → pending → settled → refunded
 
 ### 7.3 Disbursement
 ```
-requested → mcc_validated → authorized → captured → receipt_pending
-                                                       → verified → reconciled
-                                                       → disputed
+requested → mcc_validated → authorized → captured → settled → receipt_pending
+                                                             → verified → reconciled
+                                                             → disputed
+authorized/captured → failed: counter batas dilepas, dana kembali ke CampaignRestricted
+settled → failed: ditolak (dana sudah di merchant; koreksi = refund/dispute)
 ```
-Aturan: `authorized` wajib punya 2 ledger entry sebelum `commit`. `captured` tanpa ledger entry = bug kritis (invariant test gagal).
+Aturan: `authorized` wajib punya 2 ledger entry sebelum `commit`. `captured` tanpa ledger entry = bug kritis (invariant test gagal). Driver demo `fake` menyelesaikan transfer secara sinkron (`captured → settled` dengan `settled_at`); rail bank nyata menunggu callback sebelum `settled`.
 
 ### 7.4 Receipt
 ```

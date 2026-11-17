@@ -55,22 +55,18 @@ test("P3 donation amount validates on blur without clearing the input", async ({
   await expect(amount).toHaveValue("5000");
 });
 
-test("P3 disbursement sheet guards a dirty draft", async ({ page }) => {
+test("P3 pencairan is a page-level form with a live draft", async ({ page }) => {
   await login(page, "budi@amanahlink.test");
 
-  await page
-    .getByRole("button", { name: "Cairkan dana", exact: true })
-    .click({ timeout: 90_000 });
+  // The old overlay is gone: the form lives on its own Dana page, so there is
+  // no dismiss guard and no dialog to escape by accident.
+  await page.getByRole("link", { name: "Dana", exact: true }).click();
+  await expect(page).toHaveURL(/\/dashboard\/pencairan$/);
+
   await page.locator("#campaign").selectOption({ index: 1 });
+  await page.locator("#disbursement-amount").fill("75a0b00");
 
-  await page.getByLabel("Tutup").click();
-  await expect(
-    page.getByRole("alertdialog", { name: "Buang perubahan?" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Lanjut mengisi" }).click();
-  await expect(page.locator("#campaign")).toBeVisible();
-
-  await page.getByLabel("Tutup").click();
-  await page.getByRole("button", { name: "Buang perubahan" }).click();
-  await expect(page.locator("#campaign")).not.toBeVisible();
+  await expect(page.locator("#disbursement-amount")).toHaveValue("75000");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator("#campaign")).not.toHaveValue("");
 });

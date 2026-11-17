@@ -128,11 +128,11 @@ final class DisbursementConcurrencyTest extends TestCase
             static fn (string $output): bool => str_contains($output, '"ok":false'),
         ));
 
-        $this->assertCount(3, $succeeded, 'Hanya 3 dari 20 pencairan yang boleh lolos: '.implode(' | ', $outputs));
+        $this->assertCount(3, $succeeded, 'Hanya 3 dari 20 pembayaran yang boleh lolos: '.implode(' | ', $outputs));
         $this->assertCount(17, $failed, 'Sisanya harus ditolak: '.implode(' | ', $outputs));
 
         foreach ($failed as $output) {
-            $this->assertStringContainsString('Saldo kampanye tidak mencukupi', $output);
+            $this->assertStringContainsString('Dana kampanye tidak mencukupi', $output);
         }
 
         $balance = app(LedgerService::class)->balanceOf(AccountCode::CampaignRestricted, $campaign->id);
