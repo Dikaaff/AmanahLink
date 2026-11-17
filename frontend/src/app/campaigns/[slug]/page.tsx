@@ -4,6 +4,11 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { DonationSheet } from "@/components/donation-sheet";
+import {
+  CampaignCover,
+  CoverChip,
+  CoverChips,
+} from "@/components/campaign-cover";
 import { Alert, ErrorState, Loading, Progress, StatusBadge } from "@/components/ui";
 import { api, errorMessage, type Campaign } from "@/lib/api";
 import { dateOnly, daysLeft, rupiah } from "@/lib/format";
@@ -75,21 +80,31 @@ export default function CampaignDetailPage() {
         ← Semua kampanye
       </Link>
 
-      <div className="mt-5 grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-start">
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <StatusBadge status={campaign.status} label={campaign.status_label} />
-            <span className="text-sm text-ink-muted">
-              {daysLeft(campaign.deadline_at)} · tenggat {dateOnly(campaign.deadline_at)}
-            </span>
-          </div>
+      <CampaignCover
+        campaign={campaign}
+        priority
+        sizes="(min-width: 1152px) 1104px, 100vw"
+        className="mt-5 aspect-[16/10] rounded-md border border-line sm:aspect-[21/9]"
+      >
+        <CoverChips
+          left={<StatusBadge status={campaign.status} label={campaign.status_label} />}
+          right={
+            <CoverChip>
+              {daysLeft(campaign.deadline_at)} · {dateOnly(campaign.deadline_at)}
+            </CoverChip>
+          }
+        />
+      </CampaignCover>
 
-          <h1 className="mt-4 text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+      <div className="mt-7 grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-start">
+        <div>
+          <h1 className="text-display font-semibold leading-tight text-ink sm:text-display-lg">
             {campaign.title}
           </h1>
 
-          <p className="mt-2 text-sm text-ink-muted">
-            Dikelola oleh {campaign.campaigner?.name ?? "penggalang dana"}
+          <p className="mt-2 text-body-sm text-ink-muted">
+            Dikelola oleh {campaign.campaigner?.name ?? "penggalang dana"} ·
+            tenggat {dateOnly(campaign.deadline_at)}
           </p>
 
           <div className="card mt-6 p-4 sm:p-5">
@@ -98,7 +113,7 @@ export default function CampaignDetailPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                   Terkumpul
                 </p>
-                <p className="mt-1 text-3xl font-semibold text-ink">
+                <p className="numeric mt-1 text-num-lg font-semibold text-ink">
                   {rupiah(campaign.current_amount)}
                 </p>
               </div>
@@ -163,11 +178,11 @@ export default function CampaignDetailPage() {
         </div>
 
         <aside id="donation-panel" className="card scroll-mt-20 p-5 lg:sticky lg:top-24">
-          <h2 className="text-lg font-semibold text-stone-900">Donasi sekarang</h2>
+          <h2 className="text-h2 font-semibold text-ink">Donasi sekarang</h2>
 
           {campaign.is_accepting_donations ? (
             <>
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-2 text-body-sm text-ink-secondary">
                 Dana langsung masuk ke saldo terkunci kampanye setelah pembayaran
                 terkonfirmasi. Biaya platform 2% dipotong sekali saat dana diterima.
               </p>
@@ -178,10 +193,11 @@ export default function CampaignDetailPage() {
               >
                 Buka formulir donasi
               </button>
-              <p className="mt-3 text-xs leading-relaxed text-stone-500">
-                Pilih nominal, lihat ringkasan, lalu bayar tanpa meninggalkan
-                halaman kampanye ini.
-              </p>
+              <ul className="mt-4 space-y-2 border-t border-line pt-4 text-xs text-ink-muted">
+                <li>Dana terkunci sampai pencairan disetujui.</li>
+                <li>Setiap pencairan punya bukti nota dan jejak ledger.</li>
+                <li>Tidak ada biaya tersembunyi di luar biaya platform 2%.</li>
+              </ul>
             </>
           ) : (
             <div className="mt-3">
@@ -194,13 +210,22 @@ export default function CampaignDetailPage() {
       </div>
 
       <div className="fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 md:hidden">
-        <button
-          type="button"
-          className="flex min-h-[52px] w-full items-center justify-center rounded-sm bg-ink px-5 text-body-sm font-medium text-inverse shadow-sheet"
-          onClick={() => setDonationOpen(true)}
-        >
-          {campaign.is_accepting_donations ? "Donasi sekarang" : "Lihat status kampanye"}
-        </button>
+        {campaign.is_accepting_donations ? (
+          <button
+            type="button"
+            className="flex min-h-[52px] w-full items-center justify-center rounded-sm bg-accent px-5 text-body-sm font-medium text-white shadow-sheet hover:bg-accent-strong"
+            onClick={() => setDonationOpen(true)}
+          >
+            Donasi sekarang
+          </button>
+        ) : (
+          <a
+            href="#donation-panel"
+            className="flex min-h-[52px] w-full items-center justify-center rounded-sm bg-accent px-5 text-body-sm font-medium text-white shadow-sheet hover:bg-accent-strong"
+          >
+            Lihat status kampanye
+          </a>
+        )}
       </div>
 
       {campaign.is_accepting_donations ? (

@@ -18,10 +18,20 @@ export function MobileBottomNav() {
 
   if (!ready) return null;
 
+  const isStaff = user?.role === "admin" || user?.role === "verifier";
   const items = user
     ? [
         { href: "/", label: "Kampanye", Icon: House },
-        { href: "/dashboard", label: "Dasbor", Icon: LayoutDashboard },
+        {
+          href:
+            user.role === "admin"
+              ? "/admin"
+              : user.role === "verifier"
+                ? "/admin/campaigns"
+                : "/dashboard",
+          label: isStaff ? "Console" : "Dasbor",
+          Icon: LayoutDashboard,
+        },
         { href: "/notifications", label: "Notifikasi", Icon: Bell },
       ]
     : [
@@ -46,7 +56,7 @@ export function MobileBottomNav() {
               aria-current={active ? "page" : undefined}
               className={`relative inline-flex min-h-11 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium ${active ? "text-ink" : "text-ink-muted"}`}
             >
-              {active ? <span className="absolute inset-x-5 top-0 h-0.5 bg-ink" /> : null}
+              {active ? <span className="absolute inset-x-5 top-0 h-0.5 bg-accent" /> : null}
               <Icon aria-hidden="true" size={22} strokeWidth={active ? 2 : 1.5} />
               <span>{label}</span>
             </Link>

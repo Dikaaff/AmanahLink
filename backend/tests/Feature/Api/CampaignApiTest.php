@@ -162,6 +162,29 @@ final class CampaignApiTest extends TestCase
         $this->assertSame('active', $response->json('data.0.status'));
     }
 
+    public function test_cover_image_is_serialized_but_not_user_writable(): void
+    {
+        $campaign = Campaign::factory()->active()->create([
+            'cover_image_url' => '/campaigns/demo.jpg',
+        ]);
+
+        $this->getJson("/api/v1/campaigns/{$campaign->slug}")
+            ->assertOk()
+            ->assertJsonPath('data.cover_image_url', '/campaigns/demo.jpg');
+
+        Sanctum::actingAs(User::factory()->campaigner()->create());
+
+        $this->postJson('/api/v1/campaigns', $this->payload([
+            'cover_image_url' => 'https://evil.test/tracker.jpg',
+        ]))
+            ->assertCreated()
+            ->assertJsonPath('data.cover_image_url', null);
+
+        $this->assertDatabaseMissing('campaigns', [
+            'cover_image_url' => 'https://evil.test/tracker.jpg',
+        ]);
+    }
+
     public function test_submit_then_approve_moves_the_campaign_to_active(): void
     {
         $campaigner = User::factory()->campaigner()->create();

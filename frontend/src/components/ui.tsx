@@ -23,10 +23,12 @@ export function ErrorState({
   retryLabel?: string;
 }) {
   return (
-    <Card className="p-5">
-      <h3 className="text-h3 font-semibold text-ink">Data gagal dimuat</h3>
-      <p className="mt-2 text-body-sm text-ink-secondary">{message}</p>
-      <Button variant="secondary" className="mt-4" onClick={onRetry}>
+    <Card className="flex flex-wrap items-center justify-between gap-4 border-danger bg-danger-soft px-4 py-3">
+      <div className="min-w-0">
+        <h3 className="text-body-sm font-semibold text-danger">Data belum tersedia</h3>
+        <p className="mt-1 text-body-sm text-ink-secondary">{message}</p>
+      </div>
+      <Button variant="secondary" className="shrink-0" onClick={onRetry}>
         {retryLabel}
       </Button>
     </Card>

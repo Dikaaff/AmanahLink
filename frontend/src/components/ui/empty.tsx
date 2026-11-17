@@ -19,7 +19,7 @@ export function Empty({
 }) {
   return (
     <div
-      className={`flex flex-col items-center justify-center rounded-sm border border-line bg-canvas px-6 py-12 text-center ${
+      className={`flex flex-col items-center justify-center rounded-sm border border-line bg-canvas px-6 py-9 text-center ${
         variant === "action" || variant === "search" ? "border-dashed" : ""
       } ${variant === "search" ? "bg-sunken" : ""}`}
     >

@@ -45,14 +45,14 @@ export function SectionTabs({
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "relative inline-flex min-h-11 items-center px-3 text-body-sm font-medium transition-colors",
-                  active ? "text-ink" : "text-ink-muted hover:text-ink",
+                  active ? "text-accent-strong" : "text-ink-muted hover:text-accent-strong",
                 )}
               >
                 {item.label}
                 {active ? (
                   <span
                     aria-hidden="true"
-                    className="absolute inset-x-2 bottom-0 h-0.5 bg-ink"
+                    className="absolute inset-x-2 bottom-0 h-0.5 bg-accent"
                   />
                 ) : null}
               </Link>

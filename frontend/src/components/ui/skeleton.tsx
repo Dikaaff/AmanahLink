@@ -54,7 +54,7 @@ export function SkeletonCard({
   );
 }
 
-/** Mirrors `CampaignCard`: status row, two title lines, three description lines. */
+/** Mirrors `CampaignCard`: cover 16:10, title, description, progress. */
 export function SkeletonCampaignCard({
   className,
   ...props
@@ -62,34 +62,29 @@ export function SkeletonCampaignCard({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-md border border-line bg-surface p-5",
+        "flex flex-col overflow-hidden rounded-md border border-line bg-surface",
         className,
       )}
       {...props}
     >
-      <div className="flex items-start justify-between gap-3">
-        <Skeleton className="h-5 w-20" />
-        <Skeleton className="h-3 w-16" />
-      </div>
-      <div className="mt-3 space-y-2">
-        <Skeleton className="h-6 w-full" />
-        <Skeleton className="h-6 w-4/5" />
-      </div>
-      <div className="mt-2 flex-1 space-y-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-2/3" />
-      </div>
-      <div className="mt-4 space-y-2">
-        <Skeleton className="h-2 w-full rounded-full" />
-        <div className="flex items-center justify-between gap-4">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-28" />
+      <Skeleton className="aspect-[16/10] w-full rounded-none" />
+      <div className="flex flex-1 flex-col p-5">
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-full" />
+          <Skeleton className="h-6 w-4/5" />
         </div>
-      </div>
-      <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
-        <Skeleton className="h-3 w-28" />
-        <Skeleton className="h-3 w-20" />
+        <div className="mt-3 space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+        <div className="mt-auto space-y-2 pt-5">
+          <Skeleton className="h-2 w-full rounded-full" />
+          <div className="flex items-center justify-between gap-4">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-10" />
+          </div>
+          <Skeleton className="h-3 w-40" />
+        </div>
       </div>
     </div>
   );

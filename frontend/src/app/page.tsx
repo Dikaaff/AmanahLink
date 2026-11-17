@@ -63,13 +63,13 @@ export default function HomePage() {
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6">
       <section
         id="cara-kerja"
-        className="rounded-lg border border-line-strong bg-canvas px-5 py-8 text-ink sm:px-10 sm:py-12"
+        className="rounded-lg border border-line-strong bg-canvas px-5 py-8 text-ink sm:px-8 sm:py-10 lg:grid lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-12 lg:px-10 lg:py-12"
       >
-        <div className="max-w-2xl">
+        <div>
           <p className="text-label font-medium uppercase text-ink-secondary">
             Donasi dengan batas tujuan
           </p>
-          <h1 className="mt-4 text-h1 font-semibold md:text-h1-lg">
+          <h1 className="mt-4 max-w-xl text-display font-semibold sm:text-display-lg">
             Dana tidak bisa dipakai sembarangan.
           </h1>
           <p className="mt-4 max-w-xl text-body text-ink-secondary">
@@ -83,7 +83,7 @@ export default function HomePage() {
               value={draftQuery}
               onChange={(event) => setDraftQuery(event.target.value)}
               placeholder="Cari kampanye, mis. biaya operasi"
-              className="min-h-11 w-full rounded-sm border border-line-strong bg-canvas px-5 text-body text-ink placeholder:text-ink-muted focus:border-ink focus:outline-none"
+              className="min-h-11 w-full rounded-sm border border-line-strong bg-canvas px-5 text-body text-ink placeholder:text-ink-muted focus:border-accent focus:outline-none"
               aria-label="Cari kampanye"
             />
             <button
@@ -95,18 +95,33 @@ export default function HomePage() {
           </form>
         </div>
 
-        <dl className="mt-10 grid max-w-2xl grid-cols-2 gap-4 border-t border-line-strong pt-6 text-body-sm sm:grid-cols-3">
-          <div>
+        <dl className="mt-8 grid grid-cols-2 gap-x-5 gap-y-6 border-t border-line-strong pt-6 sm:grid-cols-3 lg:mt-0 lg:grid-cols-1 lg:gap-0 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
+          <div className="lg:border-b lg:border-line lg:py-4 lg:first:pt-0">
             <dt className="text-label">Bukti dana</dt>
-            <dd className="mt-1 font-semibold text-ink">Ledger double-entry</dd>
+            <dd className="mt-1 text-body-sm font-semibold text-ink">
+              Ledger double-entry
+            </dd>
+            <p className="mt-1 hidden text-xs text-ink-muted lg:block">
+              Setiap rupiah punya jejak debit-kredit yang dapat diaudit.
+            </p>
           </div>
-          <div>
+          <div className="lg:border-b lg:border-line lg:py-4">
             <dt className="text-label">Pencairan</dt>
-            <dd className="mt-1 font-semibold text-ink">Merchant + MCC</dd>
+            <dd className="mt-1 text-body-sm font-semibold text-ink">
+              Merchant + MCC
+            </dd>
+            <p className="mt-1 hidden text-xs text-ink-muted lg:block">
+              Dana hanya keluar ke merchant terverifikasi di kategori yang sah.
+            </p>
           </div>
-          <div>
+          <div className="lg:py-4 lg:last:pb-0">
             <dt className="text-label">Nota</dt>
-            <dd className="mt-1 font-semibold text-ink">OCR + review manual</dd>
+            <dd className="mt-1 text-body-sm font-semibold text-ink">
+              OCR + review manual
+            </dd>
+            <p className="mt-1 hidden text-xs text-ink-muted lg:block">
+              Bukti belanja dibaca mesin, lalu diputuskan manusia.
+            </p>
           </div>
         </dl>
       </section>
@@ -114,7 +129,7 @@ export default function HomePage() {
       <section className="mt-10">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-h1 font-semibold text-ink">
+            <h2 className="text-h1 font-semibold text-ink sm:text-h1-lg">
               Kampanye berjalan
             </h2>
             <p className="mt-1 text-body-sm text-ink-secondary">
@@ -137,8 +152,12 @@ export default function HomePage() {
             <CampaignGridSkeleton count={3} />
           ) : result && result.data.length > 0 ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {result.data.map((campaign) => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
+              {result.data.map((campaign, index) => (
+                <CampaignCard
+                  key={campaign.id}
+                  campaign={campaign}
+                  priority={index === 0}
+                />
               ))}
             </div>
           ) : (

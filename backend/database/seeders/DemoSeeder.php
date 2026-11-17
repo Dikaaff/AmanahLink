@@ -39,6 +39,7 @@ class DemoSeeder extends Seeder
                 'user_id' => $campaigner->id,
                 'title' => 'Bantu Biaya Operasi Ibu Sari',
                 'description' => 'Dana digunakan hanya untuk obat, rumah sakit, dan praktik dokter yang menangani Ibu Sari.',
+                'cover_image_url' => '/campaigns/operasi-ibu-sari.jpg',
                 'target_amount' => 10_000_000,
                 'current_amount' => 0,
                 'allowed_mcc_array' => ['5912', '8062'],
@@ -47,6 +48,7 @@ class DemoSeeder extends Seeder
                 'reviewed_at' => now(),
             ],
         );
+        $campaign->update(['cover_image_url' => '/campaigns/operasi-ibu-sari.jpg']);
 
         DisbursementLimit::firstOrCreate(
             ['campaign_id' => $campaign->id],
@@ -77,6 +79,71 @@ class DemoSeeder extends Seeder
             );
 
             $settlements->settle($reference);
+        }
+
+        // Additional public campaigns make the feed representative: different
+        // causes, deadlines, and progress, each backed by settled donations so
+        // the ledger stays balanced.
+        foreach ([
+            [
+                'slug' => 'seragam-dan-buku-untuk-anak-kampung',
+                'title' => 'Seragam dan Buku untuk Anak Kampung',
+                'description' => 'Setiap anak berhak mulai sekolah dengan seragam yang layak dan buku yang lengkap. Dana hanya dipakai di toko buku dan sekolah yang terdaftar.',
+                'cover_image_url' => '/campaigns/seragam-anak-kampung.jpg',
+                'target_amount' => 12_000_000,
+                'deadline_days' => 24,
+                'donations' => ['PAY-DEMO-1001' => '3750000.00'],
+            ],
+            [
+                'slug' => 'dapur-umum-untuk-korban-banjir',
+                'title' => 'Dapur Umum untuk Korban Banjir',
+                'description' => 'Dapur umum menyediakan makanan hangat setiap hari untuk keluarga yang rumahnya terendam. Belanja bahan makanan dibatasi ke minimarket dan pasar terdaftar.',
+                'cover_image_url' => '/campaigns/dapur-umum-banjir.jpg',
+                'target_amount' => 25_000_000,
+                'deadline_days' => 45,
+                'donations' => ['PAY-DEMO-1002' => '11400000.00'],
+            ],
+            [
+                'slug' => 'beasiswa-anak-nelayan',
+                'title' => 'Beasiswa Anak Nelayan',
+                'description' => 'Biaya sekolah dan perlengkapan belajar untuk anak-anak nelayan yang terpaksa berhenti sekolah. Pencairan hanya ke sekolah dan toko buku terverifikasi.',
+                'cover_image_url' => '/campaigns/beasiswa-anak-nelayan.jpg',
+                'target_amount' => 18_000_000,
+                'deadline_days' => 60,
+                'donations' => ['PAY-DEMO-1003' => '6200000.00'],
+            ],
+        ] as $demo) {
+            $extra = Campaign::firstOrCreate(
+                ['slug' => $demo['slug']],
+                [
+                    'user_id' => $campaigner->id,
+                    'title' => $demo['title'],
+                    'description' => $demo['description'],
+                    'cover_image_url' => $demo['cover_image_url'],
+                    'target_amount' => $demo['target_amount'],
+                    'current_amount' => 0,
+                    'allowed_mcc_array' => ['8211', '5411'],
+                    'status' => CampaignStatus::Active,
+                    'deadline_at' => now()->addDays($demo['deadline_days']),
+                    'reviewed_at' => now(),
+                ],
+            );
+            $extra->update(['cover_image_url' => $demo['cover_image_url']]);
+
+            foreach ($demo['donations'] as $reference => $amount) {
+                Donation::firstOrCreate(
+                    ['payment_ref' => $reference],
+                    [
+                        'campaign_id' => $extra->id,
+                        'donor_id' => $donor->id,
+                        'amount' => $amount,
+                        'status' => DonationStatus::Initiated,
+                        'expires_at' => now()->addDay(),
+                    ],
+                );
+
+                $settlements->settle($reference);
+            }
         }
     }
 

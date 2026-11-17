@@ -32,7 +32,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
       {!online ? (
         <div
           role="status"
-          className="bg-ink px-4 py-2 text-center text-body-sm font-medium text-white"
+          className="bg-accent px-4 py-2 text-center text-body-sm font-medium text-white"
         >
           Anda sedang offline. Perubahan tidak dapat disimpan sampai koneksi kembali.
         </div>

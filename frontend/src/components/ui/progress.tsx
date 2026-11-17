@@ -29,7 +29,7 @@ export function Progress({
       {...props}
     >
       <div
-        className="h-full rounded-full bg-ink transition-[width] duration-150 motion-reduce:transition-none"
+        className="h-full rounded-full bg-accent transition-[width] duration-150 motion-reduce:transition-none"
         style={{ width: `${normalized}%` }}
       />
     </div>

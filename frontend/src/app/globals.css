@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 /* ===========================================================================
-   PAPER & INK — design tokens (P3)
-   Monochrome editorial. No color carries meaning; see components/badge.tsx.
+   AMANAH CALM — design tokens
+   White-first workspace with a sea-blue action layer and restrained semantic
+   color. The palette is deliberately quiet so status can carry meaning.
    Literal values are declared once and mapped to the product's fixed light
    canvas. AmanahLink deliberately does not follow the operating system's dark
    preference: paper stays white and ink stays black on every product route.
@@ -33,6 +34,15 @@
   --color-inverse-muted: var(--inverse-muted);
   --color-inverse-line: var(--inverse-line);
   --color-overlay: var(--overlay);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-strong: var(--accent-strong);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
 }
 
 @theme {
@@ -105,10 +115,10 @@
   color-scheme: light;
 
   --mono-white: #ffffff;
-  --mono-paper: #fafafa;
-  --mono-ink-950: #0a0a0a;
-  --mono-ink-900: #121212;
-  --mono-ink-850: #161616;
+  --mono-paper: #f7fafc;
+  --mono-ink-950: #102a43;
+  --mono-ink-900: #16324f;
+  --mono-ink-850: #1d405f;
   --mono-line-100: #e4e4e7;
   --mono-line-700: #262626;
   --mono-neutral-400: #a1a1aa;
@@ -120,6 +130,16 @@
   --mono-border-300: #8e8e96;
   /* 3.48:1 on the dark canvas. */
   --mono-border-800: #66666f;
+
+  --sea-500: #168aad;
+  --sea-600: #126782;
+  --sea-050: #eef9fc;
+  --mint-600: #207a5a;
+  --mint-050: #eefaf4;
+  --amber-600: #9a6500;
+  --amber-050: #fff8e6;
+  --coral-600: #b43b43;
+  --coral-050: #fff1f2;
 }
 
 /* Fixed light mapping for every route. */
@@ -138,6 +158,15 @@
   --inverse-muted: var(--mono-neutral-400);
   --inverse-line: var(--mono-neutral-600);
   --overlay: rgb(10 10 10 / 0.4);
+  --accent: var(--sea-500);
+  --accent-soft: var(--sea-050);
+  --accent-strong: var(--sea-600);
+  --success: var(--mint-600);
+  --success-soft: var(--mint-050);
+  --warning: var(--amber-600);
+  --warning-soft: var(--amber-050);
+  --danger: var(--coral-600);
+  --danger-soft: var(--coral-050);
 }
 
 /* Keep legacy specimen attributes harmless: product surfaces remain light. */
@@ -156,7 +185,7 @@
 
   /* One focus ring, from a token, visible on both canvases. */
   :focus-visible {
-    outline: 2px solid var(--color-ink);
+    outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
 
@@ -187,11 +216,11 @@
   }
 
   .btn-primary {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm bg-ink px-5 text-body-sm font-medium text-inverse transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm bg-accent px-5 text-body-sm font-medium text-white transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .btn-secondary {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-line-strong bg-canvas px-5 text-body-sm font-medium text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-line-strong bg-canvas px-5 text-body-sm font-medium text-ink transition-colors hover:border-accent hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .btn-ghost {
@@ -203,11 +232,11 @@
   }
 
   .input {
-    @apply min-h-11 w-full rounded-sm border border-line-strong bg-canvas px-3 text-body text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-ink disabled:cursor-not-allowed disabled:bg-sunken disabled:text-ink-muted;
+    @apply min-h-11 w-full rounded-sm border border-line-strong bg-canvas px-3 text-body text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-accent disabled:cursor-not-allowed disabled:bg-sunken disabled:text-ink-muted;
   }
 
   .input[aria-invalid="true"] {
-    @apply border-ink text-ink;
+    @apply border-danger text-ink;
   }
 
   .table-head {

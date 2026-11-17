@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
+import { BrandMark as AmanahBrandMark } from "@/components/brand-mark";
 
-function BrandMark() {
+export function LegacyBrandMark() {
   return (
     <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm bg-ink text-inverse">
       <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
@@ -48,15 +49,29 @@ export function Nav() {
     <header className="sticky top-0 z-30 border-b border-line bg-canvas">
       <div className="mx-auto flex min-h-14 max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-8">
         <Link href="/" className="flex items-center gap-3">
-          <BrandMark />
+          <AmanahBrandMark />
           <span className="sr-only text-h3 font-semibold tracking-tight min-[360px]:not-sr-only">
-            AmanahLink
+            Amanah<span className="text-accent-strong">Link</span>
           </span>
         </Link>
 
         <nav className="hidden flex-wrap items-center gap-1 sm:flex">
           <NavLink href="/">Kampanye</NavLink>
-          {user ? <NavLink href="/dashboard">Dasbor</NavLink> : null}
+          {user ? (
+            <NavLink
+              href={
+                user.role === "admin"
+                  ? "/admin"
+                  : user.role === "verifier"
+                    ? "/admin/campaigns"
+                    : "/dashboard"
+              }
+            >
+              {user.role === "verifier" || user.role === "admin"
+                ? "Console"
+                : "Dasbor"}
+            </NavLink>
+          ) : null}
           {user ? (
             <NavLink href="/notifications">
               <span className="inline-flex items-center gap-1.5">
@@ -69,17 +84,9 @@ export function Nav() {
               </span>
             </NavLink>
           ) : null}
-          {user && (user.role === "campaigner" || user.role === "admin") ? (
+          {user?.role === "campaigner" ? (
             <NavLink href="/dashboard/new">Kampanye Baru</NavLink>
           ) : null}
-          {user && (user.role === "verifier" || user.role === "admin") ? (
-            <>
-              <NavLink href="/admin/campaigns">Kampanye</NavLink>
-              <NavLink href="/admin/receipts">Review nota</NavLink>
-              <NavLink href="/admin/audit-logs">Audit</NavLink>
-            </>
-          ) : null}
-          {user?.role === "admin" ? <NavLink href="/admin">Admin</NavLink> : null}
         </nav>
 
         <div className="flex items-center gap-3">

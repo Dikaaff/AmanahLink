@@ -39,23 +39,23 @@ const TONES: Record<BadgeTone, ToneSpec> = {
   rejected: {
     word: "Ditolak",
     Icon: XCircle,
-    line: "border-solid border-ink",
-    fill: "bg-ink text-inverse",
+    line: "border-solid border-danger",
+    fill: "bg-danger-soft text-danger",
     weight: "font-semibold",
   },
   success: {
     word: "Berhasil",
     Icon: Check,
-    line: "border-solid border-ink",
-    fill: "bg-canvas text-ink",
+    line: "border-solid border-success",
+    fill: "bg-success-soft text-success",
     weight: "font-medium",
     strokeWidth: 2.5,
   },
   pending: {
     word: "Menunggu",
     Icon: Clock,
-    line: "border-solid border-ink",
-    fill: "bg-canvas text-ink",
+    line: "border-solid border-warning",
+    fill: "bg-warning-soft text-warning",
     weight: "font-medium",
   },
   draft: {
@@ -75,8 +75,8 @@ const TONES: Record<BadgeTone, ToneSpec> = {
   warning: {
     word: "Hampir habis",
     Icon: AlertTriangle,
-    line: "border-solid border-ink",
-    fill: "bg-canvas text-ink",
+    line: "border-solid border-warning",
+    fill: "bg-warning-soft text-warning",
     weight: "font-semibold",
   },
 };

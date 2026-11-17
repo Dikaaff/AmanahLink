@@ -19,6 +19,7 @@ import {
 import { useAuth } from "@/components/auth-provider";
 import { useOnlineStatus } from "@/lib/feedback";
 import { cn } from "@/lib/utils";
+import { BrandMark as AmanahBrandMark } from "@/components/brand-mark";
 
 type NavItem = {
   href: string;
@@ -64,7 +65,7 @@ function isActive(pathname: string, item: NavItem): boolean {
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-function BrandMark() {
+export function LegacyBrandMark() {
   return (
     <span className="inline-flex h-9 w-9 items-center justify-center rounded-sm bg-ink text-inverse">
       <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
@@ -88,8 +89,8 @@ function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
       className={cn(
         "group relative flex min-h-10 items-center gap-3 rounded-sm px-3 text-body-sm font-medium transition-colors",
         active
-          ? "bg-ink text-inverse"
-          : "text-ink-secondary hover:bg-canvas hover:text-ink",
+          ? "bg-accent text-white"
+          : "text-ink-secondary hover:bg-accent-soft hover:text-accent-strong",
       )}
     >
       <Icon
@@ -103,7 +104,7 @@ function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
         <span
           className={cn(
             "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
-            active ? "bg-inverse text-ink" : "bg-ink text-inverse",
+            active ? "bg-white text-accent-strong" : "bg-accent text-white",
           )}
         >
           {item.badge > 99 ? "99+" : item.badge}
@@ -278,11 +279,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-dvh bg-canvas">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-sunken lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-white lg:flex">
         <div className="flex h-16 items-center gap-3 border-b border-line px-5">
-          <BrandMark />
+          <AmanahBrandMark />
           <span className="text-h3 font-semibold tracking-tight text-ink">
-            AmanahLink
+            Amanah<span className="text-accent-strong">Link</span>
           </span>
         </div>
 
@@ -293,7 +294,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               className={index > 0 ? "mt-6" : ""}
             >
               {group.label ? (
-                <p className="px-3 pb-2 text-label font-medium uppercase text-ink-muted">
+                <p className="px-3 pb-2 text-xs font-medium text-ink-muted">
                   {group.label}
                 </p>
               ) : null}
@@ -341,9 +342,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="lg:pl-64">
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-line bg-canvas px-4 lg:hidden">
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <BrandMark />
+            <AmanahBrandMark />
             <span className="text-h3 font-semibold tracking-tight text-ink">
-              AmanahLink
+              Amanah<span className="text-accent-strong">Link</span>
             </span>
           </Link>
           <div className="flex items-center gap-1">
@@ -358,7 +359,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell aria-hidden="true" size={20} strokeWidth={1.7} />
               {unreadNotifications > 0 ? (
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-ink" />
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent" />
               ) : null}
             </Link>
             {user ? (
@@ -377,7 +378,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {!online ? (
           <div
             role="status"
-            className="bg-ink px-4 py-2 text-center text-body-sm font-medium text-white"
+            className="bg-accent px-4 py-2 text-center text-body-sm font-medium text-white"
           >
             Anda sedang offline. Perubahan tidak dapat disimpan sampai koneksi
             kembali.
@@ -410,16 +411,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "relative inline-flex min-h-11 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium",
-                  active ? "text-ink" : "text-ink-muted",
+                  active ? "text-accent-strong" : "text-ink-muted",
                 )}
               >
                 {active ? (
-                  <span className="absolute inset-x-6 top-0 h-0.5 bg-ink" />
+                  <span className="absolute inset-x-6 top-0 h-0.5 bg-accent" />
                 ) : null}
                 <span className="relative">
                   <Icon aria-hidden="true" size={21} strokeWidth={active ? 2 : 1.6} />
                   {item.badge ? (
-                    <span className="absolute -right-2 -top-1.5 h-2 w-2 rounded-full bg-ink" />
+                    <span className="absolute -right-2 -top-1.5 h-2 w-2 rounded-full bg-accent" />
                   ) : null}
                 </span>
                 <span>{item.label}</span>

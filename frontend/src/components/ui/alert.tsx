@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils";
 export type AlertTone = "error" | "success" | "info" | "warning";
 
 const TONE = {
-  error: { Icon: CircleAlert, weight: "font-medium" },
-  success: { Icon: Check, weight: "font-normal" },
-  info: { Icon: Info, weight: "font-normal" },
-  warning: { Icon: TriangleAlert, weight: "font-medium" },
+  error: { Icon: CircleAlert, weight: "font-medium", tone: "border-danger bg-danger-soft text-danger" },
+  success: { Icon: Check, weight: "font-normal", tone: "border-success bg-success-soft text-success" },
+  info: { Icon: Info, weight: "font-normal", tone: "border-accent bg-accent-soft text-accent-strong" },
+  warning: { Icon: TriangleAlert, weight: "font-medium", tone: "border-warning bg-warning-soft text-warning" },
 } as const;
 
 /**
@@ -26,13 +26,14 @@ export function Alert({
   children: ReactNode;
   className?: string;
 }) {
-  const { Icon, weight } = TONE[tone];
+  const { Icon, weight, tone: toneClass } = TONE[tone];
 
   return (
     <div
       role={tone === "error" || tone === "warning" ? "alert" : "status"}
       className={cn(
-        "flex gap-3 rounded-sm border border-line bg-sunken px-4 py-3 text-body-sm text-ink",
+        "flex gap-3 rounded-sm border px-4 py-3 text-body-sm",
+        toneClass,
         className,
       )}
     >

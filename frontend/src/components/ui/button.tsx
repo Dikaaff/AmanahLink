@@ -17,11 +17,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-ink text-inverse hover:bg-ink-hover",
+        primary: "bg-accent text-white hover:bg-accent-strong",
         secondary:
-          "border border-line-strong bg-canvas text-ink hover:border-ink",
-        outline: "border border-line-strong text-ink hover:bg-sunken",
-        ghost: "text-ink-secondary hover:bg-sunken hover:text-ink",
+          "border border-line-strong bg-canvas text-ink hover:border-accent hover:bg-accent-soft",
+        outline: "border border-line-strong text-ink hover:border-accent hover:bg-accent-soft",
+        ghost: "text-ink-secondary hover:bg-accent-soft hover:text-accent-strong",
       },
       size: {
         sm: "min-h-11 px-4 text-body-sm",

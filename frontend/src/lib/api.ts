@@ -22,6 +22,7 @@ export interface Campaign {
   title: string;
   slug: string;
   description: string;
+  cover_image_url: string | null;
   status: string;
   status_label: string;
   target_amount: string;

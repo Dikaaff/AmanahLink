@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'title',
     'slug',
     'description',
+    'cover_image_url',
     'target_amount',
     'current_amount',
     'allowed_mcc_array',

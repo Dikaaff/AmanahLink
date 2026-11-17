@@ -306,14 +306,14 @@ export default function DashboardPage() {
 
       {/* One action queue, only when it is not empty. */}
       {isFundraiser && drafts.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-ink bg-sunken px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-accent bg-accent-soft px-4 py-3">
           <p className="text-body-sm text-ink">
             <span className="font-semibold">{drafts.length} draf</span> belum
             diajukan untuk review.
           </p>
           <Link
             href="/dashboard/campaigns"
-            className="text-body-sm font-medium text-ink underline underline-offset-4"
+            className="text-body-sm font-medium text-accent-strong underline underline-offset-4"
           >
             Ajukan draf
           </Link>

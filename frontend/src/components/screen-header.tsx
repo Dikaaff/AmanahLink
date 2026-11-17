@@ -23,7 +23,7 @@ export function ScreenHeader({
     >
       <div>
         {eyebrow ? (
-          <p className="text-label font-medium text-ink-secondary">
+          <p className="text-body-sm font-medium text-accent-strong">
             {eyebrow}
           </p>
         ) : null}

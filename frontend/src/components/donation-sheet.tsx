@@ -203,8 +203,8 @@ export function DonationSheet({
                     }}
                     className={`min-h-11 rounded-md border px-3 text-body-sm font-medium transition-colors ${
                       amount === String(preset)
-                        ? "border-ink bg-sunken text-ink"
-                        : "border-line-strong text-ink-secondary hover:border-ink hover:text-ink"
+                        ? "border-accent bg-accent-soft text-accent-strong"
+                        : "border-line-strong text-ink-secondary hover:border-accent hover:text-accent-strong"
                     }`}
                   >
                     {rupiah(preset)}
